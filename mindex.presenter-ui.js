@@ -130,6 +130,7 @@ function renderPresenterServiceInputRail(service) {
   const examples = presenterPreparationPlaceholderForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const placeholder = examples || "입력할 항목이 없습니다";
+  const remainingExamples = remainingPresenterPreparationExamples(placeholder, draft);
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
@@ -137,6 +138,7 @@ function renderPresenterServiceInputRail(service) {
       </header>
       <section class="svc-presenter-preparation-input">
         <textarea class="svc-presenter-preparation-text" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="5" placeholder="${escapeAttr(placeholder)}" aria-label="예배 준비 입력">${escapeHtml(draft)}</textarea>
+        <div class="svc-presenter-preparation-examples" data-presenter-preparation-examples aria-label="남은 입력 예시" ${remainingExamples ? "" : "hidden"}>${escapeHtml(remainingExamples)}</div>
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}" ${applying ? "disabled" : ""}>
             <i data-lucide="wand-sparkles"></i>

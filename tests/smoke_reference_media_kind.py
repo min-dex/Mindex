@@ -35,6 +35,17 @@ def main():
                     if(source.endsWith('.MP4'))check(host.querySelector('.svc-reference-media-kind')?.textContent==='영상','missing detected label');
                   }
                   state.services=[service];state.selectedServiceId=service.id;state.serviceItems={[service.id]:[item]};
+                  const context={item,index:0,service};
+                  host.className='svc-board-subgroup-controls';host.style.width='600px';
+                  host.innerHTML=renderPresenterBoardItemActions(service.id,context)
+                    +presenterServiceInputControls(item,0,service,{headerActions:true});
+                  const actions=host.querySelector('[data-service-item-actions]');
+                  check(actions.lastElementChild.matches('[data-service-item-commit]'),'save not last');
+                  check(host.querySelectorAll('input[type=file]').length===1,'duplicate file chooser');
+                  check(actions.querySelector('input[type=file]'),'file chooser not in header');
+                  for(const node of actions.querySelectorAll('.svc-reference-media-upload,.svc-board-subgroup-commit'))
+                    check(node.getBoundingClientRect().height===30,'action height inconsistent');
+                  check(host.querySelector('.svc-reference-media-title').getBoundingClientRect().width<=360.5,'title stretched');
                   refreshPresenterForService=()=>{};updateSaveState=()=>{};markServiceElementDirty=()=>{};
                   const field=document.createElement('input');
                   field.dataset.serviceId=service.id;field.dataset.serviceItemIndex='0';

@@ -26155,7 +26155,7 @@ function renderPresenterRoleOptions(selectedRole = "") {
 function renderServicePraiseLinkControl(item, index) {
   if (!isSongServiceLabel(item?.label) && !isSpecialSongServiceItem(item)) return "";
   if (item?.song_id) {
-    return `<button class="svc-item-link svc-item-link--linked" type="button" data-open-song="${escapeAttr(item.song_id)}" aria-label="찬양 DB에서 열기">찬양 DB</button>`;
+    return `<button class="svc-item-link svc-item-link--linked" type="button" data-open-song="${escapeAttr(item.song_id)}" aria-label="찬양 DB에서 열기" title="찬양 DB에서 열기">DB</button>`;
   }
   if (isOneOffSpecialPraiseItem(item, selectedServiceForEditor())) {
     return `<span class="svc-item-link svc-item-link--manual" aria-label="일회성 특송">일회성</span>`;
@@ -26185,7 +26185,7 @@ function renderServiceScriptureLinkControl(item) {
     : null;
   const reference = normalizeServiceItemReferenceSpacing(payload?.reference || item?.raw_title);
   if (!parseBibleReference(reference)) return "";
-  return `<button class="svc-item-link" type="button" data-open-scripture-reference="${escapeAttr(reference)}" aria-label="말씀에서 열기">말씀</button>`;
+  return `<button class="svc-item-link svc-item-link--linked" type="button" data-open-scripture-reference="${escapeAttr(reference)}" aria-label="말씀 DB에서 열기" title="말씀 DB에서 열기">DB</button>`;
 }
 
 function renderServiceDashboard(options = {}) {
@@ -27660,7 +27660,7 @@ function presenterServiceInputIsStatic(item = {}, memo = parseServiceItemMemo(it
     || sectionKey === "closing_visual");
 }
 
-function presenterServiceInputControls(item, index, service) {
+function presenterServiceInputControls(item, index, service, options = {}) {
   const context = presenterServiceInputItem(item, service);
   if (!context) return "";
   const { mode, model, memo } = context;
@@ -27680,7 +27680,7 @@ function presenterServiceInputControls(item, index, service) {
     return renderPresenterServiceScriptureInput(item, index, memo);
   }
   if (mode === "asset") {
-    return renderPresenterServiceAssetInput(item, index, memo);
+    return renderPresenterServiceAssetInput(item, index, memo, options);
   }
   return renderPresenterServiceTextInputs(item, index, model, memo);
 }
@@ -27919,7 +27919,19 @@ function renderPresenterMonthlyCorporatePrayerInputs(item, index, memo, serviceI
     </div>`;
 }
 
-function renderPresenterServiceAssetInput(item, index, memo) {
+function renderPresenterAssetUpload(item, index, memo, serviceId) {
+  const reference = isPresenterReferenceMediaItem(item, memo);
+  const asset = normalizeServiceAsset(memo.asset);
+  const kind = asset.kind || serviceMemoElementType(memo);
+  return `<label class="svc-reference-media-upload">
+    <input type="file" accept="${escapeAttr(reference ? PRESENTER_REFERENCE_MEDIA_ACCEPT : serviceAssetFileAcceptForKind(kind))}"
+      ${reference ? "data-presenter-reference-media-file" : "data-service-item-asset-file"}
+      data-service-id="${escapeAttr(serviceId)}" data-service-item-index="${index}" />
+    <i data-lucide="upload"></i><span>파일 선택</span>
+  </label>`;
+}
+
+function renderPresenterServiceAssetInput(item, index, memo, options = {}) {
   const asset = normalizeServiceAsset(memo.asset);
   const elementType = serviceMemoElementType(memo);
   const serviceId = item.service_id || state.selectedServiceId;
@@ -27938,12 +27950,9 @@ function renderPresenterServiceAssetInput(item, index, memo) {
               <option value="audio"${kind === "audio" ? " selected" : ""}>음원</option>
             </select>
           </label>` : detectedKind ? `<span class="svc-reference-media-kind">${escapeHtml(serviceAssetFileKindLabel(kind))}</span>` : ""}
-          <label class="svc-reference-media-upload">
-            <input type="file" accept="${PRESENTER_REFERENCE_MEDIA_ACCEPT}" data-presenter-reference-media-file data-service-id="${escapeAttr(serviceId)}" data-service-item-index="${index}" />
-            <i data-lucide="upload"></i><span>파일 선택</span>
-          </label>
+          ${options.headerActions ? "" : renderPresenterAssetUpload(item, index, memo, serviceId)}
         </div>
-        <label class="svc-presenter-input-field">
+        <label class="svc-presenter-input-field svc-reference-media-title">
           <span>제목</span>
           <input class="svc-presenter-input-control" type="text" data-service-item-field="asset_name" data-service-item-index="${index}" data-service-id="${escapeAttr(serviceId)}"
             value="${escapeAttr(asset.name)}" placeholder="참고 화면 제목" aria-label="참고 화면 제목" />
@@ -27958,12 +27967,9 @@ function renderPresenterServiceAssetInput(item, index, memo) {
   return `
     <div class="svc-reference-media-input svc-reference-media-input--asset svc-reference-media-input--${escapeAttr(assetKind)}">
       <div class="svc-reference-media-toolbar svc-reference-media-toolbar--asset">
-        <label class="svc-reference-media-upload">
-          <input type="file" accept="${escapeAttr(serviceAssetFileAcceptForKind(assetKind))}" data-service-item-asset-file data-service-id="${escapeAttr(serviceId)}" data-service-item-index="${index}" />
-          <i data-lucide="upload"></i><span>${escapeHtml(typeLabel)} 선택</span>
-        </label>
+        ${options.headerActions ? "" : renderPresenterAssetUpload(item, index, memo, serviceId)}
       </div>
-      <label class="svc-presenter-input-field">
+      <label class="svc-presenter-input-field svc-reference-media-title">
         <span>이름</span>
         <input class="svc-presenter-input-control" type="text" data-service-item-field="asset_name" data-service-item-index="${index}" data-service-id="${escapeAttr(serviceId)}"
           value="${escapeAttr(asset.name)}" placeholder="${escapeAttr(`${typeLabel} 이름`)}" aria-label="${escapeAttr(`${item.label || "파일"} 이름`)}" title="${escapeAttr(asset.name)}" />
@@ -29815,14 +29821,18 @@ function renderPresenterBoardSubgroupAudioControls(serviceId, subgroup = {}) {
 function renderPresenterBoardItemActions(serviceId, context) {
   const audioControls = serviceItemSupportsHeaderAudio(context.item)
     ? renderPresenterBoardItemAudioControls(serviceId, context) : "";
+  const inputContext = presenterServiceInputItem(context.item, context.service);
+  const fileControls = inputContext?.mode === "asset"
+    ? renderPresenterAssetUpload(context.item, context.index, inputContext.memo, serviceId) : "";
   return `
     <div class="svc-board-subgroup-flow" data-service-item-actions data-service-id="${escapeAttr(serviceId)}" data-service-item-index="${escapeAttr(String(context.index))}">
       <span class="svc-input-status" data-service-input-status role="status" aria-live="polite"></span>
+      ${fileControls}
+      ${audioControls}
       <button class="reference-new-btn svc-board-subgroup-commit" type="button" data-service-item-commit
         data-service-id="${escapeAttr(serviceId)}" data-service-item-index="${escapeAttr(String(context.index))}">
         <i data-lucide="check"></i><span>저장</span>
       </button>
-      ${audioControls}
     </div>`;
 }
 
@@ -29830,7 +29840,7 @@ function renderPresenterBoardSubgroupInputControls(serviceId, subgroup = {}, opt
   const contexts = presenterBoardSubgroupInputContexts(serviceId, subgroup);
   if (!contexts.length) return "";
   const blocks = contexts.map((context) => {
-    const controls = presenterServiceInputControls(context.item, context.index, context.service);
+    const controls = presenterServiceInputControls(context.item, context.index, context.service, { headerActions: true });
     if (!controls) return "";
     const label = contexts.length > 1 ? String(context.item.label || "항목").trim() : "";
     return `

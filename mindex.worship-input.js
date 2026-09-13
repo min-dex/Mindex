@@ -2,7 +2,7 @@
 // Loaded before app.js so these browser globals stay available to app orchestration.
 
 function remainingPresenterPreparationExamples(examples = "", draft = "") {
-  if (!String(draft).trim()) return "";
+  if (!String(draft)) return "";
   const rows = String(examples).split(/\r?\n/).filter((line) => line.includes(":"));
   const keyFor = (label) => compactSearchValue(normalizePresenterPreparationInputLabel(label));
   const entryKey = (entry) => compactSearchValue(entry.rawLabel || entry.label) === "말씀"

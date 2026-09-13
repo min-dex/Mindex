@@ -17,6 +17,7 @@ def main():
                     '성경봉독: 요한복음 3:16','설교 제목: 은혜 / 홍길동 목사','설교 본문: 요한복음 3:16'].join('\\n');
                   const remaining=draft=>remainingPresenterPreparationExamples(examples,draft);
                   check(remaining('')==='','empty should use native placeholder');
+                  check(remaining('\\n  \\n')===examples,'blank draft loses examples');
                   check(!remaining('찬양1: 꽃들도').includes('찬양1:'),'completed entry');
                   check(remaining('찬양1: 꽃들도').includes('찬양2:'),'unfilled entry');
                   check(!remaining('대표기도:').includes('대표기도:'),'pending label');
@@ -53,6 +54,8 @@ def main():
                   state.presenterPreparationDrafts[service.id]='대표기도:';
                   const restored=document.createElement('div');restored.innerHTML=renderPresenterSidebarPreparationInput(service);
                   check(!restored.querySelector('[data-presenter-preparation-examples]').textContent.includes('대표기도:'),'rerender loses filtering');
+                  restored.innerHTML=renderPresenterServiceInputRail(service);
+                  check(restored.querySelector('[data-presenter-preparation-examples]').textContent===remaining('대표기도:'),'right rail missing remaining examples');
                   check(hints.getBoundingClientRect().right<=host.getBoundingClientRect().right,'narrow panel overflow');
                   return 'PASS remaining examples, partial input, aliases, reorder, deletion, composition, caret, escaping';
                 }"""), flush=True)
