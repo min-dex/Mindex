@@ -13469,10 +13469,6 @@ function defaultServicePraiseLeader(typeId, serviceOrDate = null) {
   const date = serviceDateString(serviceOrDate);
   if (!date) return "";
   if (appTypeId === "sunday-main") return isAllGenerationsWorshipDate(date) ? "이재희 청년" : "김석범 목사";
-  if (appTypeId === "wednesday") {
-    const offset = Math.floor((dateOnlyUtcTime(date) - dateOnlyUtcTime("2026-07-22")) / (7 * 86400000));
-    return offset < 0 || offset % 2 === 1 ? "김석범 목사" : "김광한 전도사";
-  }
   return "";
 }
 
