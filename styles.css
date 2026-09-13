@@ -3419,6 +3419,26 @@ body[data-module="praise"] .song-count-badge {
 .toast-region { position: fixed; right: var(--s4); bottom: var(--s4); z-index: 20; display: grid; gap: var(--s2); width: min(360px, calc(100vw - 32px)); }
 .toast { border: 0; border-radius: var(--r); background: var(--panel); box-shadow: var(--shadow-soft); }
 .toast { padding: var(--s3); color: var(--ink-2); }
+.toast { display: flex; align-items: flex-start; gap: 8px; }
+.toast[hidden] { display: none; }
+.toast-message { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.toast-close {
+  display: inline-flex;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r);
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+.toast-close:hover { background: var(--panel-2); }
+.toast-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toast-close svg { width: 14px; height: 14px; }
 .toast.error { border-color: color-mix(in srgb, var(--danger) 22%, var(--line-soft)); color: var(--danger); }
 
 .unsaved-dialog-backdrop {
@@ -6563,6 +6583,19 @@ body[data-theme="dark"] .service-week-empty:hover {
 .svc-presenter-preparation-text--sidebar:focus {
   background: var(--sidebar-hover-bg);
 }
+.svc-presenter-preparation-examples {
+  min-width: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--ink-4);
+  font-size: var(--ui-meta-size);
+  font-weight: var(--ui-meta-weight);
+  line-height: 1.45;
+  padding: 4px 10px;
+}
+.svc-presenter-preparation-examples[hidden] { display: none; }
 .svc-presenter-preparation-apply--sidebar {
   justify-self: start;
   height: 28px;
@@ -8597,7 +8630,7 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
   outline: none;
 }
 .svc-slide-citation-reference-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.svc-slide-hidden-badge {
+.svc-board-subgroup-head .svc-element-hidden-badge {
   display: inline-flex;
   align-items: center;
   min-height: 16px;

@@ -9059,6 +9059,12 @@ function handleDetailInput(event) {
   if (preparationInput) {
     const serviceId = preparationInput.dataset.serviceId || state.selectedServiceId;
     if (serviceId) state.presenterPreparationDrafts[serviceId] = preparationInput.value;
+    const examples = preparationInput.parentElement.querySelector("[data-presenter-preparation-examples]");
+    if (examples) {
+      const remaining = remainingPresenterPreparationExamples(preparationInput.placeholder, preparationInput.value);
+      examples.textContent = remaining;
+      examples.hidden = !remaining;
+    }
     event.stopPropagation();
     return;
   }
@@ -19530,27 +19536,70 @@ function escapeXml(value) {
     .replaceAll("'", "&apos;");
 }
 
+function toastDisplayDuration(message, type = "info") {
+  const minimum = type === "error" ? 8000 : /저장|반영/.test(String(message)) ? 6000 : 4000;
+  return Math.max(minimum, Math.min(12000, String(message).length * 75));
+}
+
+function showQueuedToasts() {
+  if (!refs.toastRegion) return;
+  let visible = [...refs.toastRegion.children].filter((toast) => !toast.hidden).length;
+  for (const toast of refs.toastRegion.children) {
+    if (visible >= 3) break;
+    if (!toast.hidden) continue;
+    toast.hidden = false;
+    toast.scheduleRemoval?.();
+    visible += 1;
+  }
+}
+
+function dismissToast(toast) {
+  window.clearTimeout(toast.removeTimer);
+  toast.remove();
+  showQueuedToasts();
+}
+
 function showToast(message, type = "info") {
   if (!message || !refs.toastRegion) return;
   const toastKey = `${type}:${message}`;
   const existingToast = Array.from(refs.toastRegion.children).find((toast) => toast.dataset.toastKey === toastKey);
   if (existingToast) {
-    refs.toastRegion.appendChild(existingToast);
-    window.clearTimeout(existingToast.removeTimer);
-    existingToast.removeTimer = window.setTimeout(() => existingToast.remove(), 3200);
+    existingToast.scheduleRemoval();
     return;
-  }
-
-  while (refs.toastRegion.children.length >= 3) {
-    refs.toastRegion.firstElementChild?.remove();
   }
 
   const toast = document.createElement("div");
   toast.className = `toast ${type === "error" ? "error" : ""}`;
   toast.dataset.toastKey = toastKey;
-  toast.textContent = message;
+  toast.hidden = true;
+  const text = document.createElement("span");
+  text.className = "toast-message";
+  text.textContent = message;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "toast-close";
+  close.setAttribute("aria-label", "알림 닫기");
+  close.title = "알림 닫기";
+  close.innerHTML = '<i data-lucide="x"></i>';
+  close.addEventListener("click", () => dismissToast(toast));
+  toast.append(text, close);
+  let hovered = false;
+  toast.scheduleRemoval = () => {
+    window.clearTimeout(toast.removeTimer);
+    if (toast.hidden || hovered || toast.contains(document.activeElement)) return;
+    toast.removeTimer = window.setTimeout(() => dismissToast(toast), toastDisplayDuration(message, type));
+  };
+  toast.addEventListener("mouseenter", () => { hovered = true; window.clearTimeout(toast.removeTimer); });
+  toast.addEventListener("mouseleave", () => { hovered = false; toast.scheduleRemoval(); });
+  toast.addEventListener("focusin", () => window.clearTimeout(toast.removeTimer));
+  toast.addEventListener("focusout", (event) => {
+    if (!toast.contains(event.relatedTarget)) queueMicrotask(() => {
+      if (toast.isConnected) toast.scheduleRemoval();
+    });
+  });
   refs.toastRegion.appendChild(toast);
-  toast.removeTimer = window.setTimeout(() => toast.remove(), 3200);
+  refreshIcons(toast);
+  showQueuedToasts();
 }
 
 function refreshIcons(root = document) {
@@ -23144,6 +23193,7 @@ function renderPresenterSidebarPreparationInput(service) {
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const examples = presenterPreparationPlaceholderForService(service);
   const placeholder = examples || "입력할 항목이 없습니다";
+  const remainingExamples = remainingPresenterPreparationExamples(placeholder, draft);
   return `
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
@@ -23151,6 +23201,7 @@ function renderPresenterSidebarPreparationInput(service) {
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
         <textarea class="svc-presenter-preparation-text svc-presenter-preparation-text--sidebar" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="4" placeholder="${escapeAttr(placeholder)}" aria-label="예배 입력 붙여넣기">${escapeHtml(draft)}</textarea>
+        <div class="svc-presenter-preparation-examples" data-presenter-preparation-examples aria-label="남은 입력 예시" ${remainingExamples ? "" : "hidden"}>${escapeHtml(remainingExamples)}</div>
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply svc-presenter-preparation-apply--sidebar" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}" ${applying ? "disabled" : ""}>
             <i data-lucide="wand-sparkles"></i>
@@ -29650,7 +29701,7 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
     ? display.title
     : subgroup.title || subgroup.name;
   const firstSlide = subgroup.slides[0]?.slide || slides[0]?.slide;
-  const visibleTitle = isPresenterPreparationSlide(firstSlide)
+  const visibleTitle = firstSlide && isPresenterPreparationSlide(firstSlide)
     ? ""
     : presenterVisibleTitle(rawLabel, rawTitle);
   const visibleLabel = rawLabel;
@@ -29663,7 +29714,10 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
   const context = presenterBoardSubgroupItemContext(serviceId, subgroup);
   const itemIndexAttr = context ? ` data-service-item-index="${escapeAttr(String(context.index))}"` : "";
   const elementIdAttr = context?.item?.id ? ` data-service-element-id="${escapeAttr(context.item.id)}"` : "";
-  const showHead = Boolean(options.showHead && (visibleLabel || visibleTitle || warnings.length || headerActions));
+  const hidden = context?.item
+    ? Boolean(parseServiceItemMemo(context.item.memo).hiddenInPresentation)
+    : subgroup.slides.length > 0 && subgroup.slides.every(({ slide }) => presenterSlideIsHidden(slide));
+  const showHead = hidden || Boolean(options.showHead && (visibleLabel || visibleTitle || warnings.length || headerActions));
   return `
     <div class="svc-board-subgroup${active ? " active" : ""}${showHead ? "" : " collapsed-head"}"${itemIndexAttr}${elementIdAttr}>
       ${showHead ? `
@@ -29677,6 +29731,7 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
             title="${escapeAttr(interactionLabel)}">
             ${visibleLabel ? `<span>${escapeHtml(visibleLabel)}</span>` : ""}
             ${visibleTitle ? `<strong>${escapeHtml(visibleTitle)}</strong>` : ""}
+            ${hidden ? `<span class="svc-element-hidden-badge">숨김</span>` : ""}
             ${renderPresenterWarnings(warnings)}
           </button>
           ${headerActions}
@@ -30020,7 +30075,6 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
       <span class="svc-slide-thumb-meta">
         <span class="svc-slide-thumb-no" aria-hidden="true">${slideNumber}</span>
         ${citationReferenceInput}
-        ${hidden ? `<span class="svc-slide-hidden-badge">숨김</span>` : ""}
         ${formBadge || scriptureReferenceBadge}
       </span>
       <button class="svc-slide-thumb${active ? " active" : ""}${selected ? " selected" : ""}" type="button"

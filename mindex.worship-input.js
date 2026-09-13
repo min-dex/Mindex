@@ -1,6 +1,39 @@
 // Worship preparation input parsing and song-resolution helpers.
 // Loaded before app.js so these browser globals stay available to app orchestration.
 
+function remainingPresenterPreparationExamples(examples = "", draft = "") {
+  if (!String(draft).trim()) return "";
+  const rows = String(examples).split(/\r?\n/).filter((line) => line.includes(":"));
+  const keyFor = (label) => compactSearchValue(normalizePresenterPreparationInputLabel(label));
+  const entryKey = (entry) => compactSearchValue(entry.rawLabel || entry.label) === "말씀"
+    && String(entry.content || "").trim() && !presenterPreparationContentLooksScriptureReference(entry.content)
+    ? "설교제목" : keyFor(entry.label);
+  const keys = rows.map((line) => keyFor(line.slice(0, line.indexOf(":"))));
+  const covered = new Set();
+  const labelOnlyLines = new Set();
+  String(draft).split(/\r\n?|\n/).forEach((line, index) => {
+    const text = normalizePresenterPreparationLineText(line);
+    if (!text) return;
+    const pending = text.match(/^([^:：]+)[:：]\s*$/);
+    const parsed = parseKnownPresenterPreparationLine(text) || parsePresenterPreparationLine(text)
+      || (pending ? { label: pending[1] } : null);
+    if (parsed) {
+      covered.add(entryKey(parsed));
+      return;
+    }
+    const prefix = keyFor(text);
+    const matching = keys.filter((key) => key.startsWith(prefix));
+    if (!matching.length) return;
+    labelOnlyLines.add(index + 1);
+    if (keys.includes(prefix)) covered.add(prefix);
+    else if (matching.length === 1) covered.add(matching[0]);
+  });
+  for (const entry of parsePresenterPreparationInput(draft).entries) {
+    if (!labelOnlyLines.has(entry.line)) covered.add(entryKey(entry));
+  }
+  return rows.filter((_, index) => !covered.has(keys[index])).join("\n");
+}
+
 function presenterPreparationPlaceholderSongLabel(item) {
   const label = String(item?.label || "").replace(/\s+/g, "").trim();
   if (!label) return "";
