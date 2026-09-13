@@ -8876,7 +8876,8 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   --presenter-output-fg: #f8f8f3;
   --presenter-output-muted: rgba(248, 248, 243, .62);
 }
-.svc-slide-thumb-frame .svc-slide-mini-output:has(.svc-slide-mini-canvas) {
+.svc-slide-thumb-frame .svc-slide-mini-output:has(.svc-slide-mini-canvas),
+.svc-presenter-live-preview .svc-slide-mini-output:has(.svc-slide-mini-canvas) {
   background: transparent;
 }
 .svc-slide-mini-output .presenter-static-media-preview {
