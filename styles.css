@@ -9164,3 +9164,7 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-setlist-entry--status { background: transparent; border: 1px dashed var(--line); }
 .svc-setlist-week-status { display: grid; gap: 6px; padding: 20px 0; color: var(--ink-3); font-size: var(--ui-meta-size); }
 .svc-setlist-week-status strong { color: var(--ink-2); }
+/* Media health updates stay outside the mounted live preview. */
+.svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.svc-presenter-video-health:empty { display: none; }
+.svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; }

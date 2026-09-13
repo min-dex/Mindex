@@ -2928,6 +2928,9 @@ function handlePresenterControllerMessage(message = {}) {
     markPresenterOutputConnected(message.clientId, message.warmup);
     restorePresenterControllerSession();
     reconcilePresenterTransportReceipt(message);
+    state.presenter.videoHealth = message.videoHealth
+      ? { ...message.videoHealth, clientId: message.clientId, receivedAt: Date.now() } : null;
+    syncPresenterVideoHealthControl();
     return;
   }
   if (message.type === "presenter-output-disconnect") {
@@ -3314,6 +3317,7 @@ function initPresenterOutputCore() {
       clientId: outputClientId,
       transportVersion: 1,
       receivedMessageId: currentPayload?.messageId || "",
+      videoHealth: presenterOutputVideoHealth(currentPayload),
       warmup: presenterOutputWarmupSummary(),
     });
   };
@@ -3391,7 +3395,14 @@ function initPresenterOutputCore() {
       return false;
     }
   };
+  let lastVideoRetryId = "";
   const handleOutputSignalMessage = (message = {}) => {
+    if (message.type === "presenter-video-retry") {
+      if (message.clientId !== outputClientId || !message.requestId || message.requestId === lastVideoRetryId) return;
+      lastVideoRetryId = message.requestId;
+      retryPresenterOutputVideo(message, currentPayload).finally(postHeartbeat);
+      return;
+    }
     if (message?.type === "presenter-navigation") {
       if (message.payload?.snapshotId === currentPayload?.snapshotId) {
         applyPayload(mergePresenterNavigation(currentPayload, message.payload));
@@ -3427,6 +3438,10 @@ function initPresenterOutputCore() {
   if (channel) {
     renderFreshStoredState();
     channel.onmessage = (event) => {
+      if (event.data?.type === "presenter-video-retry") {
+        handleOutputSignalMessage(event.data);
+        return;
+      }
       if (event.data?.type === "presenter-navigation") {
         handleOutputSignalMessage(event.data);
         return;
@@ -4280,6 +4295,43 @@ function preparePresenterOutputFrameForPaint(host) {
   const videos = [...host.querySelectorAll("video.presenter-video")];
   const videoReady = videos.map(preparePresenterOutputVideoForPaint);
   return Promise.all([...imageReady, ...videoReady]);
+}
+
+function presenterOutputVideoHealth(payload) {
+  const layer = document.querySelector("#presenterOutputRoot .presenter-output-layer.is-active");
+  const video = layer?.querySelector("video.presenter-video");
+  if (!video || !payload?.serviceId) return null;
+  const status = video.error ? "error" : video.ended ? "ended"
+    : video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA ? "loading"
+      : video.paused ? "paused" : "playing";
+  return { serviceId: payload.serviceId, index: payload.index,
+    frameKey: layer.dataset.presenterFrameKey || "", status };
+}
+
+async function retryPresenterOutputVideo(request, payload) {
+  const health = presenterOutputVideoHealth(payload);
+  if (!health || health.serviceId !== request.serviceId || health.index !== request.index
+    || health.frameKey !== request.frameKey || !["error", "paused"].includes(health.status)) return;
+  const video = document.querySelector("#presenterOutputRoot .presenter-output-layer.is-active video.presenter-video");
+  // Reload only failed media. Resuming a paused video must preserve its position.
+  if (health.status === "error") video.load();
+  try { await video.play(); } catch {
+    // Autoplay policy may still require a gesture in the output window.
+    // Expose native controls only after this explicit recovery attempt.
+    if (video.isConnected) video.controls = true;
+  }
+}
+
+function requestPresenterVideoRetry(serviceId) {
+  const health = state.presenter.videoHealth;
+  if (!health || health.serviceId !== serviceId || serviceId !== state.presenter.serviceId
+    || health.index !== state.presenter.index || state.presenter.safetyBlank || state.presenter.liveScripture?.active
+    || Date.now() - health.receivedAt > 5000 || !["error", "paused"].includes(health.status)) return;
+  const message = { type: "presenter-video-retry", serviceId, index: health.index,
+    clientId: health.clientId, frameKey: health.frameKey,
+    requestId: `${Date.now()}:${Math.random()}` };
+  safeStorageSet("local", PRESENTER_SIGNAL_KEY, JSON.stringify(message));
+  try { state.presenter.channel?.postMessage(message); } catch { /* Storage delivers the request. */ }
 }
 
 function preparePresenterOutputVideoForPaint(video) {

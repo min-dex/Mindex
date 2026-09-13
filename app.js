@@ -28057,7 +28057,30 @@ function renderPresenterLiveStatusPanel(service, slides = [], options = {}) {
       <div class="svc-presenter-live-preview" aria-hidden="true">
         ${previewSlide ? renderPresenterSlideMiniPreview(previewSlide, service.id) : `<span class="svc-presenter-live-preview-empty"></span>`}
       </div>
+      <div class="svc-presenter-video-health" data-presenter-video-health data-service-id="${escapeAttr(service.id)}">${options.outputOpen ? renderPresenterVideoHealthControl(service.id) : ""}</div>
     </aside>`;
+}
+
+function renderPresenterVideoHealthControl(serviceId) {
+  const health = state.presenter.videoHealth;
+  if (!health || health.serviceId !== serviceId || serviceId !== state.presenter.serviceId
+    || health.index !== state.presenter.index || state.presenter.safetyBlank || state.presenter.liveScripture?.active
+    || Date.now() - health.receivedAt > 5000) return "";
+  const labels = { loading: "영상 불러오는 중", error: "영상 재생 실패", paused: "영상 일시정지 · 송출 창 확인" };
+  const label = labels[health.status];
+  if (!label) return "";
+  const retry = ["error", "paused"].includes(health.status);
+  return `<span role="status">${label}</span>${retry ? `<button type="button" class="icon-btn" data-presenter-action="retry-video" data-service-id="${escapeAttr(serviceId)}" aria-label="영상 재생 재시도" title="영상 재생 재시도"><i data-lucide="rotate-cw"></i></button>` : ""}`;
+}
+
+function syncPresenterVideoHealthControl() {
+  document.querySelectorAll("[data-presenter-video-health]").forEach((host) => {
+    const html = renderPresenterVideoHealthControl(host.dataset.serviceId);
+    if (host.dataset.healthMarkup === html) return;
+    host.dataset.healthMarkup = html;
+    host.innerHTML = html;
+    refreshIcons(host);
+  });
 }
 
 function presenterLiveStatusPreviewSlide(slides = [], safeIndex = 0, options = {}) {
@@ -30177,6 +30200,10 @@ function commitPresenterJumpDraft(serviceId = state.presenter.serviceId) {
 }
 
 function runPresenterAction(action, serviceId = state.selectedServiceId, options = {}) {
+  if (action === "retry-video") {
+    requestPresenterVideoRetry(serviceId);
+    return;
+  }
   if (!["open", "stop", "next", "prev", "first", "last", "jump", "prepare-next-service"].includes(action)) return;
   if (action === "stop") {
     stopPresenterOutput(serviceId || state.presenter.serviceId);
