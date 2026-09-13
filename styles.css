@@ -847,7 +847,7 @@ body[data-module="presenter"] #presenterRightSidebarBtn {
   display: none;
 }
 body[data-module="presenter"] .right-sidebar {
-  padding-top: 22px;
+  padding-top: 10px;
 }
 body[data-module="presenter"] #newSongBtn {
   display: none;
