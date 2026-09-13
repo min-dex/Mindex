@@ -6652,8 +6652,20 @@ textarea.svc-presenter-input-control--multiline {
 }
 .svc-presenter-input-field--lyrics textarea.svc-presenter-input-control {
   min-height: 180px;
+  max-height: 65vh;
   line-height: 1.55;
   padding: 10px 12px;
+}
+.svc-presenter-input-field--lyrics .svc-presenter-lyrics-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.svc-presenter-input-field--lyrics.is-collapsed textarea.svc-presenter-input-control {
+  min-height: 0;
+  height: 6.65em;
+  overflow-y: auto;
 }
 .svc-presenter-input-hint {
   color: var(--ink-4);

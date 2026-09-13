@@ -8692,6 +8692,26 @@ function handleDetailClick(event) {
 }
 
 function handlePresenterDetailClick(event) {
+  const lyricsToggle = event.target.closest("[data-presenter-lyrics-toggle]");
+  if (lyricsToggle) {
+    event.preventDefault();
+    const field = lyricsToggle.closest(".svc-presenter-input-field--lyrics");
+    const textarea = field?.querySelector("textarea");
+    if (!textarea) return true;
+    const expanded = lyricsToggle.getAttribute("aria-expanded") !== "true";
+    const key = lyricsToggle.dataset.presenterLyricsToggle;
+    if (expanded) expandedPresenterLyricsFields.add(key);
+    else expandedPresenterLyricsFields.delete(key);
+    field.classList.toggle("is-collapsed", !expanded);
+    textarea.rows = expanded ? Math.max(10, textarea.value.split("\n").length) : 3;
+    textarea.style.height = "";
+    lyricsToggle.setAttribute("aria-expanded", String(expanded));
+    lyricsToggle.title = expanded ? "가사 접기" : "가사 펼치기";
+    lyricsToggle.setAttribute("aria-label", lyricsToggle.title);
+    lyricsToggle.innerHTML = `<i data-lucide="${expanded ? "chevron-up" : "chevron-down"}"></i>`;
+    refreshIcons(lyricsToggle);
+    return true;
+  }
   const rightSidebarToggle = event.target.closest("[data-presenter-right-sidebar-toggle]");
   if (rightSidebarToggle) {
     togglePresenterRightSidebar();
@@ -27980,6 +28000,20 @@ function renderPresenterStaticAssetPreview(asset, icon, statusLabel) {
     </div>`;
 }
 
+const expandedPresenterLyricsFields = new Set();
+
+function renderPresenterManualLyricsField(item, index, serviceId = "") {
+  const key = JSON.stringify([serviceId, item.id || index]);
+  const expanded = expandedPresenterLyricsFields.has(key);
+  const lyrics = formatServiceManualPraiseLyricsInput(item.memo);
+  const title = expanded ? "가사 접기" : "가사 펼치기";
+  return `<div class="svc-presenter-input-field svc-presenter-input-field--lyrics${expanded ? "" : " is-collapsed"}">
+    <span class="svc-presenter-lyrics-heading">가사<button class="icon-btn" type="button" data-presenter-lyrics-toggle="${escapeAttr(key)}" aria-expanded="${expanded}" aria-label="${title}" title="${title}"><i data-lucide="${expanded ? "chevron-up" : "chevron-down"}"></i></button></span>
+    <textarea class="svc-presenter-input-control svc-presenter-input-control--multiline" data-service-item-field="manual_praise_lyrics" data-service-item-index="${index}"
+      rows="${expanded ? Math.max(10, lyrics.split("\n").length) : 3}" placeholder="가사를 붙여넣기&#10;&#10;빈 줄은 다음 슬라이드로 나뉩니다." onkeydown="handleDetailKeydown(event)" aria-label="${escapeAttr(`${item.label || "특송"} 가사`)}">${escapeHtml(lyrics)}</textarea>
+  </div>`;
+}
+
 function renderPresenterServiceTextInputs(item, index, model, memo) {
   const { needsTitle, needsAssignee } = presenterServiceTextInputSpec(item, model, memo);
   const manualPraise = servicePraiseInputMode(item, memo, model?.service) === "manual_praise";
@@ -28005,12 +28039,7 @@ function renderPresenterServiceTextInputs(item, index, model, memo) {
           <input class="svc-presenter-input-control" type="text" data-service-item-field="raw_title" data-service-item-index="${index}"
             value="${escapeAttr(item.raw_title || "")}" placeholder="${escapeAttr(titlePlaceholder)}" onkeydown="handleDetailKeydown(event)" ${specialSong ? `autocomplete="off" spellcheck="false"` : ""} aria-label="${escapeAttr(`${item.label || "항목"} ${titleLabel}`)}" />`}
       </label>` : ""}
-    ${manualPraise ? `
-      <label class="svc-presenter-input-field svc-presenter-input-field--lyrics">
-        <span>가사</span>
-        <textarea class="svc-presenter-input-control svc-presenter-input-control--multiline" data-service-item-field="manual_praise_lyrics" data-service-item-index="${index}"
-          rows="10" placeholder="가사를 붙여넣기&#10;&#10;빈 줄은 다음 슬라이드로 나뉩니다." onkeydown="handleDetailKeydown(event)" aria-label="${escapeAttr(`${item.label || "특송"} 가사`)}">${escapeHtml(formatServiceManualPraiseLyricsInput(item.memo))}</textarea>
-      </label>` : ""}
+    ${manualPraise ? renderPresenterManualLyricsField(item, index, model?.service?.id || state.presenter.serviceId) : ""}
     ${needsAssignee ? `
       <label class="svc-presenter-input-field">
         <span>${escapeHtml(assigneeLabel)}</span>
