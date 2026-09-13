@@ -9267,8 +9267,8 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 
 /* Setlist leader edits stay inside the card metadata row. */
 .svc-setlist-leader-form { display: flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; max-width: 100%; }
-.svc-setlist-leader-form input { width: 130px; min-width: 0; max-width: 100%; padding: 3px 0; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: var(--ink-2); font: inherit; box-shadow: none; text-align: right; }
-.svc-setlist-leader-form input:focus { border-color: var(--ink-5); outline: none; box-shadow: none; background: transparent; }
+.svc-setlist-leader-form input { width: 130px; min-width: 0; max-width: 100%; padding: 3px 0; border: 0; border-radius: 0; background: transparent; color: var(--ink-2); font: inherit; box-shadow: none; text-align: right; }
+.svc-setlist-leader-form input:focus { border: 0; outline: none; box-shadow: none; background: transparent; }
 
 
 
