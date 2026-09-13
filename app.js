@@ -28202,10 +28202,10 @@ function renderPresenterVideoHealthControl(serviceId) {
   if (!health || health.serviceId !== serviceId || serviceId !== state.presenter.serviceId
     || health.index !== state.presenter.index || state.presenter.safetyBlank || state.presenter.liveScripture?.active
     || Date.now() - health.receivedAt > 5000) return "";
-  const labels = { loading: "영상 불러오는 중", error: "영상 재생 실패", paused: "영상 일시정지 · 송출 창 확인" };
+  const labels = { loading: "영상 불러오는 중", error: "영상 재생 실패", paused: "영상 일시정지 · 송출 창 확인", blocked: "자동재생 차단" };
   const label = labels[health.status];
   if (!label) return "";
-  const retry = ["error", "paused"].includes(health.status);
+  const retry = ["error", "paused", "blocked"].includes(health.status);
   return `<span role="status">${label}</span>${retry ? `<button type="button" class="icon-btn" data-presenter-action="retry-video" data-service-id="${escapeAttr(serviceId)}" aria-label="영상 재생 재시도" title="영상 재생 재시도"><i data-lucide="rotate-cw"></i></button>` : ""}`;
 }
 

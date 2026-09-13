@@ -3489,7 +3489,16 @@ function initPresenterOutputCore() {
       // Ignore malformed cross-window presenter signals.
     }
   });
+  let videoRecoverySpaceHeld = false;
   window.addEventListener("keydown", (event) => {
+    if (event.key === " ") {
+      if (!event.repeat) videoRecoverySpaceHeld = false;
+      if (videoRecoverySpaceHeld || handlePresenterVideoRecoveryKey(event)) {
+        event.preventDefault();
+        videoRecoverySpaceHeld = true;
+        return;
+      }
+    }
     if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === "f") {
       event.preventDefault();
       return;
@@ -3786,6 +3795,8 @@ function commitPresenterOutputFrame(root, payload, slide, frameState, token, opt
       fitPresenterSongTitleText(nextLayer);
       fitPresenterSermonTitleText(nextLayer);
       bindPresenterOutputAutoAdvance(root, payload, slide, options, token);
+      const video = nextLayer.querySelector("video.presenter-video");
+      if (video?.autoplay && video.paused) void requestPresenterVideoPlayback(video);
     });
     warmPresenterOutputImages(payload, slide || null);
   };
@@ -4298,6 +4309,7 @@ function presenterOutputVideoHealth(payload) {
   const video = layer?.querySelector("video.presenter-video");
   if (!video || !payload?.serviceId) return null;
   const status = video.error ? "error" : video.ended ? "ended"
+    : video.paused && video.dataset.autoplayBlocked === "true" ? "blocked"
     : video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA ? "loading"
       : video.paused ? "paused" : "playing";
   return { serviceId: payload.serviceId, index: payload.index,
@@ -4307,22 +4319,42 @@ function presenterOutputVideoHealth(payload) {
 async function retryPresenterOutputVideo(request, payload) {
   const health = presenterOutputVideoHealth(payload);
   if (!health || health.serviceId !== request.serviceId || health.index !== request.index
-    || health.frameKey !== request.frameKey || !["error", "paused"].includes(health.status)) return;
+    || health.frameKey !== request.frameKey || !["error", "paused", "blocked"].includes(health.status)) return;
   const video = document.querySelector("#presenterOutputRoot .presenter-output-layer.is-active video.presenter-video");
   // Reload only failed media. Resuming a paused video must preserve its position.
   if (health.status === "error") video.load();
-  try { await video.play(); } catch {
-    // Autoplay policy may still require a gesture in the output window.
-    // Expose native controls only after this explicit recovery attempt.
-    if (video.isConnected) video.controls = true;
+  await requestPresenterVideoPlayback(video);
+}
+
+async function requestPresenterVideoPlayback(video) {
+  try { await video.play(); } catch (error) {
+    if (!video.isConnected || error?.name !== "NotAllowedError") return;
+    if (video.dataset.autoplayBlocked === "true") return;
+    video.dataset.autoplayBlocked = "true";
+    video.addEventListener("playing", () => {
+      delete video.dataset.autoplayBlocked;
+    }, { once: true });
   }
+}
+
+function handlePresenterVideoRecoveryKey(event) {
+  if (event.key !== " " || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey
+    || event.target?.closest?.("input, textarea, select, button, [contenteditable='true']")) return false;
+  const video = document.querySelector("#presenterOutputRoot .presenter-output-layer.is-active video.presenter-video");
+  if (!video || video.ended || (!video.error && !video.paused && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA)) return false;
+  // Call play in this key event, not through the controller's asynchronous channel.
+  if (!event.repeat) {
+    if (video.error) video.load();
+    void requestPresenterVideoPlayback(video);
+  }
+  return true;
 }
 
 function requestPresenterVideoRetry(serviceId) {
   const health = state.presenter.videoHealth;
   if (!health || health.serviceId !== serviceId || serviceId !== state.presenter.serviceId
     || health.index !== state.presenter.index || state.presenter.safetyBlank || state.presenter.liveScripture?.active
-    || Date.now() - health.receivedAt > 5000 || !["error", "paused"].includes(health.status)) return;
+    || Date.now() - health.receivedAt > 5000 || !["error", "paused", "blocked"].includes(health.status)) return;
   const message = { type: "presenter-video-retry", serviceId, index: health.index,
     clientId: health.clientId, frameKey: health.frameKey,
     requestId: `${Date.now()}:${Math.random()}` };

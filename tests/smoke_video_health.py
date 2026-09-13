@@ -77,9 +77,9 @@ def run(browser, url, engine):
       const payload={serviceId:'video-health-test',index:0};
       await retryPresenterOutputVideo(presenterOutputVideoHealth(payload),payload);
       video.play=play;
-      if(!video.controls)throw Error('missing native recovery controls');
+      if(video.controls || video.dataset.autoplayBlocked!=='true')throw Error('blocked state or unexpected controls');
     }''')
-    controller.wait_for_function("state.presenter.videoHealth?.status === 'paused'")
+    controller.wait_for_function("state.presenter.videoHealth?.status === 'blocked'")
     # Status updates do not replace their subtree when the status is unchanged.
     for width in [240, 320]:
         controller.evaluate('''width => {
