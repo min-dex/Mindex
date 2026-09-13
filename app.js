@@ -32243,6 +32243,7 @@ function resolvePresenterServiceItemContentState(item = {}, memo = emptyServiceI
   const loading = (reason) => result("loading", false, reason);
   if (memo.hiddenInPresentation) return filled("hidden_in_presentation");
   if (presenterFixedTitleText(item)) return filled("fixed_title");
+  if (isConfessionPrayerServiceItem(item)) return filled("confession_title");
   if (elementType === "title_content" && labelKey === "환영") return filled("title_content");
   if (isLiturgicalBodyServiceItem(item)) {
     return liturgicalBodyText(item, memo, rawText) ? filled("liturgical_body") : missing("liturgical_body_empty");
