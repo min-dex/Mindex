@@ -31844,8 +31844,7 @@ function presenterSlideWithServiceAssigneeFallback(slide = {}, service = null) {
     };
   }
   const assignee = cleanPresenterAssignee(slide.assignee || slide.sectionAssignee);
-  const worshipLeader = presenterSlideUsesWorshipLeaderAssignee(slide) ? serviceWorshipLeaderLabel(service) : "";
-  const resolvedAssignee = assignee || worshipLeader;
+  const resolvedAssignee = assignee;
   if (resolvedAssignee === (slide.assignee || "") && resolvedAssignee === (slide.sectionAssignee || "")) return slide;
   return {
     ...slide,

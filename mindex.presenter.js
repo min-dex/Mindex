@@ -1955,12 +1955,8 @@ function presenterTitleAssigneePerson(item = {}, label = "", displayText = "", t
     || (typeof serviceItemDefaultAssignee === "function" ? serviceItemDefaultAssignee(item, service) : "");
   if (compact === "설교제목") return cleanList([presenterSermonContentTitle(text), assignee]).join("\n");
   if (assignee) return assignee;
-  const fallback = presenterTitleAssigneeUsesWorshipLeader(compact)
-    ? serviceWorshipLeaderLabel(service)
-    : "";
-  if (!text || compactSearchValue(text) === compactSearchValue(titleText)) return fallback;
+  if (!text || compactSearchValue(text) === compactSearchValue(titleText)) return "";
   if (["대표기도", "기도", "성경봉독", "특송", "봉헌기도", "축도"].includes(compact)) return text;
-  if (fallback) return fallback;
   return "";
 }
 
