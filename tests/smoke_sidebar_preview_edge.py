@@ -18,7 +18,7 @@ def main():
                   const host=document.createElement('div');
                   host.className='svc-presenter-side-panel';host.id='edge-fixture';
                   host.style.cssText='position:fixed;left:10.25px;top:10px;width:296px;z-index:99999';
-                  host.innerHTML='<div class="svc-presenter-live-preview"><span class="svc-slide-mini-output"><span class="svc-slide-mini-canvas presenter-output-root"><div style="position:absolute;inset:0;background:#000A32"></div></span></span></div>';
+                  host.innerHTML='<div class="svc-presenter-live-preview"><span class="svc-slide-mini-output"><span class="svc-slide-mini-canvas presenter-output-root">'+renderPresenterSlideFrame({type:'lyrics',elementType:'lyrics',layout:'lower_bar_text',text:'가장자리 확인',title:'찬양'}, {previewStage:true})+'</span></span></div>';
                   document.body.append(host);
                 }''')
                 for width in [220, 254.5, 296, 296.75, 360]:
@@ -27,7 +27,7 @@ def main():
                       applyPresenterPreviewScales(document.getElementById('edge-fixture'));
                     }''', width)
                     shot = Image.open(BytesIO(page.locator('#edge-fixture .svc-presenter-live-preview').screenshot())).convert('RGB')
-                    green = [(x,y) for x in range(shot.width) for y in range(8,shot.height-8)
+                    green = [(x,y) for x in range(shot.width) for y in range(int(shot.height*.87),shot.height-8)
                              if (lambda c: c[1]>c[0]+20 and c[1]>c[2]+20)(shot.getpixel((x,y)))]
                     assert not green, (dpr,width,green[:8])
                 print('PASS sidebar edge pixels DPR', dpr, flush=True)

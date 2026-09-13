@@ -6826,11 +6826,11 @@ textarea.svc-presenter-input-control--multiline {
   flex-direction: column;
   align-items: stretch;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
   border: 0;
   border-radius: 0;
   background: transparent;
-  padding: 0 12px 10px;
+  padding: 0 12px;
 }
 .svc-presenter-output-group {
   display: inline-flex;
@@ -7361,7 +7361,18 @@ textarea.svc-presenter-input-control--multiline {
   flex: 1 1 auto;
   justify-content: flex-start;
 }
-.svc-presenter-side-panel .svc-presenter-help { flex: 0 0 auto; }
+.svc-presenter-side-panel .svc-presenter-help {
+  flex: 0 0 auto;
+  height: 28px;
+}
+.svc-presenter-side-panel .svc-presenter-help > summary,
+.svc-presenter-side-panel .svc-presenter-utility-actions > .svc-presenter-action-group {
+  height: 28px;
+  min-height: 28px;
+  padding-block: 0;
+}
+.svc-presenter-side-panel .svc-presenter-help > summary { width: 28px; }
+.svc-presenter-side-panel .svc-presenter-input-rail { padding-top: 10px; }
 .svc-presenter-actions .icon-btn { width: var(--ui-icon-btn-inline); height: var(--ui-icon-btn-inline); }
 .svc-presenter-actions .icon-btn.is-active { background: transparent; color: var(--accent); }
 .svc-presenter-utility-actions {
@@ -8881,6 +8892,9 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-slide-thumb-frame .svc-slide-mini-output:has(.svc-slide-mini-canvas),
 .svc-presenter-live-preview .svc-slide-mini-output:has(.svc-slide-mini-canvas) {
   background: transparent;
+}
+.svc-presenter-live-preview .svc-slide-mini-canvas.presenter-output-root:not(.no-chromakey):has(.presenter-slide--lyrics, .presenter-slide--song-title, .presenter-slide--scripture, .presenter-slide--title-assignee) {
+  background: linear-gradient(to top, var(--presenter-output-bar-edge) 0 var(--presenter-output-bar-height), var(--presenter-chromakey) var(--presenter-output-bar-height) 100%);
 }
 .svc-slide-mini-output .presenter-static-media-preview {
   display: grid;
