@@ -28,7 +28,8 @@ def main():
                     root.classList.toggle('no-chromakey',clean);
                     for(const node of root.querySelectorAll('div')) {
                       const css=getComputedStyle(node);
-                      if(Math.abs(parseFloat(css.fontSize)-50)<0.01)check(css.fontWeight==='600',node.className+' '+css.fontWeight);
+                      const weight=node.classList.contains('presenter-citation-tab')?'700':'600';
+                      if(Math.abs(parseFloat(css.fontSize)-50)<0.01)check(css.fontWeight===weight,node.className+' '+css.fontWeight);
                     }
                     const fin=getComputedStyle(root.querySelector('.presenter-scripture-reading-fin'));
                     const text=getComputedStyle(root.querySelector('.presenter-scripture-reading-text'));
@@ -38,7 +39,7 @@ def main():
                     if(clean)check(getComputedStyle(root.querySelector('.presenter-title-content-body')).fontWeight==='700','100px weight changed');
                   }
                   root.innerHTML='<div class="presenter-scripture-reading" style="position:absolute;inset:100px;width:auto;height:auto"><div class="presenter-scripture-reading-version">개역개정</div><div class="presenter-scripture-reading-text" style="margin-top:80px">하나님이 세상을 이처럼 사랑하사</div><div class="presenter-scripture-reading-fin">Fin.</div></div>';
-                  return 'PASS all tested 50px roles = 600; Fin family/italic; 90px body and 100px support preserved';
+                  return 'PASS citation tab = 700, other tested 50px roles = 600; Fin family/italic; body and support preserved';
                 }'''))
                 page.screenshot(path=f'/private/tmp/mindex-meta-{engine}.png')
                 browser.close()

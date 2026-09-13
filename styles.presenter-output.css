@@ -704,7 +704,7 @@
   color: #000;
   font-family: var(--presenter-scripture-font);
   font-size: calc(50 * var(--presenter-stage-unit));
-  font-weight: var(--presenter-weight-meta);
+  font-weight: 700;
   line-height: 1;
   text-align: left;
   letter-spacing: 0;

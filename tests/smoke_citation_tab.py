@@ -29,10 +29,11 @@ def main():
                           const tab=root.querySelector('.presenter-citation-tab');
                           const body=root.querySelector('.presenter-slide-text');
                           const t=tab.getBoundingClientRect(), b=body.getBoundingClientRect();
-                          return {label:tab.textContent, text:body.textContent, width:t.width,
+                          return {label:tab.textContent, text:body.textContent, width:t.width, weight:getComputedStyle(tab).fontWeight,
                             overlap:t.bottom>b.top+1, fits:tab.scrollWidth<=tab.clientWidth+1 && body.scrollHeight<=body.clientHeight+1};
                         }''', {'book': book})
                         assert result['label'] == book+' 1:1', result
+                        assert result['weight'] == '700', result
                         assert result['text'] == '귀 있는 자는 들으라 하시니라', result
                         assert result['fits'] and not result['overlap'], result
                         widths.append(result['width'])
