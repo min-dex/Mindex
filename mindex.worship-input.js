@@ -382,6 +382,10 @@ function presenterPreparationTargetLabel(key = "", service = null, content = "")
 function findPresenterPreparationProjectedItem(service, label) {
   const labelKey = compactSearchValue(label);
   const items = servicePrepEditorItems(service.id);
+  const exact = items.filter((item) => compactSearchValue(item.label || "") === labelKey);
+  if (exact.length === 1) return exact[0];
+  const aliases = items.filter((item) => compactSearchValue(normalizePresenterPreparationInputLabel(item.label || "")) === labelKey);
+  if (aliases.length === 1) return aliases[0];
   if (labelKey === "기도" || labelKey === "대표기도") {
     return items.find((item) =>
       String(item._worshipSectionKey || "") === "prayer"
@@ -408,8 +412,6 @@ function findPresenterPreparationProjectedItem(service, label) {
         && ["설교", "설교제목"].includes(compactSearchValue(item.label || ""))
       ));
   }
-  const exact = items.find((item) => compactSearchValue(item.label || "") === labelKey);
-  if (exact) return exact;
   const dynamicPraise = createDynamicMainPraiseProjectedItem(service, label);
   if (dynamicPraise) return dynamicPraise;
   const numbered = labelKey.match(/^(.*?)(\d+)$/);

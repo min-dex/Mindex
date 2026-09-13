@@ -27120,16 +27120,21 @@ function presenterPreparationPlaceholderForService(service) {
     const context = presenterServiceInputItem(item, service);
     if (!context) continue;
     for (const line of presenterPreparationPlaceholderLinesForItem(item, service, { ...context, exampleIndex: lines.length })) {
-      addLine(line);
+      const sameLabelItems = items.filter((candidate) => compactSearchValue(candidate.label) === compactSearchValue(item.label));
+      const numberedLine = sameLabelItems.length > 1 && !/\d$/.test(compactSearchValue(item.label))
+        ? `${item.label}${sameLabelItems.indexOf(item) + 1}${line.slice(line.indexOf(":"))}`
+        : line;
+      addLine(numberedLine);
     }
   }
-  return lines.length ? lines.slice(0, 10).join("\n") : "입력할 항목이 없습니다";
+  return lines.length ? lines.join("\n") : "입력할 항목이 없습니다";
 }
 
 function presenterPreparationPlaceholderLinesForItem(item, service, context) {
   const label = compactSearchValue(item?.label || "");
   const sectionKey = String(item?._worshipSectionKey || "").trim();
   const mode = context.mode;
+  if (mode === "asset" || context.memo?.benedictionReplacement) return [];
   if (isMonthlyCorporatePrayerGroupItem(item, context.memo)) {
     const start = Number(String(item.label).match(/\d+/)?.[0]);
     return [start, start + 1].map((ordinal) => `공동기도${ordinal}: 교회를 위해 / 홍길동 집사`);
