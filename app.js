@@ -13377,6 +13377,9 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
   if (!payloads.length) return [];
   await loadCalendarData({ silent: true });
   if (!state.calendarLoaded) throw new Error("교회력 담당 정보를 불러오지 못해 예배를 생성하지 않았습니다. 다시 시도해 주세요.");
+  payloads = payloads.map((payload) => ({ ...payload,
+    worship_leader: payload.worship_leader || defaultServiceWorshipLeader(payload.service_type_id, payload.service_date),
+  }));
   const seeds = payloads.map((payload) => calendarAssigneeRowsForNewService(normalizeWorshipService(payload)));
   const sections = seeds.flatMap((seed) => seed.sections);
   const elements = seeds.flatMap((seed) => seed.elements);
@@ -13443,9 +13446,16 @@ function defaultServicePraiseLeader(typeId) {
   return String(typeId || "") === "friday" ? "이재희 청년" : "";
 }
 
-function defaultServiceWorshipLeader(typeId) {
+function defaultServiceWorshipLeader(typeId, serviceOrDate = null) {
   const appTypeId = worshipAppServiceTypeId(typeId);
   if (appTypeId === "monthly") return "김남영 목사";
+  const date = serviceDateString(serviceOrDate);
+  if (!date) return "";
+  if (appTypeId === "sunday-main") return isAllGenerationsWorshipDate(date) ? "이재희 청년" : "김석범 목사";
+  if (appTypeId === "wednesday") {
+    const offset = Math.floor((dateOnlyUtcTime(date) - dateOnlyUtcTime("2026-07-22")) / (7 * 86400000));
+    return offset < 0 || offset % 2 === 1 ? "김석범 목사" : "김광한 전도사";
+  }
   return "";
 }
 

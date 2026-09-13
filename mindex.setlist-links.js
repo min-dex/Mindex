@@ -91,7 +91,8 @@
       const id = "worship:" + service.id;
       sources.push({id, service_id: service.id, source_kind: "worship", source_name: service.title || "",
         service_date: service.service_date, service_type_id: service.service_type_id,
-        leader: service.praise_leader || service.worship_leader || "", aliases:service.service_alias || "", status: service.status});
+        leader: ["sun_3rd", "sunday-main", "wed", "wednesday"].includes(service.service_type_id)
+          ? service.worship_leader || service.praise_leader || "" : service.praise_leader || service.worship_leader || "", aliases:service.service_alias || "", status: service.status});
       rows.sort((a,b) => (Number(a.section.sort_order)||0)-(Number(b.section.sort_order)||0)
         || String(a.section.id).localeCompare(String(b.section.id))
         || (Number(a.element.sort_order)||0)-(Number(b.element.sort_order)||0)
@@ -127,14 +128,13 @@
         const specials = (second?.candidates || []).filter(row => /^(?:2부)?특송$/.test(label(row))).map(row => ({
           ...row, raw_label:"2부 특송", archive_display_label:"2부 특송", archive_source_service_type:"sun_2nd",
         }));
-        let at = rows.findIndex(row => label(row) === "3부특송");
-        if (at < 0) {
-          at = rows.findIndex(row => !/^찬양(?:\d+(?:[–-]\d+)?)?$/.test(label(row)));
-          if (at < 0) at = rows.length;
-        }
-        rows.splice(at, 0, ...specials);
+        rows.push(...specials);
       }
-      return {...entry, candidates:rows, missing:rows.length === 0,
+      const orderedRows = [
+        ...rows.filter(row => label(row) === "2부특송"),
+        ...rows.filter(row => label(row) !== "2부특송"),
+      ];
+      return {...entry, candidates:orderedRows, missing:rows.length === 0,
         needsReview:rows.filter(row => row.review_status === "needs_review").length};
     });
   }
