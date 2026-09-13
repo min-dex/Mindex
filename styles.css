@@ -7462,6 +7462,7 @@ textarea.svc-presenter-input-control--multiline {
   background: color-mix(in srgb, var(--panel) 54%, transparent);
   padding: 2px 4px;
 }
+.svc-presenter-action-group--scripture[hidden] { display: none; }
 .svc-music-player,
 .svc-live-scripture {
   display: inline-flex;

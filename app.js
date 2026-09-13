@@ -1029,7 +1029,7 @@ function restorePresenterViewportSnapshot(snapshot) {
 function presenterViewportRestoreTarget(root, snapshot = {}) {
   if (!root?.querySelector || !snapshot) return null;
   const serviceId = CSS.escape(String(snapshot.serviceId || ""));
-  if (snapshot.elementId) {
+  if (snapshot.elementId && !snapshot.slideId && !snapshot.elementKey) {
     const target = root.querySelector(`.svc-board-subgroup[data-service-element-id="${CSS.escape(String(snapshot.elementId))}"]`);
     if (target) return target;
   }
@@ -28167,10 +28167,9 @@ function renderPresenterControlsTop(service, slides, active, index) {
             <span class="svc-presenter-action-group svc-presenter-action-group--music">
               ${renderServiceMusicPlayer()}
             </span>
-            ${showLiveScriptureControl ? `
-              <span class="svc-presenter-action-group svc-presenter-action-group--scripture">
+              <span class="svc-presenter-action-group svc-presenter-action-group--scripture" ${showLiveScriptureControl ? "" : "hidden"}>
                 ${renderLiveScriptureControl(service.id)}
-              </span>` : ""}
+              </span>
             ${renderPresenterHelpControl()}
           </span>
         </div>
@@ -28713,7 +28712,7 @@ async function appendPresenterCitationReference(input) {
     }
     input.value = "";
     if (presenterControllerIsLive(serviceId)) {
-      runPresenterAction("jump", serviceId, { index: targetIndex });
+      runPresenterAction("jump", serviceId, { index: targetIndex, scroll: false });
     } else {
       setPresenterPendingSlide(serviceId, targetIndex, { render: false });
       renderPresenterControlState(serviceId);
@@ -28753,7 +28752,11 @@ function emptyLivePraiseState(draft = "") {
   };
 }
 
+let liveScriptureRequestSerial = 0;
+
 async function runLiveScriptureAction(action, serviceId = state.selectedServiceId) {
+  if (action !== "clear" && action !== "show") return;
+  const requestSerial = ++liveScriptureRequestSerial;
   if (action === "clear") {
     state.presenter.liveScripture = { reference: "", draft: state.presenter.liveScripture.draft || "", active: false, slide: null };
     publishPresenterState({ force: true });
@@ -28772,11 +28775,13 @@ async function runLiveScriptureAction(action, serviceId = state.selectedServiceI
 
   try {
     if (serviceId) preparePresenterService(serviceId);
+    state.presenter.liveScripture.draft = query;
     const slide = await buildLiveScriptureSlide(query);
+    if (requestSerial !== liveScriptureRequestSerial || (serviceId && state.presenter.serviceId !== serviceId)) return;
     if (!slide) return;
     state.presenter.liveScripture = {
       reference: slide.title,
-      draft: query,
+      draft: state.presenter.liveScripture.draft,
       active: true,
       slide,
     };
@@ -28785,6 +28790,7 @@ async function runLiveScriptureAction(action, serviceId = state.selectedServiceI
     publishPresenterState({ force: true });
     renderPresenterControlState(serviceId);
   } catch (error) {
+    if (requestSerial !== liveScriptureRequestSerial || (serviceId && state.presenter.serviceId !== serviceId)) return;
     showToast(error.message || "성구를 불러오지 못했습니다.", "error");
   }
 }
@@ -30333,7 +30339,7 @@ function commitPresenterJumpDraft(serviceId = state.presenter.serviceId) {
   if (!Number.isFinite(requested)) return;
   state.presenter.jumpDraft = "";
   const index = requested - 1;
-  runPresenterAction("jump", serviceId, { index });
+  runPresenterAction("jump", serviceId, { index, scroll: false });
   if (isValidPresenterIndex(index, state.presenter.slides.length)) {
     scrollPresenterBoardToIndex(serviceId, index, { force: true });
   }
@@ -30378,6 +30384,7 @@ function runPresenterAction(action, serviceId = state.selectedServiceId, options
       renderPresenterControlState(serviceId);
       return;
     }
+    liveScriptureRequestSerial += 1;
     state.presenter.liveScripture = {
       ...state.presenter.liveScripture,
       active: false,
@@ -30676,6 +30683,7 @@ function scrollPresenterOutlineToItem(serviceId, itemIndex) {
 }
 
 function stopPresenterOutput(serviceId = state.presenter.serviceId) {
+  liveScriptureRequestSerial += 1;
   const activeServiceId = serviceId || state.presenter.serviceId;
   const outputWindow = state.presenter.outputWindow;
   state.presenter.channel?.postMessage({ type: "presenter-output-close" });
@@ -31199,7 +31207,8 @@ function patchPresenterControlTree(current, next) {
   for (const attr of [...next.attributes]) {
     if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
   }
-  if (current instanceof HTMLInputElement && current.value !== next.value) current.value = next.value;
+  const editingLiveScripture = current === document.activeElement && current.matches?.("[data-live-scripture-input]");
+  if (current instanceof HTMLInputElement && !editingLiveScripture && current.value !== next.value) current.value = next.value;
   const previousChildren = [...current.childNodes];
   const nextChildren = [...next.childNodes];
   nextChildren.forEach((child, index) => {
