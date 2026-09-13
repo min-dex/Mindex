@@ -693,3 +693,8 @@ Small visual polish that does not alter behavior does not need an entry.
 ## Song Form Input Normalization
 - 송폼 입력·저장 시 알려진 영문 토큰을 `V`, `PC`, `C`, `B`, `Int`, `Tag`, `Tags`, `Coda`, `VL`로 정규화하고 구분자 앞뒤 공백을 제거한다. 예: `v1a - pc - c - 간주` → `V1A-PC-C-Int`.
 - 절 번호·부분 구분·반복 순서·빈 입력은 유지한다. 한글 표기도 `1절 → V1`, `후렴 → C`, `마지막 절 → VL`, `간주 → Int`로 통일한다. 알 수 없는 토큰은 임의로 바꾸거나 삭제하지 않는다.
+
+## Calendar Assignees at Service Creation
+- 자동·수동 예배 생성 시 교회력을 먼저 읽고 담당을 실제 `mindex_worship_elements.person`에 저장한다. 어린이부·청소년부·청년부 대표기도 및 청소년부 봉헌기도에 동일한 규칙을 적용한다.
+- 화면·주보는 교회력 담당을 실시간 대체값으로 사용하지 않는다. 생성 이후 교회력 변경이나 재조회로 저장된 담당(빈칸 포함)을 덮어쓰지 않는다.
+- 교회력 로딩 실패는 담당이 없는 날과 구분하여 생성을 중단한다. 담당 요소 저장 실패 시 이번에 만든 예배만 정리하고 오류를 알린다.

@@ -4140,12 +4140,8 @@ async function ensureUpcomingPublicWorshipServices(baseDate = new Date()) {
   const missingTargets = autoUpcomingPublicServiceTargets(baseDate).filter((target) => !worshipServiceExistsForTarget(target));
   if (!missingTargets.length) return [];
   const payloads = missingTargets.map(autoWorshipServicePayload);
-  const { data, error } = await state.client
-    .from("mindex_worship_services")
-    .insert(payloads)
-    .select("*");
-  if (error) throw error;
-  return (data || payloads).map(normalizeWorshipService);
+  const data = await insertWorshipServicesWithCalendarAssignees(payloads);
+  return data.map(normalizeWorshipService);
 }
 
 const WORSHIP_SERVICE_TYPE_ALIASES = {
@@ -13335,6 +13331,57 @@ function calendarAssigneeValueForService(service = null, fields = []) {
   return "";
 }
 
+function calendarAssigneeRowsForNewService(service) {
+  const scaffold = buildWorshipServiceScaffold(service.id, service.type_id, { service });
+  const elements = scaffold.elements.flatMap((element) => {
+    const label = compactSearchValue(element.source_ref?.label || "");
+    const person = label === "대표기도" || label === "기도"
+      ? defaultServicePrayerLeader(service)
+      : label === "봉헌기도" && worshipAppServiceTypeId(service.type_id) === "youth"
+        ? calendarAssigneeValueForService(service, ["youth_offering_prayer"]) : "";
+    if (!person) return [];
+    return [{ ...element, person: cleanServiceAssignee(person),
+      source_ref: { ...element.source_ref, placeholder: false } }];
+  });
+  const sectionIds = new Set(elements.map((element) => element.section_id));
+  return { sections: scaffold.sections.filter((section) => sectionIds.has(section.id)), elements };
+}
+
+async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
+  if (!payloads.length) return [];
+  await loadCalendarData({ silent: true });
+  if (!state.calendarLoaded) throw new Error("교회력 담당 정보를 불러오지 못해 예배를 생성하지 않았습니다. 다시 시도해 주세요.");
+  const seeds = payloads.map((payload) => calendarAssigneeRowsForNewService(normalizeWorshipService(payload)));
+  const sections = seeds.flatMap((seed) => seed.sections);
+  const elements = seeds.flatMap((seed) => seed.elements);
+  const { data, error } = await state.client.from("mindex_worship_services").insert(payloads).select("*");
+  if (error) throw error;
+  const created = data || payloads;
+  try {
+    if (sections.length) {
+      const result = await state.client.from("mindex_worship_sections").insert(sections);
+      if (result.error) throw result.error;
+    }
+    if (elements.length) {
+      const result = await state.client.from("mindex_worship_elements").insert(elements);
+      if (result.error) throw result.error;
+    }
+  } catch (error) {
+    // Roll back only service IDs just inserted by this creation attempt.
+    const rollback = await state.client.from("mindex_worship_services").delete().in("id", created.map((row) => row.id));
+    if (rollback.error) throw new Error(`${error.message} (생성 항목 정리 실패: ${rollback.error.message})`);
+    throw error;
+  }
+  state.worshipSections.push(...sections);
+  state.worshipElements.push(...elements);
+  const grouped = groupWorshipElements(sections, elements);
+  for (const row of created) {
+    state.serviceItems[row.id] = grouped[row.id] || [];
+    state.loadedWorshipServiceIds.add(row.id);
+  }
+  return created;
+}
+
 function defaultServicePrayerLeader(service = null) {
   const typeId = worshipAppServiceTypeId(service?.type_id);
   const fieldMap = {
@@ -13354,15 +13401,12 @@ function defaultServicePrayerLeader(service = null) {
 
 function defaultServiceOfferingPrayerLeaderForService(service = null) {
   const typeId = worshipAppServiceTypeId(service?.type_id);
-  const calendarValue = calendarAssigneeValueForService(service, {
-    youth: ["youth_offering_prayer"],
-  }[typeId] || []);
-  return calendarValue || defaultServiceOfferingPrayerLeader(typeId);
+  return defaultServiceOfferingPrayerLeader(typeId);
 }
 
 function serviceItemDefaultAssignee(item = {}, service = selectedServiceForEditor()) {
   const label = compactSearchValue(item?.label || "");
-  if (label === "대표기도" || label === "기도") return defaultServicePrayerLeader(service);
+  if (label === "대표기도" || label === "기도") return "";
   if (label === "설교" || label === "설교제목") return defaultServiceSermonLeader(service?.type_id, service);
   if (label === "봉헌기도") return defaultServiceOfferingPrayerLeaderForService(service);
   if (label === "축도") return defaultServiceBenedictionLeader(service?.type_id, service);
@@ -24966,8 +25010,6 @@ function serviceBulletinCalendarRow(service) {
 }
 
 function serviceBulletinPrayerLeader(service, rows = serviceBulletinOrderRows(service)) {
-  const calendarValue = String(serviceBulletinCalendarRow(service)?.young_adult_prayer || "").trim();
-  if (calendarValue) return calendarValue;
   const prayerRow = rows.find((row) => compactSearchValue(row.title).includes("대표기도"));
   return prayerRow?.entries.join(" · ") || "-";
 }
@@ -32571,16 +32613,11 @@ async function createService() {
   state.saving = true;
   updateSaveState();
   try {
-    const { data: serviceRow, error: serviceError } = await state.client
-      .from("mindex_worship_services")
-      .insert(servicePayload)
-      .select("*")
-      .single();
-    if (serviceError) throw serviceError;
+    const [serviceRow] = await insertWorshipServicesWithCalendarAssignees([servicePayload]);
 
     const service = normalizeWorshipService(serviceRow || servicePayload);
     state.services = sortServicesByDate([service, ...state.services]);
-    state.serviceItems[service.id] = projectWorshipServiceItemsFromTemplate(service, []);
+    state.serviceItems[service.id] = projectWorshipServiceItemsFromTemplate(service, state.serviceItems[service.id] || []);
     state.selectedServiceTypeId = service.type_id;
     state.selectedServiceId = service.id;
     state.selectedServiceItemIndex = 0;
