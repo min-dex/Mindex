@@ -56,9 +56,23 @@ def main():
                   check(sent.length===1,'duplicate batch allowed');resolve();await first;gate=null;
                   check(!presenterReferenceMediaBatchServices.has(id),'lock retained after success');
                   const html=renderPresenterAssetUpload(getServiceItems(id)[1],1,parseServiceItemMemo(getServiceItems(id)[1].memo),id);
-                  check(!html.includes('multiple'),'replacement became multiple');
+                  check(html.includes('multiple'),'existing reference chooser is single');
                   const menu=document.createElement('div');menu.innerHTML=renderPresenterReferenceMediaQuickAdd('announcements',id);
                   check(menu.querySelector('[data-presenter-reference-media-direct-file]')?.multiple,'add chooser is single');
+                  reset();sent.length=0;
+                  const existing=normalizeServiceItem({id:'existing',service_id:id,label:'참고 화면',_worshipSectionKey:'announcements',
+                    memo:serializeServiceItemMemo({elementType:'image',inputMode:'asset',asset:{kind:'image',name:'old.png',url:'https://example.test/old.png'}})},1);
+                  const tail={...existing,id:'tail'};
+                  state.serviceItems[id]=[{...base},existing,tail];
+                  const existingInput=input(files);existingInput.dataset.serviceItemIndex='1';
+                  await uploadPresenterReferenceMediaFile(existingInput);
+                  check(getServiceItems(id).map(i=>i.id).at(-1)==='tail','files not inserted after current reference');
+                  check(getServiceItems(id).slice(1,4).map(i=>parseServiceItemMemo(i.memo).asset.name).join(',')==='one.png,two.mp4,three.jpg','existing chooser order');
+                  check(getServiceItems(id)[1].id==='existing','existing item replaced rather than reused');
+                  const originalMemo=getServiceItems(id)[1].memo;
+                  saveServiceItemMutation=async()=>{throw Error('save failed')};
+                  await uploadPresenterReferenceMediaFile(existingInput);
+                  check(getServiceItems(id)[1].memo===originalMemo && getServiceItems(id).length===5,'failed existing replacement lost original');
                   return 'PASS ordered batch, original File identity, partial failure, concurrent edits, validation and lock';
                 }'''), flush=True)
                 browser.close()
