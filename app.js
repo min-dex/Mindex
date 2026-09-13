@@ -7465,7 +7465,7 @@ function buildWorshipPersistenceRows(service, items, existingSectionById = {}, e
       ? serviceItemScriptureReferences(item, parsed, service)
       : [];
     const scriptureReference = scriptureBody
-      ? (scriptureReferences[0] || normalizeServiceItemReferenceSpacing(parsed.scriptureReference || item.raw_title || existingElement?.scripture_reference || ""))
+      ? (scriptureReferences[0] || normalizeServiceItemReferenceSpacing(parsed.scriptureReference || item.raw_title || (isOptionalCitationScriptureServiceItem(item) ? "" : existingElement?.scripture_reference) || ""))
       : (existingElement?.scripture_reference || "");
     const elementRow = {
       id: elementId,
@@ -7641,6 +7641,11 @@ function serviceElementConfigForSave(existingConfig = {}, parsed = emptyServiceI
     delete config.scriptureReferences;
     delete config.scripture_references;
   }
+  if (isOptionalCitationScriptureServiceItem(options.item || {})) {
+    delete config.scriptureReference;
+    delete config.scripture_reference;
+    delete config.scripture_references;
+  }
   if (parsed.scriptureTranslationId) {
     config.scriptureTranslationId = parsed.scriptureTranslationId;
     delete config.scripture_translation_id;
@@ -7711,6 +7716,12 @@ function serviceElementConfigForSave(existingConfig = {}, parsed = emptyServiceI
 
 function serviceElementSourceRefForSave(existingSourceRef = {}, item = {}, parsed = emptyServiceItemMemo(), manualBody = false) {
   const sourceRef = { ...(existingSourceRef && typeof existingSourceRef === "object" ? existingSourceRef : {}) };
+  if (isOptionalCitationScriptureServiceItem(item)) {
+    delete sourceRef.scriptureReferences;
+    delete sourceRef.scripture_references;
+    delete sourceRef.scriptureReference;
+    delete sourceRef.scripture_reference;
+  }
   const itemSlotKey = normalizeWorshipSlotKey(item._worshipSlotKey || item.slotKey || item.slot_key);
   if (itemSlotKey) sourceRef.slotKey = itemSlotKey;
   sourceRef.label = String(item.label || sourceRef.label || "").trim();
@@ -10227,6 +10238,10 @@ function updateServiceItemField(field, options = {}) {
         parsed.scriptureReferences = references;
         parsed.scriptureReference = references[0] || normalizeServiceItemReferenceSpacing(item.raw_title || "");
         parsed.scriptureReferencePayloads = normalizeServiceScriptureReferencePayloads(parsed.scriptureReferencePayloads, references);
+        if (!references.length && isOptionalCitationScriptureServiceItem(item) && !item.raw_title.trim()) {
+          parsed.scriptureReferencePayloads = [];
+          delete parsed.manualScripture;
+        }
         parsed.slides = [];
         if (references.length) item.raw_title = formatServiceScriptureReferenceList(references);
       } else if (isLiturgicalBodyServiceItem(item)) {
@@ -11998,14 +12013,19 @@ async function resolveServiceScriptureBodyReference(serviceId, index, options = 
       return verses.length ? formatLiveScriptureReference(reference) : null;
     }));
     if (!resolved.some(Boolean)) return;
-    if (serviceItemScriptureReferences(item).join(";") !== referenceSignature) return;
-    const parsed = parseServiceItemMemo(item.memo);
+    const currentItems = state.serviceItems[serviceId] || [];
+    const currentItem = item.id
+      ? currentItems.find((candidate) => candidate.id === item.id)
+      : currentItems.find((candidate) => candidate === item);
+    if (!currentItem || serviceItemScriptureReferences(currentItem).join(";") !== referenceSignature) return;
+    const parsed = parseServiceItemMemo(currentItem.memo);
+    if (parsed.manualScripture) return;
     parsed.scriptureReferences = references;
     parsed.scriptureReference = references[0] || "";
     parsed.slides = [];
-    item.raw_title = formatServiceScriptureReferenceList(references);
-    item.memo = serializeServiceItemMemo(parsed);
-    state.serviceItems[serviceId] = normalizeServiceItemsInCurrentOrder(items);
+    currentItem.raw_title = formatServiceScriptureReferenceList(references);
+    currentItem.memo = serializeServiceItemMemo(parsed);
+    state.serviceItems[serviceId] = normalizeServiceItemsInCurrentOrder(currentItems);
     const shouldMarkDirty = options.markDirty !== false;
     const wasDirty = Boolean(state.dirty.service);
     if (shouldMarkDirty) {
