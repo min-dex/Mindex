@@ -8221,6 +8221,21 @@ function handleSidebarPresenterActionClick(event) {
 }
 
 function handleDetailClick(event) {
+  const leaderEdit = event.target.closest("[data-setlist-leader-edit]");
+  if (leaderEdit) {
+    const id = leaderEdit.dataset.setlistLeaderEdit;
+    const original = leaderEdit.dataset.leaderValue || "";
+    worshipSetlistLeaderDrafts.set(id, { original, value: original, saving: false });
+    renderCurrentServiceModuleDetail();
+    const input = [...document.querySelectorAll("[data-setlist-leader-input]")].find(input => input.dataset.setlistLeaderInput === id);
+    input?.focus(); input?.select();
+    return;
+  }
+  const leaderSave = event.target.closest("[data-setlist-leader-save]");
+  if (leaderSave) { void saveWorshipSetlistLeader(leaderSave.dataset.setlistLeaderSave); return; }
+  const leaderCancel = event.target.closest("[data-setlist-leader-cancel]");
+  if (leaderCancel) { worshipSetlistLeaderDrafts.delete(leaderCancel.dataset.setlistLeaderCancel); renderCurrentServiceModuleDetail(); return; }
+
   document.querySelectorAll(".svc-reference-media-quick-add[open]").forEach((menu) => {
     if (!menu.contains(event.target)) menu.removeAttribute("open");
   });
@@ -8872,6 +8887,18 @@ function isPresenterPreparationInputEvent(event) {
 }
 
 function handleDetailKeydown(event) {
+  const leaderInput = event.target.closest("[data-setlist-leader-input]");
+  if (leaderInput) {
+    if (event.isComposing || event.keyCode === 229) return;
+    if (event.key === "Enter") { event.preventDefault(); void saveWorshipSetlistLeader(leaderInput.dataset.setlistLeaderInput); }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      const id = leaderInput.dataset.setlistLeaderInput;
+      if (!worshipSetlistLeaderDrafts.get(id)?.saving) { worshipSetlistLeaderDrafts.delete(id); renderCurrentServiceModuleDetail(); }
+    }
+    return;
+  }
+
   const mediaMenu = event.target.closest(".svc-reference-media-quick-add[open]");
   if (event.key === "Escape" && mediaMenu) {
     mediaMenu.removeAttribute("open");
@@ -9081,6 +9108,13 @@ function handleWindowPointerUp() {
 }
 
 function handleDetailInput(event) {
+  const leaderInput = event.target.closest("[data-setlist-leader-input]");
+  if (leaderInput) {
+    const draft = worshipSetlistLeaderDrafts.get(leaderInput.dataset.setlistLeaderInput);
+    if (draft && !draft.saving) draft.value = leaderInput.value;
+    return;
+  }
+
   const authEmail = event.target.closest("[data-auth-email]");
   if (authEmail) {
     state.auth.email = authEmail.value;
@@ -23991,6 +24025,78 @@ function worshipSetlistArchiveAliases(source = {}) {
   return [...new Set(values.map(value => String(value || "").trim()).filter(value => value && value !== typeName))].join(" · ");
 }
 
+const worshipSetlistLeaderDrafts = new Map();
+
+function renderWorshipSetlistLeaderEditor(source) {
+  const id = String(source.id || "");
+  const draft = worshipSetlistLeaderDrafts.get(id);
+  const leader = String(source.leader || "").trim();
+  if (!draft) return `<button type="button" class="svc-setlist-leader svc-setlist-entry-leader svc-setlist-leader-edit" data-setlist-leader-edit="${escapeAttr(id)}" data-leader-value="${escapeAttr(leader)}" aria-label="찬양인도자 편집: ${escapeAttr(leader || "—")}" title="찬양인도자 편집"><span>인도</span> ${escapeHtml(leader || "—")} <i data-lucide="pencil"></i></button>`;
+  return `<div class="svc-setlist-leader-form" data-setlist-leader-form="${escapeAttr(id)}">
+    <input type="text" data-setlist-leader-input="${escapeAttr(id)}" aria-label="찬양인도자" placeholder="이름 직분" value="${escapeAttr(draft.value)}" maxlength="100" ${draft.saving ? "disabled" : ""}>
+    <button type="button" data-setlist-leader-save="${escapeAttr(id)}" ${draft.saving ? "disabled" : ""}>${draft.saving ? "저장 중" : "저장"}</button>
+    <button type="button" data-setlist-leader-cancel="${escapeAttr(id)}" ${draft.saving ? "disabled" : ""}>취소</button>
+  </div>`;
+}
+
+async function persistWorshipSetlistLeader(id, value, expectedLeader) {
+  if (!state.client) throw new Error("DB 연결을 확인해 주세요.");
+  const leader = cleanServiceAssignee(value);
+  if (leader.length > 100) throw new Error("찬양인도자는 100자 이내로 입력해 주세요.");
+  const serviceId = id.startsWith("worship:") ? id.slice(8) : "";
+  let row;
+  if (serviceId) {
+    const result = await state.client.from("mindex_worship_services")
+      .update({ praise_leader: leader }).eq("id", serviceId)
+      .eq("praise_leader", expectedLeader).select("id,praise_leader").maybeSingle();
+    if (result.error) throw result.error;
+    row = result.data;
+  } else {
+    const current = await state.client.from("mindex_worship_import_sources")
+      .select("id,raw_payload,updated_at").eq("id", id).single();
+    if (current.error) throw current.error;
+    const payload = current.data?.raw_payload || {};
+    if (String(payload.service?.leader || "").trim() !== expectedLeader) throw new Error("다른 곳에서 인도자가 변경됐어요. 새로고침 후 다시 확인해 주세요.");
+    const result = await state.client.from("mindex_worship_import_sources")
+      .update({ raw_payload: { ...payload, service: { ...payload.service, leader } } })
+      .eq("id", id).eq("updated_at", current.data.updated_at).select("id").maybeSingle();
+    if (result.error) throw result.error;
+    row = result.data;
+  }
+  if (!row) throw new Error("다른 곳에서 인도자가 변경됐어요. 새로고침 후 다시 확인해 주세요.");
+  const archive = state.worshipSetlistArchive;
+  if (serviceId) {
+    const live = archive.live?.services?.find(service => service.id === serviceId);
+    if (live) live.praise_leader = leader;
+    const service = state.services.find(service => service.id === serviceId);
+    if (service) { service.praiseLeader = leader; service.leader = leader; }
+  } else {
+    const source = archive.sources?.find(source => source.id === id);
+    if (source) source.leader = leader;
+  }
+  if (!state.config.authRequired && archive.loaded) {
+    const cacheKey = `${state.config.url}:live-services-v2:${WORSHIP_IMPORT_SOURCE_LIST_SELECT}:${WORSHIP_IMPORT_CANDIDATE_LIST_SELECT}`;
+    writeStaticSupabaseCache("worship_setlist_archive", cacheKey, [{ sources: archive.sources, candidates: archive.candidates, live: archive.live }]);
+  }
+  return leader;
+}
+
+async function saveWorshipSetlistLeader(id) {
+  const draft = worshipSetlistLeaderDrafts.get(id);
+  if (!draft || draft.saving) return;
+  draft.saving = true;
+  renderCurrentServiceModuleDetail();
+  try {
+    await persistWorshipSetlistLeader(id, draft.value, draft.original);
+    worshipSetlistLeaderDrafts.delete(id);
+    showToast("찬양인도자를 저장했어요.");
+  } catch (error) {
+    draft.saving = false;
+    showToast(error.message || "저장하지 못했어요. 다시 시도해 주세요.", "error");
+  }
+  if (state.module === "service" && state.selectedServiceTypeId === SERVICE_SETLIST_ARCHIVE_PANEL_ID) renderCurrentServiceModuleDetail();
+}
+
 function renderWorshipSetlistArchiveEntry(entry) {
   if (!entry.candidates.length && entry.source.weekly_status) return renderWorshipWeekStatus({...entry,slotName:worshipSetlistArchiveTypeName(entry.source.service_type_id),weeklyStatus:entry.source.weekly_status,weeklyReason:entry.source.weekly_reason || ""});
   const source = entry.source || {};
@@ -24008,7 +24114,7 @@ function renderWorshipSetlistArchiveEntry(entry) {
           </div>
           <div class="svc-setlist-entry-meta">
             ${state.worshipSetlistArchiveView !== "service" ? `<span class="svc-setlist-leader">${escapeHtml(source.service_date || "날짜 없음")}</span>` : ""}
-            <span class="svc-setlist-leader svc-setlist-entry-leader"><span>인도</span> ${escapeHtml(leader || "미기록")}</span>
+            ${renderWorshipSetlistLeaderEditor(source)}
           </div>
         </div>
       </header>

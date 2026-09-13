@@ -9264,3 +9264,12 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .svc-presenter-video-health:empty { display: none; }
 .svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Setlist leader edits stay inside the card metadata row. */
+.svc-setlist-leader-edit { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 2px 0; background: transparent; cursor: pointer; font: inherit; }
+.svc-setlist-leader-edit:hover, .svc-setlist-leader-edit:focus-visible { color: var(--accent); text-decoration: underline; }
+.svc-setlist-leader-edit svg { width: 12px; height: 12px; flex: 0 0 auto; opacity: .6; }
+.svc-setlist-leader-form { display: flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; max-width: 100%; }
+.svc-setlist-leader-form input { width: 130px; min-width: 0; max-width: 100%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); font: inherit; }
+.svc-setlist-leader-form button { flex-shrink: 0; padding: 5px 7px; border: 0; border-radius: 5px; color: var(--ink); background: transparent; font: inherit; cursor: pointer; }
+.svc-setlist-leader-form button:hover { background: var(--line); }
