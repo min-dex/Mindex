@@ -8222,17 +8222,6 @@ function handleSidebarPresenterActionClick(event) {
 }
 
 function handleDetailClick(event) {
-  const leaderEdit = event.target.closest("[data-setlist-leader-edit]");
-  if (leaderEdit) {
-    const id = leaderEdit.dataset.setlistLeaderEdit;
-    const original = leaderEdit.dataset.leaderValue || "";
-    worshipSetlistLeaderDrafts.set(id, { original, value: original, saving: false });
-    renderCurrentServiceModuleDetail();
-    const input = [...document.querySelectorAll("[data-setlist-leader-input]")].find(input => input.dataset.setlistLeaderInput === id);
-    input?.focus();
-    return;
-  }
-
   document.querySelectorAll(".svc-reference-media-quick-add[open]").forEach((menu) => {
     if (!menu.contains(event.target)) menu.removeAttribute("open");
   });
@@ -9107,8 +9096,13 @@ function handleWindowPointerUp() {
 function handleDetailInput(event) {
   const leaderInput = event.target.closest("[data-setlist-leader-input]");
   if (leaderInput) {
-    const draft = worshipSetlistLeaderDrafts.get(leaderInput.dataset.setlistLeaderInput);
-    if (draft && !draft.saving) draft.value = leaderInput.value;
+    const id = leaderInput.dataset.setlistLeaderInput;
+    const draft = worshipSetlistLeaderDrafts.get(id) || { original: leaderInput.dataset.leaderOriginal || "", value: "", saving: false };
+    if (!draft.saving) {
+      draft.value = leaderInput.value;
+      worshipSetlistLeaderDrafts.set(id, draft);
+      leaderInput.style.width = `${worshipSetlistLeaderInputWidth(draft.value)}em`;
+    }
     return;
   }
 
@@ -24024,14 +24018,18 @@ function worshipSetlistArchiveAliases(source = {}) {
 
 const worshipSetlistLeaderDrafts = new Map();
 
+function worshipSetlistLeaderInputWidth(value = "") {
+  return Math.max(1, [...String(value)].reduce((width, char) => width + (/[ -~]/.test(char) ? .55 : 1), .4));
+}
+
 function renderWorshipSetlistLeaderEditor(source) {
   const id = String(source.id || "");
   const draft = worshipSetlistLeaderDrafts.get(id);
   const leader = String(source.leader || "").trim();
-  if (!draft) return `<button type="button" class="svc-setlist-leader svc-setlist-entry-leader svc-setlist-leader-edit" data-setlist-leader-edit="${escapeAttr(id)}" data-leader-value="${escapeAttr(leader)}" aria-label="찬양인도자 편집: ${escapeAttr(leader || "—")}" title="찬양인도자 편집"><span>인도</span> ${leader ? escapeHtml(leader) : `<span class="svc-setlist-leader-empty">—</span>`}</button>`;
-  return `<div class="svc-setlist-leader-form" data-setlist-leader-form="${escapeAttr(id)}">
-    <input type="text" data-setlist-leader-input="${escapeAttr(id)}" aria-label="찬양인도자" placeholder="이름 직분" value="${escapeAttr(draft.value)}" maxlength="100" ${draft.saving ? "disabled" : ""}>
-  </div>`;
+  const value = draft ? draft.value : leader;
+  return `<label class="svc-setlist-leader svc-setlist-leader-form"><span>인도</span>
+    <input type="text" data-setlist-leader-input="${escapeAttr(id)}" data-leader-original="${escapeAttr(draft?.original ?? leader)}" aria-label="찬양인도자" placeholder="—" value="${escapeAttr(value)}" maxlength="100" style="width:${worshipSetlistLeaderInputWidth(value)}em" ${draft?.saving ? "readonly" : ""}>
+  </label>`;
 }
 
 async function persistWorshipSetlistLeader(id, value, expectedLeader) {

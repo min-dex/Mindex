@@ -9266,10 +9266,10 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; }
 
 /* Setlist leader edits stay inside the card metadata row. */
-.svc-setlist-leader-edit { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 2px 0; background: transparent; cursor: pointer; font: inherit; }
-.svc-setlist-leader-edit:hover { color: var(--ink-2); }
-.svc-setlist-leader-edit:focus-visible { outline: 1px solid var(--line); outline-offset: 3px; }
-.svc-setlist-leader-empty { color: var(--ink-5); font-weight: 400; }
 .svc-setlist-leader-form { display: flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; max-width: 100%; }
-.svc-setlist-leader-form input { width: 130px; min-width: 0; max-width: 100%; padding: 3px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink-2); font: inherit; box-shadow: none; }
+.svc-setlist-leader-form input { width: 130px; min-width: 0; max-width: 100%; padding: 3px 0; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: var(--ink-2); font: inherit; box-shadow: none; text-align: right; }
 .svc-setlist-leader-form input:focus { border-color: var(--ink-5); outline: none; box-shadow: none; background: transparent; }
+
+
+
+.svc-setlist-leader-form input::placeholder { color: var(--ink-5); opacity: 1; }
