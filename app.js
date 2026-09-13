@@ -24031,7 +24031,7 @@ function renderWorshipSetlistLeaderEditor(source) {
   const id = String(source.id || "");
   const draft = worshipSetlistLeaderDrafts.get(id);
   const leader = String(source.leader || "").trim();
-  if (!draft) return `<button type="button" class="svc-setlist-leader svc-setlist-entry-leader svc-setlist-leader-edit" data-setlist-leader-edit="${escapeAttr(id)}" data-leader-value="${escapeAttr(leader)}" aria-label="찬양인도자 편집: ${escapeAttr(leader || "—")}" title="찬양인도자 편집"><span>인도</span> ${escapeHtml(leader || "—")} <i data-lucide="pencil"></i></button>`;
+  if (!draft) return `<button type="button" class="svc-setlist-leader svc-setlist-entry-leader svc-setlist-leader-edit" data-setlist-leader-edit="${escapeAttr(id)}" data-leader-value="${escapeAttr(leader)}" aria-label="찬양인도자 편집: ${escapeAttr(leader || "—")}" title="찬양인도자 편집"><span>인도</span> ${leader ? escapeHtml(leader) : `<span class="svc-setlist-leader-empty">—</span>`}</button>`;
   return `<div class="svc-setlist-leader-form" data-setlist-leader-form="${escapeAttr(id)}">
     <input type="text" data-setlist-leader-input="${escapeAttr(id)}" aria-label="찬양인도자" placeholder="이름 직분" value="${escapeAttr(draft.value)}" maxlength="100" ${draft.saving ? "disabled" : ""}>
     <button type="button" data-setlist-leader-save="${escapeAttr(id)}" ${draft.saving ? "disabled" : ""}>${draft.saving ? "저장 중" : "저장"}</button>
