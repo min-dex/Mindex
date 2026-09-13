@@ -6924,6 +6924,13 @@ async function persistSundayEditSync(job, options = {}) {
   const generated = rows.elements[0];
   const fields = ["title", "person", "body", "song_id", "song_version_id", "scripture_reference", "config", "content_state", "input_mode", "template_modified"];
   const patch = Object.fromEntries(fields.filter((key) => Object.hasOwn(generated, key)).map((key) => [key, generated[key]]));
+  if (job.key.startsWith("sermon-citation:")) {
+    patch.source_ref = { ...existing.source_ref };
+    delete patch.source_ref.scriptureReferences;
+    delete patch.source_ref.scripture_references;
+    delete patch.source_ref.scriptureReference;
+    delete patch.source_ref.scripture_reference;
+  }
   if (next.song_id) patch.song_version_id = next.version_id || next.song_version_id || null;
   patch.updated_at = new Date().toISOString();
   const document = serviceDocumentSnapshotFromRef(freshService);
