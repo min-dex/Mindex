@@ -1,0 +1,45 @@
+// Install @electric-sql/pglite in a temporary directory, then set PGLITE_ROOT.
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+const require = createRequire(path.resolve(process.env.PGLITE_ROOT || '.', 'package.json'));
+const { PGlite } = await import(pathToFileURL(require.resolve('@electric-sql/pglite')));
+const { pgcrypto } = await import(pathToFileURL(require.resolve('@electric-sql/pglite/contrib/pgcrypto')));
+const db = new PGlite({ extensions: { pgcrypto } });
+const scalar = async (sql, args = []) => Object.values((await db.query(sql, args)).rows[0])[0];
+try {
+  await db.exec('create role anon; create role authenticated; create schema extensions;');
+  await db.exec(await fs.readFile(new URL('../migrations/2026-09-13-readonly-monitor.sql', import.meta.url), 'utf8'));
+  await db.exec('set role anon');
+  assert.equal(await scalar('select public.mindex_monitor_register()'), null);
+  assert.equal(await scalar("select public.mindex_monitor_read('fake')"), null);
+  await assert.rejects(db.exec('select * from mindex_monitor_private.sessions'), /permission denied/);
+  await assert.rejects(db.exec("select mindex_monitor_private.set_password('nope')"), /permission denied/);
+  await db.exec('reset role');
+  await db.query('select mindex_monitor_private.set_password($1)', ['test-password']);
+  await db.exec('set role anon');
+  const reporter = await scalar('select public.mindex_monitor_register()');
+  assert.equal(reporter.length, 64);
+  assert.equal(await scalar('select public.mindex_monitor_read($1)', [reporter]), null);
+  const viewer = await scalar('select public.mindex_monitor_login($1)', ['test-password']);
+  assert.equal(viewer.length, 64);
+  const status = {name:'Test',os:'Windows',browser:'Whale',module:'presenter',output:true,slide:3,count:5,lyrics:'NEVER STORE',events:[{kind:'save_ok',at:new Date().toISOString(),content:'NEVER STORE'},{kind:'arbitrary',at:'bad'}]};
+  assert.equal(await scalar('select public.mindex_monitor_heartbeat($1,$2)', [viewer, status]), false);
+  assert.equal(await scalar('select public.mindex_monitor_heartbeat($1,$2)', [reporter, status]), true);
+  const rows = await scalar('select public.mindex_monitor_read($1)', [viewer]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].status.slide, 3);
+  assert.equal(rows[0].status.events.length, 1);
+  assert(!JSON.stringify(rows).includes('NEVER STORE'));
+  for (let i = 0; i < 5; i++) assert.equal(await scalar('select public.mindex_monitor_login($1)', ['wrong']), null);
+  assert.equal(await scalar('select public.mindex_monitor_login($1)', ['test-password']), null);
+  await scalar('select public.mindex_monitor_leave($1)', [viewer]);
+  assert.equal(await scalar('select public.mindex_monitor_read($1)', [viewer]), null);
+  await db.exec('reset role');
+  await db.exec("update mindex_monitor_private.sessions set expires_at=now()-interval '1 second'");
+  await db.exec('set role anon');
+  assert.equal(await scalar('select public.mindex_monitor_heartbeat($1,$2)', [reporter, status]), false);
+  console.log('PASS SQL permission isolation, PIN throttling, token roles, field whitelist, expiry, revocation');
+} finally { await db.close(); }

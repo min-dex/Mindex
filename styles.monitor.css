@@ -1,0 +1,14 @@
+.monitor-panel { box-sizing: border-box; width: min(880px, calc(100% - 24px)); max-height: 85vh; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.monitor-panel::backdrop { background: #0008; }
+.monitor-panel header, .monitor-panel form, .monitor-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.monitor-panel h2 { margin: 0; flex: 1; font-size: 20px; }
+.monitor-panel h3 { font-size: 16px; margin: 16px 0 8px; }
+.monitor-panel input:not([type=checkbox]) { min-width: 0; flex: 1; padding: 10px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; }
+.monitor-panel label { display: flex; align-items: center; gap: 8px; }
+.monitor-panel .monitor-device { padding: 14px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.monitor-panel p { margin: 6px 0; font-size: 14px; overflow-wrap: anywhere; }
+.monitor-panel ul { margin: 8px 0; padding-left: 20px; font-size: 14px; }
+.monitor-panel summary { cursor: pointer; font-size: 14px; margin-top: 8px; }
+.monitor-panel .monitor-message { min-height: 22px; }
+.monitor-panel [hidden] { display: none !important; }
+@media (max-width: 480px) { .monitor-panel { padding: 16px; } .monitor-panel form label { flex-basis: 100%; } }

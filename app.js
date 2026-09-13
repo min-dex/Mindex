@@ -6304,7 +6304,13 @@ async function waitForServiceSave(options, resume, itemId = "") {
   return resume(itemId);
 }
 
+function emitMonitorSaveEvent(kind) {
+  try { window.dispatchEvent(new CustomEvent("mindex:save-result", { detail: kind })); }
+  catch { /* Diagnostics must never affect persistence. */ }
+}
+
 async function runServiceSave(options, save) {
+  emitMonitorSaveEvent("save_start");
   const feedback = beginServiceInputFeedback(options.feedbackServiceId, options.feedbackItemId);
   state.saving = true;
   updateSaveState();
@@ -6316,9 +6322,11 @@ async function runServiceSave(options, save) {
   try {
     const result = await savePromise;
     finishServiceInputFeedback(feedback, Boolean(result));
+    emitMonitorSaveEvent(result ? "save_ok" : "save_failed");
     return result;
   } catch (error) {
     finishServiceInputFeedback(feedback, false);
+    emitMonitorSaveEvent("save_failed");
     const message = serviceSaveErrorMessage(error);
     if (!options.silent) showToast(message, "error");
     if (options.throwOnError) throw new Error(message);
