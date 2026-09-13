@@ -1574,6 +1574,7 @@ function bindDetailInteractionRoot(root, options = {}) {
   if (options.presenterBoard) root.addEventListener("dblclick", handlePresenterBoardDoubleClick);
   root.addEventListener("keydown", handleDetailKeydown, { capture: true });
   root.addEventListener("input", handleDetailInput);
+  root.addEventListener("focusout", handleSetlistLeaderFocusOut);
   root.addEventListener("change", handleDetailChange);
   root.addEventListener("submit", handleDetailSubmit);
   root.addEventListener("paste", handlePresenterPreparationPaste);
@@ -8228,13 +8229,9 @@ function handleDetailClick(event) {
     worshipSetlistLeaderDrafts.set(id, { original, value: original, saving: false });
     renderCurrentServiceModuleDetail();
     const input = [...document.querySelectorAll("[data-setlist-leader-input]")].find(input => input.dataset.setlistLeaderInput === id);
-    input?.focus(); input?.select();
+    input?.focus();
     return;
   }
-  const leaderSave = event.target.closest("[data-setlist-leader-save]");
-  if (leaderSave) { void saveWorshipSetlistLeader(leaderSave.dataset.setlistLeaderSave); return; }
-  const leaderCancel = event.target.closest("[data-setlist-leader-cancel]");
-  if (leaderCancel) { worshipSetlistLeaderDrafts.delete(leaderCancel.dataset.setlistLeaderCancel); renderCurrentServiceModuleDetail(); return; }
 
   document.querySelectorAll(".svc-reference-media-quick-add[open]").forEach((menu) => {
     if (!menu.contains(event.target)) menu.removeAttribute("open");
@@ -24034,8 +24031,6 @@ function renderWorshipSetlistLeaderEditor(source) {
   if (!draft) return `<button type="button" class="svc-setlist-leader svc-setlist-entry-leader svc-setlist-leader-edit" data-setlist-leader-edit="${escapeAttr(id)}" data-leader-value="${escapeAttr(leader)}" aria-label="찬양인도자 편집: ${escapeAttr(leader || "—")}" title="찬양인도자 편집"><span>인도</span> ${leader ? escapeHtml(leader) : `<span class="svc-setlist-leader-empty">—</span>`}</button>`;
   return `<div class="svc-setlist-leader-form" data-setlist-leader-form="${escapeAttr(id)}">
     <input type="text" data-setlist-leader-input="${escapeAttr(id)}" aria-label="찬양인도자" placeholder="이름 직분" value="${escapeAttr(draft.value)}" maxlength="100" ${draft.saving ? "disabled" : ""}>
-    <button type="button" data-setlist-leader-save="${escapeAttr(id)}" ${draft.saving ? "disabled" : ""}>${draft.saving ? "저장 중" : "저장"}</button>
-    <button type="button" data-setlist-leader-cancel="${escapeAttr(id)}" ${draft.saving ? "disabled" : ""}>취소</button>
   </div>`;
 }
 
@@ -24081,15 +24076,24 @@ async function persistWorshipSetlistLeader(id, value, expectedLeader) {
   return leader;
 }
 
+function handleSetlistLeaderFocusOut(event) {
+  const input = event.target.closest("[data-setlist-leader-input]");
+  if (input) void saveWorshipSetlistLeader(input.dataset.setlistLeaderInput);
+}
+
 async function saveWorshipSetlistLeader(id) {
   const draft = worshipSetlistLeaderDrafts.get(id);
   if (!draft || draft.saving) return;
+  if (cleanServiceAssignee(draft.value) === draft.original) {
+    worshipSetlistLeaderDrafts.delete(id);
+    renderCurrentServiceModuleDetail();
+    return;
+  }
   draft.saving = true;
   renderCurrentServiceModuleDetail();
   try {
     await persistWorshipSetlistLeader(id, draft.value, draft.original);
     worshipSetlistLeaderDrafts.delete(id);
-    showToast("찬양인도자를 저장했어요.");
   } catch (error) {
     draft.saving = false;
     showToast(error.message || "저장하지 못했어요. 다시 시도해 주세요.", "error");
