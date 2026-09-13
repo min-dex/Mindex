@@ -7888,7 +7888,7 @@ textarea.svc-presenter-input-control--multiline {
 .svc-reference-media-upload:focus-within {
   background: color-mix(in srgb, var(--accent) 22%, var(--panel-2));
 }
-.svc-reference-media-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.svc-reference-media-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
 .svc-reference-media-upload i { width: var(--ui-icon-sm); height: var(--ui-icon-sm); stroke-width: 1.8; }
 .svc-reference-media-preview {
   display: grid;
@@ -8102,7 +8102,7 @@ textarea.svc-presenter-input-control--multiline {
 .svc-board-subgroup-audio.has-audio {
   grid-column: 1 / -1;
   width: min(100%, 520px);
-  grid-template-columns: minmax(160px, 1fr) minmax(0, 150px) auto auto;
+  grid-template-columns: minmax(100px, 1fr) minmax(0, 150px) auto auto;
 }
 .svc-board-subgroup-audio audio {
   width: 100%;
@@ -8142,6 +8142,8 @@ textarea.svc-presenter-input-control--multiline {
   width: 1px;
   height: 1px;
   opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
   pointer-events: none;
 }
 .svc-board-subgroup-audio i,
@@ -8466,7 +8468,7 @@ textarea.svc-presenter-input-control--multiline {
 .svc-board-subgroup-controls .svc-presenter-input-control-wrap > .svc-item-link {
   flex: 0 0 auto;
 }
-.svc-reference-media-toolbar:empty { display: none; }
+.svc-reference-media-toolbar:not(:has(> *)) { display: none; }
 .svc-board-subgroup-controls,
 .svc-board-subgroup-flow {
   --svc-control-height: 30px;
