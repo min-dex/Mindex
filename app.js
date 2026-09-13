@@ -4118,7 +4118,7 @@ function autoWorshipServicePayload(target = {}) {
     updated_at: persistedAt,
     title: String(target.title || "").trim(),
     status: "draft",
-    worship_leader: defaultServiceWorshipLeader(typeId),
+    worship_leader: "",
     praise_leader: serviceUsesPraiseLeader(typeId) ? defaultServicePraiseLeader(typeId) : "",
     source_kind: "mindex",
     source_ref: {
@@ -6417,7 +6417,7 @@ async function saveWorshipServiceInstance(service) {
   const metadataSignature = serviceSaveMetadataSignature(service);
   captureWorshipRecoverySnapshot(service, "before-full-save");
   const canonicalTypeId = canonicalWorshipServiceTypeId(service.type_id);
-  const worshipLeader = cleanServiceAssignee(service.worshipLeader || service._worshipLeader);
+  const worshipLeader = "";
   const praiseLeader = serviceUsesPraiseLeader(service.type_id)
     ? cleanServiceAssignee(service.praiseLeader || service.leader)
     : "";
@@ -13398,7 +13398,8 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
   await loadCalendarData({ silent: true });
   if (!state.calendarLoaded) throw new Error("교회력 담당 정보를 불러오지 못해 예배를 생성하지 않았습니다. 다시 시도해 주세요.");
   payloads = payloads.map((payload) => ({ ...payload,
-    worship_leader: payload.worship_leader || defaultServiceWorshipLeader(payload.service_type_id, payload.service_date),
+    worship_leader: "",
+    praise_leader: payload.praise_leader || defaultServicePraiseLeader(payload.service_type_id, payload.service_date),
   }));
   const seeds = payloads.map((payload) => calendarAssigneeRowsForNewService(normalizeWorshipService(payload)));
   const sections = seeds.flatMap((seed) => seed.sections);
@@ -13462,13 +13463,9 @@ function serviceItemDefaultAssignee(item = {}, service = selectedServiceForEdito
   return "";
 }
 
-function defaultServicePraiseLeader(typeId) {
-  return String(typeId || "") === "friday" ? "이재희 청년" : "";
-}
-
-function defaultServiceWorshipLeader(typeId, serviceOrDate = null) {
+function defaultServicePraiseLeader(typeId, serviceOrDate = null) {
   const appTypeId = worshipAppServiceTypeId(typeId);
-  if (appTypeId === "monthly") return "김남영 목사";
+  if (appTypeId === "friday") return "이재희 청년";
   const date = serviceDateString(serviceOrDate);
   if (!date) return "";
   if (appTypeId === "sunday-main") return isAllGenerationsWorshipDate(date) ? "이재희 청년" : "김석범 목사";
@@ -22870,15 +22867,8 @@ function cleanPresenterAssignee(value) {
   return GENERIC_PRESENTER_ASSIGNEE_KEYS.has(compactSearchValue(assignee)) ? "" : assignee;
 }
 
-function serviceWorshipLeaderLabel(service) {
-  const sourceRef = service?._worshipSourceRef && typeof service._worshipSourceRef === "object" ? service._worshipSourceRef : {};
-  const direct = cleanPresenterAssignee(
-    service?.worshipLeader
-    || service?._worshipLeader
-    || sourceRef.worship_leader
-    || sourceRef.worshipLeader,
-  );
-  if (direct) return direct;
+function serviceWorshipLeaderLabel() {
+  // Reserved metadata: worship leadership is not in use yet.
   return "";
 }
 
@@ -25556,7 +25546,7 @@ function serviceMainPraiseTeamName(service, fallback = "") {
 }
 
 function serviceUsesPraiseLeader(typeId) {
-  return typeId !== "sunday-first" && typeId !== "sunday-second";
+  return Boolean(typeId);
 }
 
 function renderServiceMetaEditor(service) {
@@ -32740,7 +32730,7 @@ async function createService() {
     updated_at: persistedAt,
     title: "",
     status: "draft",
-    worship_leader: defaultServiceWorshipLeader(typeId),
+    worship_leader: "",
     praise_leader: serviceUsesPraiseLeader(typeId) ? String(form.leader || "").trim() : "",
     source_kind: "mindex",
     source_ref: { created_from: "mindex_template", app_service_type_id: typeId },

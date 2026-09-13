@@ -15,5 +15,10 @@ c.assert=assert;
  for(const service of state.services){const rows=groupWorshipElements(stored.mindex_worship_sections,stored.mindex_worship_elements)[service.id];const prayer=rows.find(x=>x.label==='대표기도');const expected=service.type_id==='children'?'어린이 담당':service.type_id==='youth'?'청소년 담당':'청년 담당';assert.equal(prayer.assignee,expected);assert.equal(serviceItemEditableAssigneeValue(prayer,service),expected);assert.equal(serviceItemEditableAssigneeValue({...prayer,assignee:''},service),'','Explicit clear must not refill');}
  const before=stored.mindex_worship_services.length;fail=true;await assert.rejects(insertWorshipServicesWithCalendarAssignees([autoWorshipServicePayload({typeId:'young-adult',date:'2026-09-13'})]),/fixture write failure/);assert.equal(stored.mindex_worship_services.length,before,'Partial creation rollback');assert.equal(state.services.length,3);
  const oldLoad=loadCalendarData;loadCalendarData=async()=>{};state.calendarLoaded=false;const beforeWrites=writes;await assert.rejects(insertWorshipServicesWithCalendarAssignees([autoWorshipServicePayload({typeId:'youth',date:'2026-09-13'})]),/교회력/);assert.equal(writes,beforeWrites,'Calendar failure must precede writes');loadCalendarData=oldLoad;
+ fail=false;state.calendarLoaded=true;
+ const wed=await insertWorshipServicesWithCalendarAssignees([{id:'wed-leader',service_type_id:'wed',service_date:'2026-08-12',worship_leader:'unused',praise_leader:''}]);
+ assert.equal(wed[0].worship_leader,'');assert.equal(wed[0].praise_leader,'김석범 목사');
+ assert.equal(serviceWorshipLeaderLabel({worshipLeader:'unused'}),'');
+ assert.equal(servicePraiseLeaderLabel({type_id:'sunday-first',praiseLeader:'김석범 목사'}),'김석범 목사');
  console.log('PASS all departments: persisted prayer/offering, no live overwrite, explicit clear, bounded batch writes, failure rollback');
 })()`,c);}catch(e){console.error(e);process.exitCode=1}})();
