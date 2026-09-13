@@ -19537,8 +19537,8 @@ function escapeXml(value) {
 }
 
 function toastDisplayDuration(message, type = "info") {
-  const minimum = type === "error" ? 8000 : /저장|반영/.test(String(message)) ? 6000 : 4000;
-  return Math.max(minimum, Math.min(12000, String(message).length * 75));
+  const minimum = type === "error" ? 6000 : /저장|반영/.test(String(message)) ? 4000 : 2000;
+  return Math.max(minimum, Math.min(10000, String(message).length * 75));
 }
 
 function showQueuedToasts() {
