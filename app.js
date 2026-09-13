@@ -4120,7 +4120,7 @@ function autoWorshipServicePayload(target = {}) {
     title: String(target.title || "").trim(),
     status: "draft",
     worship_leader: "",
-    praise_leader: serviceUsesPraiseLeader(typeId) ? defaultServicePraiseLeader(typeId) : "",
+    praise_leader: serviceUsesPraiseLeader(typeId) ? defaultServicePraiseLeader(typeId, { date: target.date, alias: target.alias, source_ref: sourceRef }) : "",
     source_kind: "mindex",
     source_ref: {
       created_from: "mindex_auto_schedule",
@@ -9916,6 +9916,12 @@ function updateNewServiceFormField(field) {
       return;
     }
     state.newServiceForm[key] = field.value;
+    if (key === "leader") state.newServiceForm.leaderEdited = true;
+    if ((key === "date" || key === "alias") && !state.newServiceForm.leaderEdited) {
+      state.newServiceForm.leader = defaultServicePraiseLeader(state.newServiceForm.type_id, state.newServiceForm);
+      const leaderInput = field.closest(".svc-new-form")?.querySelector('[data-new-service-field="leader"]');
+      if (leaderInput) leaderInput.value = state.newServiceForm.leader;
+    }
   }
 }
 
@@ -13330,7 +13336,7 @@ function startNewServiceForm(typeId = state.selectedServiceTypeId) {
     type_id: appTypeId,
     date: toLocalDateStr(new Date()),
     alias: "",
-    leader: defaultServicePraiseLeader(appTypeId),
+    leader: defaultServicePraiseLeader(appTypeId, toLocalDateStr(new Date())),
   };
   renderServiceList();
   renderCurrentServiceModuleDetail();
@@ -13431,7 +13437,7 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
   if (!state.calendarLoaded) throw new Error("교회력 담당 정보를 불러오지 못해 예배를 생성하지 않았습니다. 다시 시도해 주세요.");
   payloads = payloads.map((payload) => ({ ...payload,
     worship_leader: "",
-    praise_leader: payload.praise_leader || defaultServicePraiseLeader(payload.service_type_id, payload.service_date),
+    praise_leader: payload.praise_leader ?? defaultServicePraiseLeader(payload.service_type_id, payload),
   }));
   const seeds = payloads.map((payload) => calendarAssigneeRowsForNewService(normalizeWorshipService(payload)));
   const sections = seeds.flatMap((seed) => seed.sections);
@@ -13497,11 +13503,21 @@ function serviceItemDefaultAssignee(item = {}, service = selectedServiceForEdito
 
 function defaultServicePraiseLeader(typeId, serviceOrDate = null) {
   const appTypeId = worshipAppServiceTypeId(typeId);
-  if (appTypeId === "friday") return "이재희 청년";
   const date = serviceDateString(serviceOrDate);
-  if (!date) return "";
-  if (appTypeId === "sunday-main") return isAllGenerationsWorshipDate(date) ? "이재희 청년" : "김석범 목사";
-  return "";
+  const service = typeof serviceOrDate === "object" && serviceOrDate ? serviceOrDate : {};
+  if (appTypeId === "friday") {
+    return serviceFridayVariantKey({ ...service, type_id: appTypeId }) === "3355" ? "김덕열 집사" : "이재희 청년";
+  }
+  if (appTypeId === "sunday-main") {
+    const alias = service.alias || service.service_alias || service.title || "";
+    return isAllGenerationsWorshipContext(alias) || (date && isAllGenerationsWorshipDate(date)) ? "이재희 청년" : "김석범 목사";
+  }
+  return ({
+    "sunday-afternoon": "박수경 집사",
+    children: "서영윤 선생님",
+    youth: "허호범 선생님",
+    "young-adult": "이재희 청년",
+  })[appTypeId] || "";
 }
 
 function canonicalWorshipServiceTypeId(typeId) {
