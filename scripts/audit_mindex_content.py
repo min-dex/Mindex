@@ -424,7 +424,11 @@ def audit(
     warnings: list[dict[str, Any]] = []
     song_ids = {row["id"] for row in songs}
     canonical_song_ids = {row["id"] for row in canonical_songs}
-    song_version_ids = {row["id"] for row in song_versions}
+    song_versions_by_id: dict[str, dict[str, Any]] = {}
+    for row in song_versions:
+        # Preserve the first-match behavior even for malformed duplicate IDs.
+        song_versions_by_id.setdefault(row["id"], row)
+    song_version_ids = set(song_versions_by_id)
     scripture_ids = {row["id"] for row in scriptures}
     worship_service_ids = {row["id"] for row in worship_services}
     worship_service_type_ids = {row["id"] for row in worship_service_types}
@@ -599,7 +603,7 @@ def audit(
         if row.get("song_version_id") and row.get("song_version_id") not in song_version_ids:
             issues.append({"type": "worship-element-missing-song-version", "id": row_id, "song_version_id": row.get("song_version_id"), "title": row.get("title")})
         if row.get("song_id") and row.get("song_version_id"):
-            version = next((candidate for candidate in song_versions if candidate.get("id") == row.get("song_version_id")), None)
+            version = song_versions_by_id.get(row.get("song_version_id"))
             if version and version.get("source_song_id") and version.get("source_song_id") != row.get("song_id"):
                 warnings.append({
                     "type": "worship-element-song-version-source-mismatch",

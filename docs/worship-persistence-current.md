@@ -25,6 +25,36 @@ constraints or migrations were changed by this audit.
 
 ## Current representation
 
+### Full-save failure boundary coverage (2026-09-14, offline verification)
+
+`python3 tests/smoke_full_save_failure_boundaries.py` adds six synthetic cases in
+each of Chromium and WebKit: failure before a write and response loss after a
+committed write, at the service update, section upsert and element upsert stages.
+The test runs the current browser save lifecycle and row conversion against a
+stateful in-memory API double; all Supabase browser traffic is blocked.
+
+Assertions cover immediate stop at the injected boundary, retained item content
+and dirty IDs, unchanged local committed rows/source_ref, captured recovery draft,
+released save lock, and a subsequent explicit successful retry with fake-server
+state comparison without
+duplicate stable IDs. Earlier fake-server writes remain committed: this deliberately
+characterizes partial persistence, not transaction rollback. An all-written but
+unacknowledged save must still retain the local draft.
+
+Learning sources: FINDEX's
+[`config-atomic-write-smoke.mjs`](../../Findex/scripts/config-atomic-write-smoke.mjs)
+injects persistence failures and checks memory separately from disk; STUDEX's
+`dbSaveEntry` checks its `updated_at` conditional-write receipt before finalization;
+VITEX's [`Store.save`](../../Vitex/tools/local_store.py) preserves a recovery copy
+on a revision/save error. MINDEX reuses the failure-boundary testing principle,
+not those storage implementations or a second atomic-save protocol.
+
+Not covered by this matrix: structural deletes, sibling synchronization, service
+type defaults, concurrent clients, PostgreSQL rollback/locks, durable recovery,
+and idempotent exactly-once retries. These remain separate acceptance work in
+[the existing atomic-save design](worship-atomic-save-design.md). No runtime code,
+production records, migration, permission or deployment changes accompany this test.
+
 | Surface | Current implementation | Limit |
 | --- | --- | --- |
 | Service identity | `mindex_worship_services.id`, section and element UUIDs | Display labels and sort order are not stable IDs. |
@@ -54,7 +84,8 @@ must be inspected separately before asserting production integrity.
 - `saveWorshipServiceInstance`: validates rows; updates service metadata/document;
   upserts sections; upserts elements; deletes removed elements; deletes removed
   sections; then updates local state. Earlier requests remain committed if a
-  later one fails. The in-memory source_ref is assigned before the service write.
+  later one fails. The in-memory source_ref advances only after these instance row
+  writes complete; retaining it on failure does not roll back earlier remote writes.
 - `saveWorshipServiceElementPatch`: validates all current items; upserts the
   target section and element; updates the service document built from all items;
   then acknowledges only the target item's local dirty state. Other local drafts
@@ -126,3 +157,36 @@ not an implemented guarantee.
 
 No broad JSON cleanup, curated-record normalization, table deletion or production
 migration is authorized by this audit document.
+
+## Read-only audit lookup cost (2026-09-14, offline verification)
+
+`scripts/audit_mindex_content.py` now indexes song versions once instead of
+linearly searching every version for each linked worship element. The first
+matching duplicate ID is retained, matching the old lookup behavior; missing
+references and warning order/content are unchanged. This adds an in-memory map
+of references, not copies of version payloads. Fetch calls and selected columns
+are unchanged; no production bandwidth or latency improvement is claimed.
+
+`python3 tests/test_audit_version_lookup_cost.py` replaces fetches with synthetic
+rows and counts version-row visits (not elapsed time):
+
+| Versions / elements | Before | After |
+| --- | ---: | ---: |
+| 100 / 200 | 20,300 | 300 |
+| 200 / 400 | 80,600 | 600 |
+
+Both fixtures assert the complete expected warnings and counts. A separate case
+protects first-duplicate and missing-reference semantics. The existing
+`tests/test_audit_mindex_content.py` structural-warning test remains enabled.
+This tool-only optimization is separate from the full-save failure matrix above;
+it does not modify app runtime, Storage metadata, production DB or permissions.
+
+Focused timing check on Python 3.9.6 / Darwin arm64, using the same 200-version /
+400-element fixture: three warmups followed by 20 timed calls per variant in
+alternating before/after order. Median was 18.641 ms before and 5.227 ms after;
+nearest-rank p95 was 35.479 ms before and 11.527 ms after. Both variants produced
+identical complete counts/issues/warnings on every call. The before variant
+restored only the prior lookup in an in-memory module; no runtime file was reverted.
+Timing includes the complete mocked audit invocation, excludes fixture creation,
+imports and compilation, and makes no live network requests. These local samples
+are not a production database, UI latency, or guaranteed speedup measurement.
