@@ -65,6 +65,19 @@ def run(browser, url):
           field.focus();
           field.value = 'First draft';
           markServiceInputFeedbackChanged(field);
+          const observer = new MutationObserver(() => {});
+          observer.observe(host, {subtree:true, attributes:true, childList:true, characterData:true});
+          for (let i = 0; i < 20; i++) markServiceInputFeedbackChanged(field);
+          const repeatedMutations = observer.takeRecords().length;
+          observer.disconnect();
+          console.log('IDENTICAL_FEEDBACK_MUTATIONS', repeatedMutations);
+          check(repeatedMutations === 0, 'unchanged feedback mutated DOM: ' + repeatedMutations);
+          // A rebuilt status node must still be populated even if editor state is unchanged.
+          const replacement = status.cloneNode(false);
+          status.replaceWith(replacement);
+          markServiceInputFeedbackChanged(field);
+          check(replacement.textContent === '수정됨', 'replacement feedback not initialized');
+          replacement.replaceWith(status);
           let started = armSave();
           let pending = commitServiceItemInputs(service.id, 0);
           await started;

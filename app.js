@@ -10118,19 +10118,21 @@ function serviceInputFeedbackSignature(editor) {
 
 function setServiceInputFeedback(editor, status) {
   const labels = { modified: "수정됨", saving: "반영·저장 중", saved: "저장됨", error: "저장 실패" };
-  editor.dataset.inputStatus = status;
+  if (editor.dataset.inputStatus !== status) editor.dataset.inputStatus = status;
   const actions = editor.querySelector("[data-service-item-actions]")
     || [...(editor.closest(".svc-board-subgroup")?.querySelectorAll("[data-service-item-actions]") || [])]
       .find((candidate) => candidate.dataset.serviceId === editor.dataset.serviceId
         && candidate.dataset.serviceItemIndex === editor.dataset.serviceItemIndex)
     || editor;
-  actions.dataset.inputStatus = status;
+  if (actions.dataset.inputStatus !== status) actions.dataset.inputStatus = status;
   const feedback = actions.querySelector("[data-service-input-status]");
-  if (feedback) feedback.textContent = labels[status] || "";
+  const label = labels[status] || "";
+  if (feedback && feedback.textContent !== label) feedback.textContent = label;
   const button = actions.querySelector("[data-service-item-commit]");
   if (button) {
-    button.disabled = status === "saving";
-    button.setAttribute("aria-busy", String(status === "saving"));
+    const busy = status === "saving";
+    if (button.disabled !== busy) button.disabled = busy;
+    if (button.getAttribute("aria-busy") !== String(busy)) button.setAttribute("aria-busy", String(busy));
   }
 }
 

@@ -133,6 +133,9 @@ Presenter details live in `docs/thread-worship-presenter.md`. Keep shell edits o
   re-enables retry; retry reads the current fields, not the previous snapshot.
 - An older successful response must leave newer typing marked modified. Only
   success for an unchanged input snapshot may display saved.
+- Repeated identical feedback does not rewrite matching DOM text/attributes.
+  Compare each target value, rather than skipping solely on editor status, so a
+  replaced header/status node still receives its current label and busy state.
 - Cross-app source: STUDEX `dbSaveEntry` retains drafts when its conditional
   update is not confirmed; VITEX `backup_once` distinguishes local verification
   from cloud upload. MINDEX adopts the confirmation boundary, not their storage
