@@ -126,6 +126,22 @@ Presenter details live in `docs/thread-worship-presenter.md`. Keep shell edits o
   the shared `11px` label and `12px` metadata scale. Reserve smaller text for
   nonessential thumbnail annotations only.
 
+## Individual Save Draft Retention
+
+- The header save command must preserve the editor DOM, current draft, focus,
+  and text selection while its response is pending and after failure. Failure
+  re-enables retry; retry reads the current fields, not the previous snapshot.
+- An older successful response must leave newer typing marked modified. Only
+  success for an unchanged input snapshot may display saved.
+- Cross-app source: STUDEX `dbSaveEntry` retains drafts when its conditional
+  update is not confirmed; VITEX `backup_once` distinguishes local verification
+  from cloud upload. MINDEX adopts the confirmation boundary, not their storage
+  mechanisms or an implied server transaction guarantee.
+- Regression: `python3 tests/smoke_header_save_draft_retention.py` exercises the
+  real header renderer and commit/feedback lifecycle in Chromium and WebKit,
+  with deferred persistence doubles. It does not verify production writes,
+  cross-client conflict rejection, durable recovery, or multi-row atomicity.
+
 ## Assignee Terminology
 
 - 전역 UI에서 개인·단체 공통 입력 label과 placeholder는 `담당`으로 통일한다.
