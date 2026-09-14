@@ -66,7 +66,7 @@ def main():
                     page.evaluate("monitorMode='missing'")
                     page.locator('#monitorPanelBtn').click()
                     page.locator('[data-share]').check()
-                    page.wait_for_function("document.querySelector('.monitor-message').textContent.includes('서버 설정')")
+                    page.wait_for_function("document.querySelector('.monitor-share-status').textContent.includes('서버 설정')")
                     assert page.evaluate('state.presenter.index') == 2
                     print(engine, 'PASS opt-in, authenticated read, save results, separate edit/output, privacy, XSS, responsive layout, revoke, missing server isolation')
                 finally:

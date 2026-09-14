@@ -36,6 +36,27 @@ held in memory; the server stores only token hashes. Closing the panel locks it.
 Turning sharing off requests removal of that reporter's record. If offline, it
 expires normally rather than silently claiming remote deletion succeeded.
 
+## Panel hardening
+
+The controller samples small state every two seconds; uploads remain every 15
+seconds. Output connectivity uses the presenter's own heartbeat TTL. The displayed
+slide is explicitly the controller selection, not proof of rendered output.
+Invalid/stale timestamps and failed reads are not presented as verified live state.
+Reporting errors and viewer errors have separate status areas; refresh can retry
+reporting, and reconnection resumes reporting without changing worship state.
+
+Device and action filters operate on the existing last-20-category report only.
+Dates are shown with times; short session IDs distinguish identical device names.
+This is still sampled operational history, not a durable audit log. No new data
+fields, retention period, public permissions or database migration are introduced.
+
+Viewer access locks when the document becomes hidden, after five minutes without
+panel interaction, or after its 30-minute session lifetime. Locking clears the
+password input and cached rows, aborts pending viewer requests, and revokes the
+viewer token when reachable. Network/server errors never expose raw error text.
+These changes do not strengthen a weak administrator password; configure a strong
+password separately in the trusted server editor.
+
 ## Verification
 
 Run `tests/smoke_monitor.py`, `tests/smoke_monitor_isolation.py`, existing presenter
