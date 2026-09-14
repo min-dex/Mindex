@@ -1,5 +1,19 @@
 # Worship / Presenter Decision Log
 
+## Uploaded Media Cache Lifetime (2026-09-13)
+
+- New reference media and audio uploads use a shared 30-day Cache-Control
+  lifetime instead of one hour. Uploads retain timestamped paths and
+  `upsert: false`; replacing media must create a fresh URL, not overwrite bytes
+  at an existing long-lived URL.
+- Presenter preloading remains unchanged for live-output reliability.
+- This does not update existing Storage objects, clear billed usage, or prove
+  the source of historical egress. Browser eviction can still cause downloads.
+- Existing-object metadata changes belong to the Data ownership track: audit
+  immutable paths and actual response headers first, preserve bytes and URLs,
+  and use a supported Storage operation. Do not directly edit storage tables or
+  download/re-upload the entire bucket to change cache policy.
+
 ## 50px Metadata Typography (2026-09-13)
 
 - Presenter roles at the 1920-stage 50px size use weight 600. Larger fullscreen

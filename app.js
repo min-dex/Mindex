@@ -505,6 +505,8 @@ const PRESENTER_SLIDE_LAYOUTS = {
 const PRESENTER_CHROMAKEY_VIDEO_POSTER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%2300ff00'/%3E%3C/svg%3E";
 const PRESENTER_CHROMAKEY_READY_LOOP_VIDEO = "assets/presenter/chromakey-ready-loop-fast.mp4?v=source-quality-20260913";
 const PRESENTER_MEDIA_STORAGE_BUCKET = "mindex-worship-media";
+// Uploads use new paths with upsert disabled, so replacements get fresh URLs.
+const PRESENTER_MEDIA_CACHE_CONTROL = "2592000";
 const PRESENTER_REFERENCE_MEDIA_SECTION_KEYS = new Set(["sermon", "announcements"]);
 const PRESENTER_REFERENCE_MEDIA_ACCEPT = "image/*,video/*,audio/*";
 const SERVICE_ITEM_AUDIO_ACCEPT = "audio/*";
@@ -12996,7 +12998,7 @@ async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input
     uploadedPath = path;
     const { error } = await state.client.storage
       .from(PRESENTER_MEDIA_STORAGE_BUCKET)
-      .upload(path, file, { cacheControl: "3600", contentType: file.type || undefined, upsert: false });
+      .upload(path, file, { cacheControl: PRESENTER_MEDIA_CACHE_CONTROL, contentType: file.type || undefined, upsert: false });
     if (error) throw error;
     const { data } = state.client.storage.from(PRESENTER_MEDIA_STORAGE_BUCKET).getPublicUrl(path);
     const url = String(data?.publicUrl || "").trim();
@@ -13140,7 +13142,7 @@ async function uploadServiceItemAudioAsset(input) {
     uploadedPath = path;
     const { error } = await state.client.storage
       .from(PRESENTER_MEDIA_STORAGE_BUCKET)
-      .upload(path, file, { cacheControl: "3600", contentType: file.type || undefined, upsert: false });
+      .upload(path, file, { cacheControl: PRESENTER_MEDIA_CACHE_CONTROL, contentType: file.type || undefined, upsert: false });
     if (error) throw error;
     const { data } = state.client.storage.from(PRESENTER_MEDIA_STORAGE_BUCKET).getPublicUrl(path);
     const url = String(data?.publicUrl || "").trim();
