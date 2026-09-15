@@ -70,18 +70,11 @@
   and an omitted assignee. No separate prayer elements are created.
 - Bulk apply remains an in-memory edit; saving is still a separate action.
 
-## Right Controller Bulk Input (2026-09-16)
-
-- The right controller prioritizes preview and slide navigation. Bulk worship
-  input starts collapsed when empty; its native details summary remains visible.
-- A service with a draft or an in-progress apply starts expanded on first mount.
-  Same-service updates preserve the user's open/closed choice, textarea DOM,
-  draft and selection. Collapsing never applies, saves or clears input.
-- Left-side input, apply semantics, output launch and preload are unchanged.
-- `tests/smoke_preparation_disclosure.py` covers keyboard disclosure, drafts,
-  same-service updates and narrow layout with synthetic data in both engines.
-
 ## Individual Input Feedback (2026-09-12)
+
+- Right-controller bulk input stays directly visible, including when empty.
+  The 2026-09-16 disclosure experiment was reverted at the user's request;
+  reducing clutter must not add an extra step to this input workflow.
 
 - The individual editor command is labeled `반영·저장`: it still applies the
   fields and saves to the DB. Quick worship input retains its separate semantics.

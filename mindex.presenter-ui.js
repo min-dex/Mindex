@@ -131,17 +131,11 @@ function renderPresenterServiceInputRail(service) {
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const placeholder = examples || "입력할 항목이 없습니다";
   const remainingExamples = remainingPresenterPreparationExamples(placeholder, draft);
-  const mountedSidebar = refs.rightSidebar?.querySelector("[data-presenter-right-sidebar]");
-  const mountedDisclosure = mountedSidebar?.dataset.serviceId === service.id
-    ? mountedSidebar.querySelector("[data-presenter-preparation-disclosure]") : null;
-  const open = mountedDisclosure ? mountedDisclosure.open : Boolean(draft || applying);
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
-      <details data-presenter-preparation-disclosure ${open ? "open" : ""}>
-        <summary class="svc-presenter-input-rail-head" tabindex="0">
-          <span>예배 일괄 입력</span>
-          <i data-lucide="chevron-down" aria-hidden="true"></i>
-        </summary>
+      <header class="svc-presenter-input-rail-head">
+        <span>예배 일괄 입력</span>
+      </header>
       <section class="svc-presenter-preparation-input">
         <textarea class="svc-presenter-preparation-text" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="5" placeholder="${escapeAttr(placeholder)}" aria-label="예배 준비 입력">${escapeHtml(draft)}</textarea>
         <div class="svc-presenter-preparation-examples" data-presenter-preparation-examples aria-label="남은 입력 예시" ${remainingExamples ? "" : "hidden"}>${escapeHtml(remainingExamples)}</div>
@@ -152,6 +146,5 @@ function renderPresenterServiceInputRail(service) {
           </button>
         </div>
       </section>
-      </details>
     </aside>`;
 }
