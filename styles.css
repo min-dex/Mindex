@@ -6514,6 +6514,20 @@ body[data-theme="dark"] .service-week-empty:hover {
   font-size: 11px;
   font-weight: 700;
 }
+.svc-presenter-input-rail summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: var(--ui-label-weight);
+  padding-bottom: 0;
+}
+.svc-presenter-input-rail summary::-webkit-details-marker { display: none; }
+.svc-presenter-input-rail summary svg { width: 16px; height: 16px; flex-shrink: 0; }
+.svc-presenter-input-rail details[open] > summary svg { transform: rotate(180deg); }
+.svc-presenter-input-rail details[open] > .svc-presenter-preparation-input { margin-top: 10px; }
+.svc-presenter-input-rail summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .svc-presenter-preparation-input {
   display: grid;
   gap: 6px;
