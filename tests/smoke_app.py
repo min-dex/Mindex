@@ -5570,7 +5570,7 @@ def main() -> int:
                     )
                     if (
                         presenter_font_contract["chromakey"]["unit"] == "0.0520833333cqw"
-                        and presenter_font_contract["chromakey"]["barHeight"] == "20%"
+                        and presenter_font_contract["chromakey"]["barHeight"] == "18%"
                         and presenter_font_contract["chromakey"]["outputBg"] == "#00ff00"
                         and presenter_font_contract["chromakey"]["display"] == "67.5px"
                         and presenter_font_contract["chromakey"]["section"] == "52.5px"

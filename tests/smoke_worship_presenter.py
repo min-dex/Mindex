@@ -7602,7 +7602,7 @@ def main() -> int:
                     and output_state["frame"]["width"] == 1920
                     and output_state["frame"]["height"] == 1080
                     and abs(output_state["frame"]["ratio"] - (16 / 9)) <= 0.01
-                    and abs(output_state["lowerBarRatio"] - 0.20) <= 0.01
+                    and abs(output_state["lowerBarRatio"] - 0.18) <= 0.01
                     and output_state["overflow"] <= 2
                 ):
                     pass_("presenter-output-route", json.dumps(output_state, ensure_ascii=False))
