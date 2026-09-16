@@ -8390,6 +8390,13 @@ function handleDetailClick(event) {
     return;
   }
 
+  const setlistServiceLink = event.target.closest("[data-setlist-open-service]");
+  if (setlistServiceLink) {
+    const id = setlistServiceLink.dataset.setlistOpenService;
+    if (state.services.some(service => service.id === id)) selectService(id);
+    return;
+  }
+
   const serviceSetlistViewBtn = event.target.closest("[data-service-setlist-view]");
   if (serviceSetlistViewBtn) {
     const view = serviceSetlistViewBtn.dataset.serviceSetlistView;
@@ -24167,9 +24174,21 @@ async function saveWorshipSetlistLeader(id) {
   if (state.module === "service" && state.selectedServiceTypeId === SERVICE_SETLIST_ARCHIVE_PANEL_ID) renderCurrentServiceModuleDetail();
 }
 
+function worshipSetlistArchiveServiceId(source = {}) {
+  const services = state.services || [];
+  const explicit = services.find(service => service.id === source.service_id);
+  if (explicit) return explicit.id;
+  if (!source.service_date || !source.service_type_id) return "";
+  const type = worshipAppServiceTypeId(source.service_type_id);
+  const matches = services.filter(service => serviceDateString(service) === source.service_date
+    && worshipAppServiceTypeId(service.type_id || service.service_type_id) === type);
+  return matches.length === 1 ? matches[0].id : "";
+}
+
 function renderWorshipSetlistArchiveEntry(entry) {
   if (!entry.candidates.length && entry.source.weekly_status) return renderWorshipWeekStatus({...entry,slotName:worshipSetlistArchiveTypeName(entry.source.service_type_id),weeklyStatus:entry.source.weekly_status,weeklyReason:entry.source.weekly_reason || ""});
   const source = entry.source || {};
+  const serviceId = worshipSetlistArchiveServiceId(source);
   const typeName = worshipSetlistArchiveTypeName(source.service_type_id);
   const title = state.worshipSetlistArchiveView === "service" ? source.service_date || "날짜 없음" : typeName;
   const leader = String(source.leader || "").trim();
@@ -24179,7 +24198,7 @@ function renderWorshipSetlistArchiveEntry(entry) {
       <header>
         <div class="svc-setlist-entry-title">
           <div class="svc-setlist-entry-heading">
-            <strong>${escapeHtml(title)}</strong>
+            ${serviceId ? `<button type="button" class="svc-setlist-service-link" data-setlist-open-service="${escapeAttr(serviceId)}" aria-label="${escapeAttr(`${source.service_date} ${typeName} 열기`)}">${escapeHtml(title)}</button>` : `<strong>${escapeHtml(title)}</strong>`}
             ${aliases ? `<span class="svc-setlist-alias" title="${escapeAttr(aliases)}">${escapeHtml(aliases)}</span>` : ""}
           </div>
           <div class="svc-setlist-entry-meta">

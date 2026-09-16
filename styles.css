@@ -9273,3 +9273,12 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 
 
 .svc-setlist-leader-form input::placeholder { color: var(--ink-5); opacity: 1; }
+
+/* Setlist card titles use the existing service navigation. */
+.svc-setlist-service-link {
+  appearance: none; border: 0; background: none; padding: 0; margin: 0;
+  color: inherit; font: inherit; font-weight: 700; text-align: left;
+  cursor: pointer; flex-shrink: 0;
+}
+.svc-setlist-service-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.svc-setlist-service-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
