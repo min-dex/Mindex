@@ -116,6 +116,13 @@ Inactive module tabs should stay visually quiet. Active tabs may show a clearer 
 
 ## Presenter
 
+- With the right panel open, the start command beside the preview is primary;
+  the left start command remains available with a neutral surface. Closing the
+  right panel restores the left command's accent. Stop styling and button
+  dimensions do not change with this hierarchy.
+- Bulk worship input remains expanded. Keep drafts, inline per-line examples,
+  focus and save/apply behavior intact; do not add automatic collapse.
+
 Presenter details live in `docs/thread-worship-presenter.md`. Keep shell edits out of presenter internals unless required for integration.
 
 - Chromium may suppress CSS transitions inside the `service` and `presenter`

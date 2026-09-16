@@ -1,5 +1,16 @@
 # Worship / Presenter Decision Log
 
+## Output Action Hierarchy (2026-09-16)
+
+- The preview-adjacent right start command is primary while the right panel is
+  open. The left start command stays available with neutral emphasis and
+  regains accent when the right panel closes. Stop styling, action handlers
+  and button dimensions remain unchanged.
+- Keep bulk worship input expanded, as explicitly requested by the user.
+  Do not introduce a preparation disclosure or automatic collapse. Inline
+  examples remain visible only on unoccupied lines; drafts and focus stay put.
+- Reuse current tool-group dividers; no additional cards, spacing or decoration.
+
 ## Uploaded Media Cache Lifetime (2026-09-13)
 
 - New reference media and audio uploads use a shared 30-day Cache-Control

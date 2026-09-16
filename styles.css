@@ -6892,6 +6892,22 @@ textarea.svc-presenter-input-control--multiline {
   background: color-mix(in srgb, var(--panel-2) 50%, transparent);
   color: var(--sidebar-ink);
 }
+/* Keep one primary start action while the output controls are visible. */
+body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-presenter-launch--stop) {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-ink);
+}
+body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-presenter-launch--stop):is(:hover, :focus-visible) {
+  background: var(--panel-2);
+}
+.svc-presenter-side-panel .svc-presenter-launch:not(.svc-presenter-launch--stop) {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.svc-presenter-side-panel .svc-presenter-launch:not(.svc-presenter-launch--stop):is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--accent) 88%, white);
+  color: var(--accent-ink);
+}
 .svc-presenter-side-panel .svc-presenter-screen-select {
   max-width: none;
   width: 100%;
