@@ -1272,6 +1272,7 @@ function bindStaticEvents() {
     syncBrowserHistory();
   });
   refs.songList.addEventListener("scroll", saveCurrentListScroll, { passive: true });
+  refs.songList.addEventListener("scroll", handlePresenterPreparationScroll, { capture: true, passive: true });
   refs.songList.addEventListener("keydown", handleDetailKeydown);
   refs.songList.addEventListener("input", handleDetailInput);
   refs.songList.addEventListener("paste", handlePresenterPreparationPaste);
@@ -1576,6 +1577,10 @@ function bindDetailInteractionRoot(root, options = {}) {
   if (options.presenterBoard) root.addEventListener("dblclick", handlePresenterBoardDoubleClick);
   root.addEventListener("keydown", handleDetailKeydown, { capture: true });
   root.addEventListener("input", handleDetailInput);
+  root.addEventListener("scroll", handlePresenterPreparationScroll, { capture: true, passive: true });
+  root.addEventListener("focusin", (event) => {
+    if (event.target?.matches?.("[data-presenter-preparation-input]")) syncPresenterPreparationGhost(event.target);
+  });
   root.addEventListener("focusout", handleSetlistLeaderFocusOut);
   root.addEventListener("change", handleDetailChange);
   root.addEventListener("submit", handleDetailSubmit);
@@ -9144,12 +9149,7 @@ function handleDetailInput(event) {
   if (preparationInput) {
     const serviceId = preparationInput.dataset.serviceId || state.selectedServiceId;
     if (serviceId) state.presenterPreparationDrafts[serviceId] = preparationInput.value;
-    const examples = preparationInput.parentElement.querySelector("[data-presenter-preparation-examples]");
-    if (examples) {
-      const remaining = remainingPresenterPreparationExamples(preparationInput.placeholder, preparationInput.value);
-      examples.textContent = remaining;
-      examples.hidden = !remaining;
-    }
+    syncPresenterPreparationGhost(preparationInput);
     event.stopPropagation();
     return;
   }
@@ -16202,6 +16202,7 @@ function setRightSidebarContent(html = "") {
   }
   refs.rightSidebar.dataset.hasContent = hasContent ? "true" : "false";
   applyRightSidebarVisibility(hasContent);
+  refs.rightSidebar.querySelectorAll("[data-presenter-preparation-input]").forEach(syncPresenterPreparationGhost);
   if (hasContent) {
     refreshIcons(refs.rightSidebar);
     applyPresenterPreviewScales(refs.rightSidebar);
@@ -23341,15 +23342,16 @@ function renderPresenterSidebarPreparationInput(service) {
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const examples = presenterPreparationPlaceholderForService(service);
   const placeholder = examples || "입력할 항목이 없습니다";
-  const remainingExamples = remainingPresenterPreparationExamples(placeholder, draft);
   return `
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
         <span>예배 일괄 입력</span>
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
+        <div class="svc-preparation-editor">
         <textarea class="svc-presenter-preparation-text svc-presenter-preparation-text--sidebar" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="4" placeholder="${escapeAttr(placeholder)}" aria-label="예배 입력 붙여넣기">${escapeHtml(draft)}</textarea>
-        <div class="svc-presenter-preparation-examples" data-presenter-preparation-examples aria-label="남은 입력 예시" ${remainingExamples ? "" : "hidden"}>${escapeHtml(remainingExamples)}</div>
+        <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
+        </div>
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply svc-presenter-preparation-apply--sidebar" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}" ${applying ? "disabled" : ""}>
             <i data-lucide="wand-sparkles"></i>
@@ -28356,7 +28358,7 @@ function renderPresenterControlsTop(service, slides, active, index) {
           </button>
           <div class="svc-presenter-window-controls">
           ${renderPresenterScreenControl()}
-          <button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="송출 화면 전체화면" title="송출 화면 전체화면" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i></button>
+          <button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="송출 화면 전체화면" title="송출 화면 전체화면" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i><span>전체화면</span></button>
           ${renderPresenterAlwaysOnTopControl()}
           </div>
         </div>

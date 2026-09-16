@@ -1,38 +1,29 @@
 // Worship preparation input parsing and song-resolution helpers.
 // Loaded before app.js so these browser globals stay available to app orchestration.
 
-function remainingPresenterPreparationExamples(examples = "", draft = "") {
-  if (!String(draft)) return "";
-  const rows = String(examples).split(/\r?\n/).filter((line) => line.includes(":"));
-  const keyFor = (label) => compactSearchValue(normalizePresenterPreparationInputLabel(label));
-  const entryKey = (entry) => compactSearchValue(entry.rawLabel || entry.label) === "말씀"
-    && String(entry.content || "").trim() && !presenterPreparationContentLooksScriptureReference(entry.content)
-    ? "설교제목" : keyFor(entry.label);
-  const keys = rows.map((line) => keyFor(line.slice(0, line.indexOf(":"))));
-  const covered = new Set();
-  const labelOnlyLines = new Set();
-  String(draft).split(/\r\n?|\n/).forEach((line, index) => {
-    const text = normalizePresenterPreparationLineText(line);
-    if (!text) return;
-    const pending = text.match(/^([^:：]+)[:：]\s*$/);
-    const parsed = parseKnownPresenterPreparationLine(text) || parsePresenterPreparationLine(text)
-      || (pending ? { label: pending[1] } : null);
-    if (parsed) {
-      covered.add(entryKey(parsed));
-      return;
-    }
-    const prefix = keyFor(text);
-    const matching = keys.filter((key) => key.startsWith(prefix));
-    if (!matching.length) return;
-    labelOnlyLines.add(index + 1);
-    if (keys.includes(prefix)) covered.add(prefix);
-    else if (matching.length === 1) covered.add(matching[0]);
-  });
-  for (const entry of parsePresenterPreparationInput(draft).entries) {
-    if (!labelOnlyLines.has(entry.line)) covered.add(entryKey(entry));
-  }
-  return rows.filter((_, index) => !covered.has(keys[index])).join("\n");
+function renderPresenterPreparationGhost(examples = "", draft = "") {
+  const values = String(draft).split(/\r\n?|\n/);
+  const hints = String(examples).split(/\r\n?|\n/);
+  return Array.from({ length: Math.max(values.length, hints.length) }, (_, index) => {
+    const value = values[index] || "";
+    const occupied = value.length > 0;
+    return `<span class="svc-preparation-ghost-line${occupied ? " is-occupied" : ""}">${escapeHtml(occupied ? value : hints[index] || " ")}</span>`;
+  }).join("");
 }
+
+function syncPresenterPreparationGhost(input) {
+  const ghost = input?.parentElement?.querySelector("[data-presenter-preparation-ghost]");
+  if (!ghost) return;
+  const markup = renderPresenterPreparationGhost(input.placeholder, input.value);
+  if (ghost.innerHTML !== markup) ghost.innerHTML = markup;
+  ghost.style.width = `${input.clientWidth}px`;
+  ghost.style.transform = `translateY(${-input.scrollTop}px)`;
+}
+
+function handlePresenterPreparationScroll(event) {
+  if (event.target?.matches?.("[data-presenter-preparation-input]")) syncPresenterPreparationGhost(event.target);
+}
+
 
 function presenterPreparationPlaceholderSongLabel(item) {
   const label = String(item?.label || "").replace(/\s+/g, "").trim();
