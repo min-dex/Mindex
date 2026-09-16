@@ -84,6 +84,26 @@ def run(browser, url):
         return {started, release};
       };
       const results = [];
+      for (const mode of ['full', 'element']) {
+        const [target] = fixture();
+        edit(target, 'Keep invalid-scope draft');
+        const realBuild = buildWorshipPersistenceRows;
+        buildWorshipPersistenceRows = (...args) => {
+          const rows = realBuild(...args);
+          rows.sections[0].service_id = 'another-service';
+          return rows;
+        };
+        let rejected = false;
+        try {
+          if (mode === 'full') await saveService(sid, {silent:true, renderAfterSave:false, throwOnError:true});
+          else await save(target);
+        } catch (error) { rejected = error.message.includes('service ownership mismatch'); }
+        finally { buildWorshipPersistenceRows = realBuild; }
+        check(rejected && writes.length === 0, mode+' invalid scope reached DB');
+        check(state.dirty.service && item(target).raw_title === 'Keep invalid-scope draft', mode+' rejected save lost draft');
+        check(!state.saving && !activeServiceSavePromise, mode+' rejected save kept lock');
+      }
+      results.push('full and element saves reject foreign sections before any DB write');
       for (const count of [0, null]) {
         const [target] = fixture();
         edit(target, 'Keep this draft');

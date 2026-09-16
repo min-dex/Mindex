@@ -81,9 +81,24 @@ function fixture(failDocument) {
   };
   vm.createContext(validation);
   vm.runInContext(extract('validateWorshipPersistenceRows'), validation);
-  assert.doesNotThrow(() => validation.validateWorshipPersistenceRows({
+  assert.throws(() => validation.validateWorshipPersistenceRows({
     sections: [{id: 'section', service_id: 'different-service', created_at: 'now', updated_at: 'now'}],
     elements: [{id: 'item', section_id: 'unsubmitted-section', element_type: 'plain_text', created_at: 'now', updated_at: 'now'}],
-  }, {serviceId: 'service'}));
-  console.log('REPRODUCED: payload validator lacks service/section ownership checks');
+  }, {serviceId: 'service'}), /service ownership mismatch/);
+  const validRows = {
+    sections: [{id: 'section', service_id: 'service', created_at: 'now', updated_at: 'now'}],
+    elements: [{id: 'item', section_id: 'section', element_type: 'plain_text', created_at: 'now', updated_at: 'now'}],
+  };
+  assert.doesNotThrow(() => validation.validateWorshipPersistenceRows(validRows, {serviceId: 'service'}));
+  assert.doesNotThrow(() => validation.validateWorshipPersistenceRows({sections: [], elements: []}, {serviceId: 'service'}));
+  assert.throws(() => validation.validateWorshipPersistenceRows({
+    ...validRows, elements: [{...validRows.elements[0], section_id: 'foreign-section'}],
+  }, {serviceId: 'service'}), /section is not in this save/);
+  assert.throws(() => validation.validateWorshipPersistenceRows({
+    ...validRows, sections: [...validRows.sections, ...validRows.sections],
+  }, {serviceId: 'service'}), /duplicate id/);
+  assert.throws(() => validation.validateWorshipPersistenceRows({
+    ...validRows, elements: [...validRows.elements, ...validRows.elements],
+  }, {serviceId: 'service'}), /duplicate id/);
+  console.log('PASS: payload service/section membership and duplicate IDs are checked');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -51,11 +51,12 @@ assert.equal(prepare([song('봉헌','곡',1)], {service_type_id:'youth'})[0].arc
 console.log('PASS: Archive role labels across services and no duplicated suffix');
 
 context.state = { search: '이재희', worshipSetlistArchiveView: 'date' };
+context.worshipSetlistLeaderDrafts = new Map();
 context.normalizeSearchValue = value => String(value || '').trim().toLowerCase();
 context.serviceTypeDisplayName = () => '금요기도회';
 context.escapeHtml = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 context.escapeAttr = value => context.escapeHtml(value).replaceAll('"', '&quot;');
-for (const name of ['filterWorshipSetlistArchiveEntries', 'renderWorshipSetlistArchiveEntry', 'renderWorshipSetlistCandidate']) {
+for (const name of ['worshipSetlistArchiveServiceId', 'worshipSetlistLeaderInputWidth', 'renderWorshipSetlistLeaderEditor', 'filterWorshipSetlistArchiveEntries', 'renderWorshipSetlistArchiveEntry', 'renderWorshipSetlistCandidate']) {
   const start = source.indexOf(`function ${name}(`);
   vm.runInContext(source.slice(start, source.indexOf('\n}\n', start) + 2), context);
 }
@@ -67,7 +68,7 @@ assert.ok(context.renderWorshipSetlistArchiveEntry(entry).includes('이재희 �
 assert.ok(context.renderWorshipSetlistArchiveEntry(entry).includes('<strong>금요기도회</strong>'));
 context.state.worshipSetlistArchiveView = 'service';
 assert.ok(context.renderWorshipSetlistArchiveEntry(entry).includes('<strong>2026-01-16</strong>'));
-assert.ok(context.renderWorshipSetlistArchiveEntry({...entry, source:{}}).includes('미기록'));
+assert.ok(context.renderWorshipSetlistArchiveEntry({...entry, source:{}}).includes('placeholder="—" value=""'));
 assert.ok(context.renderWorshipSetlistArchiveEntry({...entry, source:{leader:'<이름>'}}).includes('&lt;이름&gt;'));
 console.log('PASS: Leader search, absent leader, HTML escaping and contextual card titles');
 

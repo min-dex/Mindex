@@ -7173,9 +7173,14 @@ function validateWorshipPersistenceRows(rows = {}, context = {}) {
   const errors = [];
   const serviceId = String(context.serviceId || "").trim();
   const elementSlotByKey = new Map();
+  const sectionIds = new Set();
+  const elementIds = new Set();
   (rows.sections || []).forEach((section, index) => {
     if (!section?.id) errors.push(`section[${index}] id missing`);
     if (!section?.service_id) errors.push(`section[${index}] service_id missing`);
+    if (serviceId && section?.service_id !== serviceId) errors.push(`section[${index}] service ownership mismatch`);
+    if (section?.id && sectionIds.has(section.id)) errors.push(`section[${index}] duplicate id`);
+    if (section?.id) sectionIds.add(section.id);
     if (!section?.created_at) errors.push(`section[${index}] created_at missing`);
     if (!section?.updated_at) errors.push(`section[${index}] updated_at missing`);
   });
@@ -7183,6 +7188,9 @@ function validateWorshipPersistenceRows(rows = {}, context = {}) {
     const label = element?.source_ref?.label || element?.title || element?.id || `element[${index}]`;
     if (!element?.id) errors.push(`${label} id missing`);
     if (!element?.section_id) errors.push(`${label} section_id missing`);
+    if (element?.section_id && !sectionIds.has(element.section_id)) errors.push(`${label} section is not in this save`);
+    if (element?.id && elementIds.has(element.id)) errors.push(`${label} duplicate id`);
+    if (element?.id) elementIds.add(element.id);
     if (!element?.created_at) errors.push(`${label} created_at missing`);
     if (!element?.updated_at) errors.push(`${label} updated_at missing`);
     if (!WORSHIP_DB_ELEMENT_TYPES.has(String(element?.element_type || ""))) {

@@ -1,5 +1,17 @@
 # Current Worship Persistence Contract
 
+## Client payload validation (2026-09-16)
+
+The client now rejects sections whose service_id differs from the save target,
+elements whose section_id is absent from the submitted sections, and duplicate
+section/element IDs. Full and single-element save tests inject a foreign section
+and verify zero DB writes, retained drafts and released save locks.
+
+This validates the submitted payload only. It does not verify ownership of an
+existing ID against the live database, replace server constraints, make separate
+requests atomic, or prevent stale-client document replacement. The partial-write
+and cross-client overwrite reproductions below still succeed.
+
 ## Save receipt hardening (2026-09-11)
 
 Full and element saves now request an exact affected-row count for the service
@@ -114,10 +126,10 @@ must be inspected separately before asserting production integrity.
    not DB rollback.
 2. **High: cross-client lost updates.** ID-only document replacement accepts a
    stale client's source_ref. A same-tab save queue is not compare-and-swap.
-3. **Medium: scope validation.** `validateWorshipPersistenceRows` checks IDs,
-   timestamps, modes and duplicate slot keys, but currently does not reject a
-   section belonging to another service or an element whose section is absent
-   from the submitted set. Ordinary FK existence alone does not establish ownership.
+3. **Scope validation, partially hardened 2026-09-16.** The client now checks
+   payload service/section membership and duplicate IDs, in addition to timestamps,
+   modes and duplicate slots. Live database ownership of submitted IDs still needs
+   server validation. Ordinary FK existence alone does not establish ownership.
 4. **Recovery is limited.** Local snapshot failure warns but does not prevent
    save. Remote history shares the same overwrite path. The history size constant
    is measured with JS string length, and trimming retains one entry even above
