@@ -738,7 +738,9 @@
   font-size: var(--presenter-scripture-fitted-size, var(--presenter-scripture-bar-size));
   line-break: anywhere;
   overflow-wrap: anywhere;
-  white-space: normal;
+  white-space: pre-wrap;
+  text-align: justify;
+  text-align-last: left;
   word-break: break-all;
 }
 .presenter-output-root:not(.no-chromakey) .presenter-slide--scripture-sermon {
@@ -1187,7 +1189,9 @@
   overflow-wrap: anywhere;
   text-overflow: clip;
   -webkit-text-stroke: .01em currentColor;
-  white-space: normal;
+  white-space: pre-wrap;
+  text-align: justify;
+  text-align-last: left;
   word-break: break-all;
 }
 .presenter-slide--scripture-sermon .presenter-scripture-reading,
