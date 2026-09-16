@@ -8331,6 +8331,12 @@ function handleDetailClick(event) {
     return;
   }
 
+  const serviceDbBtn = event.target.closest("[data-service-db-song], [data-service-db-reference]");
+  if (serviceDbBtn) {
+    void openServiceDbTab(serviceDbBtn);
+    return;
+  }
+
   const openSongBtn = event.target.closest("[data-open-song]");
   if (openSongBtn) {
     openGlobalSongResult(openSongBtn.dataset.openSong);
@@ -26367,10 +26373,26 @@ function renderPresenterRoleOptions(selectedRole = "") {
 }
 
 
+async function openServiceDbTab(button) {
+  if (button.disabled) return;
+  const songId = button.dataset.serviceDbSong;
+  const reference = button.dataset.serviceDbReference;
+  if (!songId && !parseBibleReference(reference)) return;
+  button.disabled = true;
+  try {
+    if (!(await confirmSaveBeforeLeaving())) return;
+    await openNewPageTab();
+    if (songId) await openGlobalSongResult(songId);
+    else await openGlobalBibleReference(reference);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function renderServicePraiseLinkControl(item, index) {
   if (!isSongServiceLabel(item?.label) && !isSpecialSongServiceItem(item)) return "";
   if (item?.song_id) {
-    return `<button class="svc-item-link svc-item-link--linked" type="button" data-open-song="${escapeAttr(item.song_id)}" aria-label="찬양 DB에서 열기" title="찬양 DB에서 열기">DB</button>`;
+    return `<button class="svc-item-link svc-item-link--linked" type="button" data-service-db-song="${escapeAttr(item.song_id)}" aria-label="찬양 DB 새 탭에서 열기" title="찬양 DB 새 탭에서 열기">DB</button>`;
   }
   if (isOneOffSpecialPraiseItem(item, selectedServiceForEditor())) {
     return `<span class="svc-item-link svc-item-link--manual" aria-label="일회성 특송">일회성</span>`;
@@ -26400,7 +26422,7 @@ function renderServiceScriptureLinkControl(item) {
     : null;
   const reference = normalizeServiceItemReferenceSpacing(payload?.reference || item?.raw_title);
   if (!parseBibleReference(reference)) return "";
-  return `<button class="svc-item-link svc-item-link--linked" type="button" data-open-scripture-reference="${escapeAttr(reference)}" aria-label="말씀 DB에서 열기" title="말씀 DB에서 열기">DB</button>`;
+  return `<button class="svc-item-link svc-item-link--linked" type="button" data-service-db-reference="${escapeAttr(reference)}" aria-label="말씀 DB 새 탭에서 열기" title="말씀 DB 새 탭에서 열기">DB</button>`;
 }
 
 function renderServiceDashboard(options = {}) {
