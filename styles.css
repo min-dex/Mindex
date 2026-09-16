@@ -6860,6 +6860,26 @@ textarea.svc-presenter-input-control--multiline {
   color: var(--sidebar-ink);
   letter-spacing: 0;
 }
+.svc-presenter-window-controls {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+.svc-presenter-window-controls > .icon-btn {
+  min-width: 0;
+  width: 100%;
+  height: 30px;
+  gap: 6px;
+  background: transparent;
+  color: var(--ink-3);
+}
+.svc-presenter-window-controls .svc-presenter-fullscreen {
+  width: 30px;
+  height: 30px;
+}
 .svc-presenter-side-panel .svc-presenter-launch:hover,
 .svc-presenter-side-panel .svc-presenter-launch:focus-visible {
   background: color-mix(in srgb, var(--panel-2) 50%, transparent);

@@ -3181,8 +3181,35 @@ function consumePresenterShortcutEvent(event) {
 }
 
 function requestPresenterOutputFullscreenFromController() {
-  presenterOutputWindowRef()?.focus?.();
-  window.mindexElectron?.fullscreenPresenterOutput?.().catch?.(() => {});
+  const fail = () => showToast("송출 화면을 전체화면으로 전환하지 못했습니다. 송출 화면에서 직접 클릭해 주세요.", "error");
+  if (window.mindexElectron?.fullscreenPresenterOutput) {
+    window.mindexElectron.fullscreenPresenterOutput().catch(fail);
+    return;
+  }
+  const output = presenterOutputWindowRef();
+  if (!output || output.closed) {
+    showToast("연결된 송출 창이 없습니다. 송출을 시작한 뒤 다시 시도해 주세요.", "info");
+    return;
+  }
+  const requestId = `fullscreen:${Date.now()}:${Math.random()}`;
+  const origin = window.location.origin;
+  const finish = (success) => {
+    window.clearTimeout(timer);
+    window.removeEventListener("message", onResult);
+    if (!success) fail();
+  };
+  const onResult = (event) => {
+    if (event.origin !== origin || event.source !== output
+      || event.data?.type !== "presenter-fullscreen-result" || event.data.requestId !== requestId) return;
+    finish(event.data.success === true);
+  };
+  const timer = window.setTimeout(() => finish(false), 5000);
+  window.addEventListener("message", onResult);
+  try {
+    output.focus();
+    // Must run directly in the controller click/key event, before any await.
+    output.postMessage({ type: "presenter-fullscreen-request", requestId }, { targetOrigin: origin, delegate: "fullscreen" });
+  } catch { finish(false); }
 }
 
 function shouldKeepPresenterShortcutInFocusedControl(event) {
@@ -3261,6 +3288,19 @@ function applyPresenterPreviewScales(host = document) {
   });
 }
 
+function setupPresenterDelegatedFullscreen() {
+  window.addEventListener("message", async (event) => {
+    if (event.origin !== window.location.origin || !window.opener || event.source !== window.opener
+      || event.data?.type !== "presenter-fullscreen-request" || typeof event.data.requestId !== "string") return;
+    let success = false;
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      success = Boolean(document.fullscreenElement);
+    } catch { /* Report failure to the controller without changing the slide. */ }
+    event.source.postMessage({ type: "presenter-fullscreen-result", requestId: event.data.requestId, success }, event.origin);
+  });
+}
+
 function setupPresenterStartupFullscreen() {
   const url = new URL(window.location.href);
   if (url.searchParams.get("fullscreen") !== "start") return;
@@ -3317,6 +3357,7 @@ function initPresenterOutputCore() {
   applyPresenterOutputViewportScale();
   window.addEventListener("resize", () => applyPresenterOutputViewportScale());
   setupPresenterStartupFullscreen();
+  setupPresenterDelegatedFullscreen();
 
   let currentPayload = null;
   let channel = null;

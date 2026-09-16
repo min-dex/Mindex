@@ -28354,8 +28354,11 @@ function renderPresenterControlsTop(service, slides, active, index) {
             <i data-lucide="${escapeAttr(launchIcon)}"></i>
             <span>${escapeHtml(launchLabel)}</span>
           </button>
+          <div class="svc-presenter-window-controls">
           ${renderPresenterScreenControl()}
+          <button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="송출 화면 전체화면" title="송출 화면 전체화면" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i></button>
           ${renderPresenterAlwaysOnTopControl()}
+          </div>
         </div>
         <div class="svc-presenter-main" aria-live="polite">
           <span class="svc-slide-counter" aria-label="${escapeAttr(uiText("presenter.aria.slideCount", { current, count }))}">
@@ -30574,6 +30577,10 @@ function commitPresenterJumpDraft(serviceId = state.presenter.serviceId) {
 }
 
 function runPresenterAction(action, serviceId = state.selectedServiceId, options = {}) {
+  if (action === "fullscreen") {
+    requestPresenterOutputFullscreenFromController();
+    return;
+  }
   if (action === "retry-video") {
     requestPresenterVideoRetry(serviceId);
     return;
