@@ -30,8 +30,6 @@ def main():
                     shot = Image.open(BytesIO(page.locator('#edge-fixture .svc-presenter-live-preview').screenshot())).convert('RGB')
                     green = [(x,y) for x in range(shot.width) for y in range(int(shot.height*.87),shot.height-8)
                              if (lambda c: c[1]>c[0]+20 and c[1]>c[2]+20)(shot.getpixel((x,y)))]
-                    if green:
-                        shot.save('/private/tmp/mindex-preview-edge-failure.png')
                     assert not green, (engine,dpr,width,green[:8])
                 print('PASS sidebar edge pixels', engine, 'DPR', dpr, flush=True)
                 page.evaluate('''() => {
