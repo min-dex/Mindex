@@ -1214,7 +1214,7 @@ function bindStaticEvents() {
   refs.moduleButtons.forEach((button) => {
     button.addEventListener("click", () => switchModule(button.dataset.module));
   });
-  refs.pageTabAddBtn?.addEventListener("click", openNewPageTab);
+  refs.pageTabAddBtn?.addEventListener("click", () => { void openNewPageTab(); });
   refs.pageTabs?.addEventListener("click", handlePageTabClick);
   refs.pageTabs?.addEventListener("keydown", handlePageTabKeydown);
   refs.pageTabs?.addEventListener("dragstart", handlePageTabDragStart);
@@ -2395,6 +2395,7 @@ function currentBrowserHistorySnapshot() {
     selectedBibleTranslationId: state.selectedBibleTranslationId,
     selectedBibleChapter: state.selectedBibleChapter,
     selectedBibleVerse: state.selectedBibleVerse,
+    selectedBibleVerseEnd: state.selectedBibleVerses?.at(-1) || state.selectedBibleVerse,
     selectedServiceTypeId: state.selectedServiceTypeId,
     selectedServiceId,
     bibleTextSearchQuery: state.bibleTextSearchQuery,
@@ -2438,7 +2439,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
     state.selectedBibleTranslationId = snapshot.selectedBibleTranslationId || state.selectedBibleTranslationId;
     state.selectedBibleChapter = Number(snapshot.selectedBibleChapter) || 1;
     state.selectedBibleVerse = Number(snapshot.selectedBibleVerse) || null;
-    state.selectedBibleVerses = state.selectedBibleVerse ? [state.selectedBibleVerse] : [];
+    state.selectedBibleVerses = buildVerseRange(state.selectedBibleVerse, Number(snapshot.selectedBibleVerseEnd));
     state.lastSelectedBibleVerse = state.selectedBibleVerse || null;
     state.selectedServiceTypeId = snapshot.selectedServiceTypeId || null;
     state.selectedServiceId = snapshot.selectedServiceId || null;
@@ -14167,6 +14168,7 @@ function sanitizePageTab(tab) {
   return {
     id: String(tab?.id || `tab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`),
     label: String(tab?.label || "").trim() || pageTabTitleForSnapshot(snapshot),
+    openerTabId: String(tab?.openerTabId || ""),
     snapshot,
   };
 }
@@ -14231,6 +14233,7 @@ function persistPageTabsState() {
     tabs: state.pageTabs.map((tab) => ({
       id: tab.id,
       label: tab.label,
+      openerTabId: tab.openerTabId || "",
       snapshot: tab.snapshot,
     })),
     index: state.pageTabIndex,
@@ -14356,30 +14359,42 @@ async function handlePageTabKeydown(event) {
   await activatePageTab(Number(tab.dataset.pageTabIndex));
 }
 
-async function openNewPageTab() {
+async function openNewPageTab(snapshot = defaultPageTabSnapshot(), { openerTabId = "" } = {}) {
   syncActivePageTabState();
-  state.pageTabs.splice(state.pageTabIndex + 1, 0, newPageTab(defaultPageTabSnapshot()));
+  state.pageTabs.splice(state.pageTabIndex + 1, 0, { ...newPageTab(snapshot), openerTabId });
   state.pageTabIndex += 1;
   persistPageTabsState();
   await applyPageTabSnapshot(state.pageTabIndex);
 }
 
+let pageTabClosePending = false;
+
 async function closePageTab(index) {
-  if (!Number.isInteger(index)) return;
-  if (state.pageTabs.length === 1) {
-    if (state.pageTabs[0]?.snapshot?.module === "home") return;
-    await goHome();
-    return;
-  }
-  const closingActive = index === state.pageTabIndex;
-  state.pageTabs.splice(index, 1);
-  if (index < state.pageTabIndex) state.pageTabIndex -= 1;
-  state.pageTabIndex = Math.max(0, Math.min(state.pageTabIndex, state.pageTabs.length - 1));
-  persistPageTabsState();
-  if (closingActive) await applyPageTabSnapshot(state.pageTabIndex);
-  else {
-    renderPageTabs();
-    refreshIcons(refs.pageTabs);
+  if (pageTabClosePending || !Number.isInteger(index) || !state.pageTabs[index]) return;
+  const tab = state.pageTabs[index];
+  const activeId = state.pageTabs[state.pageTabIndex]?.id;
+  const closingActive = tab.id === activeId;
+  pageTabClosePending = true;
+  try {
+    if (state.pageTabs.length === 1) {
+      if (tab.snapshot?.module !== "home") await goHome();
+      return;
+    }
+    if (closingActive && !(await confirmSaveBeforeLeaving())) return;
+    if (state.pageTabs[state.pageTabIndex]?.id !== activeId) return;
+    index = state.pageTabs.findIndex((candidate) => candidate.id === tab.id);
+    if (index < 0) return;
+    state.pageTabs.splice(index, 1);
+    const returnIndex = state.pageTabs.findIndex((candidate) => candidate.id === (closingActive ? tab.openerTabId : activeId));
+    state.pageTabIndex = returnIndex >= 0 ? returnIndex : Math.max(0, Math.min(index, state.pageTabs.length - 1));
+    persistPageTabsState();
+    if (closingActive) await applyPageTabSnapshot(state.pageTabIndex);
+    else {
+      renderPageTabs();
+      refreshIcons(refs.pageTabs);
+    }
+  } finally {
+    pageTabClosePending = false;
   }
 }
 
@@ -26384,13 +26399,26 @@ async function openServiceDbTab(button) {
   if (button.disabled) return;
   const songId = button.dataset.serviceDbSong;
   const reference = button.dataset.serviceDbReference;
-  if (!songId && !parseBibleReference(reference)) return;
+  const parsed = songId ? null : parseBibleReference(reference);
+  if (!songId && !parsed) return;
   button.disabled = true;
   try {
     if (!(await confirmSaveBeforeLeaving())) return;
-    await openNewPageTab();
-    if (songId) await openGlobalSongResult(songId);
-    else await openGlobalBibleReference(reference);
+    const snapshot = songId ? {
+      ...defaultPageTabSnapshot(),
+      module: "praise",
+      selectedSongId: songId,
+      selectedVersionId: getPreferredVersionId(state.songs.find((song) => song.id === songId)),
+    } : {
+      ...defaultPageTabSnapshot(),
+      module: "scripture",
+      selectedBookCode: parsed.book.code,
+      selectedBibleChapter: parsed.chapter || 1,
+      selectedBibleVerse: parsed.verse,
+      selectedBibleVerseEnd: parsed.verseEnd,
+      selectedBibleTranslationId: state.selectedBibleTranslationId,
+    };
+    await openNewPageTab(snapshot, { openerTabId: state.pageTabs[state.pageTabIndex]?.id || "" });
   } finally {
     button.disabled = false;
   }
