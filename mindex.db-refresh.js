@@ -66,7 +66,7 @@
       const oldSongs = state.worshipElements.filter(row => oldSectionIds.has(row.section_id)).map(row => row.song_id);
       const songs = await songsSnapshot([...new Set([...oldSongs, ...elements.map(row => row.song_id)].filter(Boolean))]);
       const slides = await fetchSupabaseBatches(ids, batch => fetchSupabasePaged("mindex_worship_presenter_slides", "*", q => q.in("service_id", batch).order("section_order").order("element_order").order("slide_order")));
-      return { ids, serviceRows, fullServices, sections, elements, songs, slides };
+      return { ids, serviceRows, fullServices, sections, elements, elementSelect, songs, slides };
     }
     if (module === "scripture") return { scriptures: await fetchSupabasePaged("mindex_scriptures", "*", q => q.eq("is_active", true).order("id")) };
     if (module === "references") return { references: await fetchSupabasePaged("mindex_reference_links", "*", q => q.order("sort_order").order("id")) };
@@ -111,6 +111,10 @@
         presenterSlideBuildCache.delete(id);
       }
       if (!state.services.some(row => row.id === state.selectedServiceId)) state.selectedServiceId = null;
+      const listSelect = state.serviceAliasSupported ? WORSHIP_SERVICE_LIST_SELECT : WORSHIP_SERVICE_BASE_LIST_SELECT;
+      const listKey = WORSHIP_EMERGENCY_TODAY_ONLY ? `today:${localDateStringWithOffset(new Date(), 0)}` : listSelect;
+      writeStaticSupabaseCache("mindex_worship_services", listKey, snapshot.serviceRows);
+      writeStaticSupabaseCache("mindex_worship_rows", worshipRowsCacheKey(snapshot.ids, snapshot.elementSelect), [{ sections: snapshot.sections, elements: snapshot.elements }]);
       captureCleanFingerprint("service");
     }
     if (snapshot.scriptures) {
