@@ -56,7 +56,7 @@
   --presenter-output-bg: var(--presenter-chromakey);
   --presenter-output-fg: #fff;
   --presenter-output-muted: rgba(255, 255, 255, .72);
-  --presenter-output-bar-height: 17.5%;
+  --presenter-output-bar-height: 20%;
   --presenter-output-bar: linear-gradient(180deg, #000A64 0%, #000A32 100%);
   --presenter-output-bar-edge: #000A32;
   --presenter-output-stroke: #000;

@@ -8854,7 +8854,7 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   --presenter-output-bg: #00ff00;
   --presenter-output-fg: #fff;
   --presenter-output-muted: rgba(255, 255, 255, .72);
-  --presenter-output-bar-height: 17.5%;
+  --presenter-output-bar-height: 20%;
   --presenter-output-bar: linear-gradient(180deg, #000A64 0%, #000A32 100%);
   --presenter-output-bar-edge: #000A32;
   --presenter-output-stroke: #000;
@@ -9285,9 +9285,10 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-setlist-week-status { display: grid; gap: 6px; padding: 20px 0; color: var(--ink-3); font-size: var(--ui-meta-size); }
 .svc-setlist-week-status strong { color: var(--ink-2); }
 /* Media health updates stay outside the mounted live preview. */
-.svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.svc-presenter-video-health:empty { display: none; }
-.svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; }
+.svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; min-height: 40px; }
+.svc-presenter-video-health:empty { visibility: hidden; }
+.svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; font-size: var(--ui-meta-size); line-height: 1.3; }
+.svc-presenter-video-health > .icon-btn { flex: 0 0 30px; width: 30px; height: 30px; }
 
 /* Setlist leader edits stay inside the card metadata row. */
 .svc-setlist-leader-form { display: flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; max-width: 100%; }

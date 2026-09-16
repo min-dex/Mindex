@@ -52,6 +52,13 @@ with sync_playwright() as p:
     page.click("#full")
     output.wait_for_function("!!document.fullscreenElement")
     assert page.evaluate("notices.length") == 0
+    for _ in range(8):
+        output.evaluate("document.exitFullscreen()")
+        output.wait_for_function("!document.fullscreenElement")
+        page.bring_to_front()
+        page.click("#full")
+        output.wait_for_function("!!document.fullscreenElement")
+        assert page.evaluate("!document.fullscreenElement && notices.length === 0")
     output.close()
     page.click("#full")
     assert "연결된 송출 창이 없습니다" in page.evaluate("notices.at(-1)")

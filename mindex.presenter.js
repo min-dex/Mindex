@@ -3201,13 +3201,14 @@ function requestPresenterOutputFullscreenFromController() {
   const onResult = (event) => {
     if (event.origin !== origin || event.source !== output
       || event.data?.type !== "presenter-fullscreen-result" || event.data.requestId !== requestId) return;
+    if (!event.data.success) console.warn("Presenter fullscreen rejected:", event.data.error || "unknown");
     finish(event.data.success === true);
   };
   const timer = window.setTimeout(() => finish(false), 5000);
   window.addEventListener("message", onResult);
   try {
-    output.focus();
-    // Must run directly in the controller click/key event, before any await.
+    // Delegate while the clicked controller still owns focus and activation.
+    // The browser brings the output forward when it enters fullscreen.
     output.postMessage({ type: "presenter-fullscreen-request", requestId }, { targetOrigin: origin, delegate: "fullscreen" });
   } catch { finish(false); }
 }
@@ -3283,11 +3284,14 @@ function setupPresenterDelegatedFullscreen() {
     if (event.origin !== window.location.origin || !window.opener || event.source !== window.opener
       || event.data?.type !== "presenter-fullscreen-request" || typeof event.data.requestId !== "string") return;
     let success = false;
+    let errorMessage = "";
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: "hide" });
       success = Boolean(document.fullscreenElement);
-    } catch { /* Report failure to the controller without changing the slide. */ }
-    event.source.postMessage({ type: "presenter-fullscreen-result", requestId: event.data.requestId, success }, event.origin);
+    } catch (error) {
+      errorMessage = `${error?.name || "Error"}: ${error?.message || "Fullscreen request failed"}`;
+    }
+    event.source.postMessage({ type: "presenter-fullscreen-result", requestId: event.data.requestId, success, error: errorMessage }, event.origin);
   });
 }
 
