@@ -3261,6 +3261,52 @@ function applyPresenterPreviewScales(host = document) {
   });
 }
 
+function setupPresenterStartupFullscreen() {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("fullscreen") !== "start") return;
+  // Consume the launch request so refresh and later slide updates cannot repeat it.
+  url.searchParams.delete("fullscreen");
+  window.history.replaceState(window.history.state, "", url.toString());
+  const target = document.documentElement;
+  if (!target.requestFullscreen || document.fullscreenEnabled === false) return;
+  let pending = false;
+  let fallback = true;
+  const cancelFallback = () => {
+    fallback = false;
+    window.removeEventListener("click", onClick, true);
+    window.removeEventListener("keydown", onKey, true);
+    document.removeEventListener("fullscreenchange", onFullscreenChange);
+  };
+  const request = async () => {
+    if (pending || !fallback) return;
+    if (document.fullscreenElement) { cancelFallback(); return; }
+    pending = true;
+    try {
+      await target.requestFullscreen({ navigationUI: "hide" });
+      cancelFallback();
+    } catch {
+      // A blocked startup request is retried only by an explicit output click.
+    } finally { pending = false; }
+  };
+  function onClick(event) {
+    if (!event.isTrusted || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey
+      || event.target?.closest?.("button, a, input, select, textarea, [contenteditable='true']")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void request();
+  }
+  function onKey(event) {
+    if (event.key === "Escape") cancelFallback();
+  }
+  function onFullscreenChange() {
+    if (document.fullscreenElement) cancelFallback();
+  }
+  window.addEventListener("click", onClick, true);
+  window.addEventListener("keydown", onKey, true);
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  void request();
+}
+
 function initPresenterOutputCore() {
   document.title = "MINDEX";
   document.documentElement.classList.add("presenter-output-document");
@@ -3270,6 +3316,7 @@ function initPresenterOutputCore() {
   `;
   applyPresenterOutputViewportScale();
   window.addEventListener("resize", () => applyPresenterOutputViewportScale());
+  setupPresenterStartupFullscreen();
 
   let currentPayload = null;
   let channel = null;

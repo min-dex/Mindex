@@ -6229,8 +6229,13 @@ async function deleteReferenceLink(id) {
 }
 
 function referenceTableErrorMessage(error) {
-  if (isUnavailableRelationError(error)) return "링크 테이블이 없습니다.";
-  if (/permission|policy|rls/i.test(error?.message || "")) return "권한이 필요합니다.";
+  const code = String(error?.code || "");
+  const message = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`;
+  if (code === "42501" || /permission denied|row.level security|\brls\b|policy/i.test(message)) {
+    return "링크에 접근할 권한이 없습니다. 로그인 상태와 접근 권한을 확인해 주세요.";
+  }
+  if (code === "42P01" || /relation .* does not exist/i.test(message)) return "링크 테이블이 없습니다.";
+  if (isUnavailableRelationError(error)) return "링크 테이블 정보를 확인할 수 없습니다. 서버 설정을 확인해 주세요.";
   return error?.message || "링크를 업데이트하지 못했습니다.";
 }
 
@@ -15159,7 +15164,7 @@ function currentLoadingStatusItems() {
   if (state.bibleTextSearchLoading) items.push("말씀 검색");
   if (state.saving) items.push("저장");
   if (state.presenter.outputPendingAt && !isPresenterOutputHeartbeatOpen()) {
-    items.push(state.presenter.outputBlockedAt ? "팝업 차단 확인" : "출력 창 연결");
+    items.push(state.presenter.outputBlockedAt ? "출력 창 열기 실패" : "출력 창 연결");
   }
   return [...new Set(items)];
 }
@@ -27313,7 +27318,12 @@ async function requestPresenterScreens({ silent = false } = {}) {
     return screens;
   } catch (error) {
     console.warn("Could not detect presenter screens.", error);
-    if (!silent) showToast("화면 감지 권한을 확인해 주세요.", "error");
+    if (!silent) {
+      const message = error?.name === "NotAllowedError"
+        ? "화면 감지가 허용되지 않았습니다. 브라우저의 이 사이트 설정에서 ‘창 관리’ 권한을 확인한 뒤 다시 시도해 주세요."
+        : "출력 화면을 감지하지 못했습니다. 모니터 연결을 확인한 뒤 다시 시도해 주세요.";
+      showToast(message, "error");
+    }
     return [];
   }
 }
@@ -28322,7 +28332,7 @@ function renderPresenterControlsTop(service, slides, active, index) {
     ? state.presenter.jumpDraft
     : (count || current === 0 ? current : "");
   const statusLabel = outputBlocked
-    ? "팝업 차단"
+    ? "창 열기 실패"
     : outputPending
       ? outputPendingDelayed ? "연결 지연" : "연결 중"
       : outputOpen
@@ -31063,12 +31073,14 @@ async function openPresenterOutput(serviceId = state.selectedServiceId) {
   }
 
   const features = presenterOutputWindowFeatures(targetRect);
-  const outputWindow = window.open(url, "mindexPresenterOutput", features);
+  const browserUrl = new URL(url);
+  browserUrl.searchParams.set("fullscreen", "start");
+  const outputWindow = window.open(browserUrl.toString(), "mindexPresenterOutput", features);
   if (!outputWindow) {
     state.presenter.outputPendingAt = 0;
     state.presenter.outputBlockedAt = Date.now();
     state.presenter.outputAttemptServiceId = serviceId;
-    showToast("브라우저가 출력 창을 차단했습니다.", "error");
+    showToast("출력 창을 열지 못했습니다. 브라우저의 이 사이트 팝업 허용 설정을 확인해 주세요.", "error");
     renderPresenterControlState(serviceId);
     return;
   }

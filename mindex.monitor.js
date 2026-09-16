@@ -114,7 +114,7 @@
     if (!rows.length) $("[data-devices]").textContent = "해당 기기 없음";
   }
   async function rpc(name, args) {
-    if (!state.client?.rpc) throw Error("서버 연결을 확인해 주세요.");
+    if (!state.client?.rpc) throw Error("원격 조회에 필요한 DB 클라이언트가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.");
     if (!navigator.onLine) throw Error("네트워크 연결이 끊겼습니다.");
     const controller = new AbortController();
     requests.set(controller, ["mindex_monitor_login", "mindex_monitor_read"].includes(name) ? "viewer" : "reporter");

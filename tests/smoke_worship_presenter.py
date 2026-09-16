@@ -7521,7 +7521,7 @@ def main() -> int:
                     and blocked_popup_state["attemptServiceId"] == service["id"]
                     and not blocked_popup_state["open"]
                     and not blocked_popup_state["hasWindowRef"]
-                    and blocked_popup_state["status"] == "팝업 차단"
+                    and blocked_popup_state["status"] == "창 열기 실패"
                 ):
                     pass_("presenter-popup-block-skips-hydrate", json.dumps(blocked_popup_state, ensure_ascii=False))
                 else:
