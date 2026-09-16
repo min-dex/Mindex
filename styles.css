@@ -8916,6 +8916,10 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-presenter-live-preview .svc-slide-mini-canvas.presenter-output-root:not(.no-chromakey):has(.presenter-slide--lyrics, .presenter-slide--song-title, .presenter-slide--scripture, .presenter-slide--title-assignee) {
   background: linear-gradient(to top, var(--presenter-output-bar-edge) 0 var(--presenter-output-bar-height), var(--presenter-chromakey) var(--presenter-output-bar-height) 100%);
 }
+.svc-slide-mini-canvas.presenter-output-root:has(video.presenter-video) {
+  /* Match the video backing through fractional compositor seams. */
+  background: #000;
+}
 .svc-slide-mini-output .presenter-static-media-preview {
   display: grid;
   width: 100%;
