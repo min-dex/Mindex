@@ -9,6 +9,7 @@
   const add = (text, days) => { const d=date(text); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); };
   const week = text => {const d=date(text);return Number.isNaN(+d)?'':add(text,-d.getUTCDay());};
   const aliases = s => [s.source_name,s.title,s.service_alias,...(Array.isArray(s.aliases)?s.aliases:[s.aliases])].filter(Boolean).join(' ');
+  const absent = s => s && (s.no_gathering === true || s.no_gathering === 'true' || s.source_ref?.no_gathering === true || s.source_ref?.no_gathering === 'true' || /집회\s*없음/.test(aliases(s)));
   function build(entries = [], services = []) {
     const usable = services.filter(s=>!['sunday-first','sunday-second'].includes(type(s.service_type_id)));
     const keys=[...entries.map(e=>week(e.source.service_date)),...usable.map(s=>week(s.service_date))].filter(Boolean).sort();
@@ -22,13 +23,20 @@
       const used=new Set();
       const cells=slots.flatMap(([id,name,day])=>{
         const matching=actual.filter(e=>type(e.source.service_type_id)===id);
-        if(matching.length) return matching.map(e=>{used.add(e);return e.candidates.length ? {...e,slotName:name} : {...e,slotName:name,weeklyStatus:e.source.weekly_status||'콘티 미등록',weeklyReason:e.source.weekly_reason||'예배 기록 등록됨'};});
+        if(matching.length) return matching.map(e=>{
+          used.add(e);
+          if(e.candidates.length) return {...e,slotName:name};
+          const saved=scheduled.find(s=>s.service_date===e.source.service_date && type(s.service_type_id)===id);
+          const noGathering=absent(e.source)||absent(saved);
+          return {...e,slotName:name,weeklyStatus:e.source.weekly_status||(noGathering?'집회 없음':'콘티 미등록'),
+            weeklyReason:e.source.weekly_reason||(noGathering?(saved?.service_alias||saved?.title||''):'찬양 목록이 아직 등록되지 않았습니다')};
+        });
         const saved=scheduled.find(s=>type(s.service_type_id)===id);
         const merged=allGeneration && ['children','youth'].includes(id);
-        const noGathering=saved && (saved.no_gathering===true || saved.no_gathering==='true' || /집회\s*없음/.test(aliases(saved)));
+        const noGathering=absent(saved);
         return [{source:{...(saved||{}),service_type_id:id,service_date:saved?.service_date||add(key,day),aliases:saved?.service_alias||''},
           candidates:[],missing:true,slotName:name,weeklyStatus:merged?'집회 없음':noGathering?'집회 없음':saved?'콘티 미등록':'기록 없음',
-          weeklyReason:merged?'온세대 찬양예배':noGathering?(saved.service_alias||saved.title||''):saved?'예배 일정 등록됨':'집회 여부 미확인'}];
+          weeklyReason:merged?'온세대 찬양예배':noGathering?(saved.service_alias||saved.title||''):saved?'찬양 목록이 아직 등록되지 않았습니다':'집회 여부 미확인'}];
       });
       for(const e of actual) if(!used.has(e)) cells.push(e);
       groups.push({key,title:key+' ~ '+add(key,6),entries:cells});

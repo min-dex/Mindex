@@ -24088,13 +24088,20 @@ function renderWorshipSetlistArchiveGroups(entries = []) {
 
 function renderWorshipWeekStatus(entry) {
   const title = state.worshipSetlistArchiveView === "service" ? entry.source.service_date : entry.slotName;
-  return `<article class="svc-setlist-entry svc-setlist-entry--status">
+  const status = entry.weeklyStatus;
+  const kind = status === "집회 없음" ? "absent" : status === "콘티 미등록" ? "missing" : "unknown";
+  const serviceId = kind === "missing" ? worshipSetlistArchiveServiceId(entry.source) : "";
+  const heading = serviceId
+    ? `<button type="button" class="svc-setlist-service-link" data-setlist-open-service="${escapeAttr(serviceId)}" aria-label="${escapeAttr(`${entry.source.service_date} ${entry.slotName} 열기`)}">${escapeHtml(title)}</button>`
+    : `<strong>${escapeHtml(title)}</strong>`;
+  return `<article class="svc-setlist-entry svc-setlist-entry--status svc-setlist-entry--${kind}">
     <header><div class="svc-setlist-entry-title">
-      <div class="svc-setlist-entry-heading"><strong>${escapeHtml(title)}</strong></div>
+      <div class="svc-setlist-entry-heading">${heading}</div>
       ${state.worshipSetlistArchiveView !== "service" ? `<span class="svc-setlist-leader">${escapeHtml(entry.source.service_date)}</span>` : ""}
     </div></header>
-    <div class="svc-setlist-week-status"><strong>${escapeHtml(entry.weeklyStatus)}</strong>
-      <span>${escapeHtml(entry.weeklyReason)}</span></div>
+    <div class="svc-setlist-week-status"><strong>${escapeHtml(status === "기록 없음" ? "집회 여부 미확인" : status)}</strong>
+      ${entry.weeklyReason && entry.weeklyReason !== "집회 여부 미확인" ? `<span>${escapeHtml(entry.weeklyReason)}</span>` : ""}
+      ${serviceId ? `<button type="button" class="svc-setlist-status-open" data-setlist-open-service="${escapeAttr(serviceId)}">예배 열기 →</button>` : ""}</div>
   </article>`;
 }
 
