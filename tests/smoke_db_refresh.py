@@ -107,7 +107,12 @@ def run(browser, url):
           state.worshipSections=structuredClone(tables.mindex_worship_sections);
           state.worshipElements=[{...tables.mindex_worship_elements[0],song_id:oldId}];
           state.serviceItems={[serviceId]:[]};
+          const otherService={id:'other-service',service_type_id:'fri',service_date:'2026-09-25',title:'추석',service_alias:'추석',source_ref:{no_gathering:true}};
+          tables.mindex_worship_services.push(otherService);
+          state.services.push(normalizeWorshipService({...otherService,title:'old title',service_alias:'old alias',source_ref:{}}));
           check(await MINDEX_DB_REFRESH.refresh()===true,'service refresh failed');
+          check(state.services.find(s=>s.id==='other-service').alias==='추석','unselected service alias stale');
+          check(state.services.find(s=>s.id==='other-service')._worshipSourceRef.no_gathering===true,'unselected service exception stale');
           check(state.worshipElements[0].song_id===newId,'service link stale');
           check(state.services[0]._worshipSourceRef.marker==='fresh','source document stale');
           check(state.songs.find(s=>s.id===oldId).versions.every(v=>v.id!==version),'old linked song retained moved version');

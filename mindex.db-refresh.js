@@ -105,8 +105,7 @@
     }
     if (snapshot.serviceRows) {
       const full = new Map(snapshot.fullServices.map(row => [row.id, row]));
-      const old = new Map(state.services.map(row => [row.id, row]));
-      state.services = snapshot.serviceRows.map(row => full.has(row.id) ? normalizeWorshipService(full.get(row.id)) : old.get(row.id) || normalizeWorshipService(row));
+      state.services = snapshot.serviceRows.map(row => normalizeWorshipService(full.get(row.id) || row));
       const ids = new Set(snapshot.ids);
       const sectionIds = new Set([...state.worshipSections.filter(row => ids.has(row.service_id)), ...snapshot.sections].map(row => row.id));
       state.worshipSections = [...state.worshipSections.filter(row => !ids.has(row.service_id)), ...snapshot.sections];
