@@ -1,5 +1,19 @@
 # Current Worship Persistence Contract
 
+## Element document isolation (2026-09-16)
+
+An element Apply now builds its document from committed section/element rows
+plus the target element, not the other local item drafts. It preserves existing
+section metadata and replaces only the target's block in the committed source
+text when one exists. A whole-source draft remains local. Ambiguous source blocks
+are rejected before row writes rather than guessing.
+
+Document slides use the explicitly supplied service/items without consulting the
+live slide cache or scheduling Scripture hydration. The normal presenter path is
+unchanged. Browser tests cover sibling/source draft isolation, preserved unknown
+source text, late edits, failures and queue release. These changes do not make
+the multi-request save atomic or add cross-client revision protection.
+
 ## Client payload validation (2026-09-16)
 
 The client now rejects sections whose service_id differs from the save target,
@@ -98,10 +112,10 @@ must be inspected separately before asserting production integrity.
   sections; then updates local state. Earlier requests remain committed if a
   later one fails. The in-memory source_ref advances only after these instance row
   writes complete; retaining it on failure does not roll back earlier remote writes.
-- `saveWorshipServiceElementPatch`: validates all current items; upserts the
-  target section and element; updates the service document built from all items;
-  then acknowledges only the target item's local dirty state. Other local drafts
-  can therefore appear in the document although their element rows were not saved.
+- `saveWorshipServiceElementPatch`: validates current rows; upserts the target
+  section and element; updates the document from committed rows plus the target;
+  then acknowledges only the target item's local dirty state. Other item/source
+  drafts remain local. The requests still are not a transaction.
 - Both paths use ID-only predicates for service updates, not an expected revision
   or updated_at comparison. Local signatures protect edits made during this
   runtime's request; they do not prevent overwriting a newer remote document.

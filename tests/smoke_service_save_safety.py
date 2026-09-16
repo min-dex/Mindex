@@ -131,11 +131,24 @@ def run(browser, url):
       results.push('zero-row full save stops before children and preserves baseline');
 
       let [a,b] = fixture();
+      state.services[0]._worshipSourceRef = withServiceDocumentSnapshot(state.services[0], getServiceItems(sid));
+      const baseDocument = serviceDocumentSnapshotFromRef(state.services[0]);
+      baseDocument.sourceText += '\\n\\n[별도]\\n사용자 항목: Keep unknown extension';
+      state.services[0]._worshipSourceRef[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY] = baseDocument;
+      const emptySnapshot = buildServiceDocumentSlideSnapshots(sid, [], state.services[0]);
+      check(!JSON.stringify(emptySnapshot).includes('Original 1'), 'empty explicit snapshot revived old document slides');
       edit(a, 'Save A'); edit(b, 'Draft B');
+      state.services[0]._worshipSourceTextDraft = 'UNSAVED WHOLE SERVICE SOURCE';
       await save(a);
       check(item(b).raw_title === 'Draft B', 'sibling draft overwritten');
       check(state.dirtyServiceElementIds.get(sid)?.has(b), 'sibling draft marked clean');
       check(state.dirty.service, 'dirty sibling lost');
+      const storedDocument = serviceDocumentSnapshotFromRef(state.services[0]);
+      check(storedDocument.sourceText.includes('Save A') && storedDocument.sourceText.includes('Original 1'), 'element document did not use committed sibling');
+      check(storedDocument.sourceText.includes('Keep unknown extension'), 'unknown source text lost');
+      check(!JSON.stringify(storedDocument).includes('Draft B'), 'sibling draft leaked into document/slides');
+      check(!JSON.stringify(storedDocument).includes('UNSAVED WHOLE SERVICE SOURCE'), 'whole-source draft leaked into element save');
+      check(state.services[0]._worshipSourceTextDraft === 'UNSAVED WHOLE SERVICE SOURCE', 'whole-source draft lost locally');
       results.push('sibling draft preserved');
 
       [a,b] = fixture(); edit(a, 'First');

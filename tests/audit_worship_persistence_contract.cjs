@@ -19,7 +19,7 @@ function fixture(failDocument) {
   const db = {element: {title: 'remote edit'}, document: {revision: 'remote'}};
   const filters = [];
   const state = {
-    worshipSections: [section], worshipElements: [element],
+    worshipSections: [section], worshipElements: [element, {id: 'other', section_id: 'section', title: 'committed sibling'}],
     serviceItems: {service: items},
     client: {from(table) {
       return {
@@ -39,7 +39,8 @@ function fixture(failDocument) {
     }},
   };
   const context = {
-    state, getServiceItems: () => items,
+    state, structuredClone, getServiceItems: () => items,
+    serviceDocumentSnapshotFromRef: () => null,
     ensureWorshipServiceRowsLoadedForPersistence: async () => {},
     normalizeServiceItemsInCurrentOrder: x => x,
     normalizeServiceItemsForTemplateHierarchy: (_s, x) => x,
@@ -50,7 +51,7 @@ function fixture(failDocument) {
     sanitizeWorshipPersistenceRows: () => {}, compactWorshipPersistenceRows: () => {},
     validateWorshipPersistenceRows: () => {}, captureWorshipRecoverySnapshot: () => {},
     withServiceDocumentSnapshot: (_s, all) => ({items: clone(all)}),
-    groupWorshipElements: () => ({service: items}),
+    groupWorshipElements: (_sections, elements) => ({service: elements.map(row => ({id: row.id, raw_title: row.title}))}),
     syncSharedSundayContentAfterSave: async () => {},
     refreshPresenterForService: () => {}, serviceHasPendingTextEdits: () => false,
   };
@@ -69,8 +70,10 @@ function fixture(failDocument) {
   await ok.context.saveWorshipServiceElementPatch({id: 'service'}, 'item');
   assert.deepEqual(ok.filters, [['id', 'service']]);
   assert.equal(ok.db.document.revision, undefined);
-  assert.equal(ok.db.document.items[1].raw_title, 'unsaved draft');
-  console.log('REPRODUCED: ID-only document replacement; snapshot receives sibling drafts');
+  assert.equal(ok.db.document.items.find(item => item.id === 'other').raw_title, 'committed sibling');
+  assert.equal(ok.context.state.serviceItems.service.find(item => item.id === 'other').raw_title, 'unsaved draft');
+  console.log('REPRODUCED: ID-only document replacement');
+  console.log('PASS: single-element snapshot excludes sibling drafts');
 
   const validation = {
     WORSHIP_DB_ELEMENT_TYPES: new Set(['plain_text']),

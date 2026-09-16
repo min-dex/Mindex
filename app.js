@@ -6686,9 +6686,10 @@ async function saveWorshipServiceElementPatch(service, itemId) {
   const existingElementById = Object.fromEntries(existingElements.map((element) => [element.id, element]));
   const items = ensureUniqueServiceItemPersistenceIds(normalizeServiceItemsForTemplateHierarchy(
     service,
-    normalizeServiceItemsInCurrentOrder(getServiceItems(serviceId)),
+    normalizeServiceItemsInCurrentOrder(structuredClone(getServiceItems(serviceId))),
   )).filter((item) => !isUnmodifiedTemplatePlaceholder(item));
   if (!items.some((item) => item.id === targetItemId)) return false;
+  const documentService = structuredClone(service);
 
   const elementTypedStateColumns = await worshipElementTypedStateColumns();
   const rows = buildWorshipPersistenceRows(service, items, existingSectionById, existingElementById, {
@@ -6700,9 +6701,22 @@ async function saveWorshipServiceElementPatch(service, itemId) {
 
   const elementRow = rows.elements.find((element) => element.id === targetItemId);
   if (!elementRow) return false;
-  const sectionRow = rows.sections.find((section) => section.id === elementRow.section_id);
+  const sectionRow = existingSectionById[elementRow.section_id]
+    || rows.sections.find((section) => section.id === elementRow.section_id);
   captureWorshipRecoverySnapshot(service, "before-element-patch");
-  const sourceRef = withServiceDocumentSnapshot(service, items);
+  const committedSections = sectionRow
+    ? [...existingSections.filter(section => section.id !== sectionRow.id), sectionRow] : existingSections;
+  const committedElements = [...existingElements.filter(element => element.id !== elementRow.id), elementRow];
+  const committedItems = groupWorshipElements(committedSections, committedElements)[serviceId] || [];
+  const previousItems = groupWorshipElements(existingSections, existingElements)[serviceId] || [];
+  const previousItem = previousItems.find(item => item.id === targetItemId);
+  const committedItem = committedItems.find(item => item.id === targetItemId);
+  const previousDocument = serviceDocumentSnapshotFromRef(documentService);
+  delete documentService._worshipSourceTextDraft;
+  if (previousDocument?.sourceText && previousItem && committedItem) {
+    documentService._worshipSourceTextDraft = sundayEditSyncSourceText(previousDocument, previousItem, committedItem, documentService);
+  }
+  const sourceRef = withServiceDocumentSnapshot(documentService, committedItems);
   if (sectionRow) {
     const { error } = await state.client
       .from("mindex_worship_sections")
@@ -22159,7 +22173,7 @@ function buildServiceDocumentSnapshot(service = null, items = null) {
   const sourceItems = Array.isArray(items) ? items : getServiceOutputItems(serviceId);
   const sourceText = serviceDocumentSourceTextForSnapshot(service, sourceItems);
   const sourceRecords = buildServiceDocumentSourceRecords(sourceText, sourceItems, service);
-  const slides = buildServiceDocumentSlideSnapshots(serviceId, sourceItems);
+  const slides = buildServiceDocumentSlideSnapshots(serviceId, sourceItems, service);
   return normalizeServiceDocumentSnapshot({
     kind: MINDEX_SERVICE_DOCUMENT_KIND,
     version: MINDEX_SERVICE_DOCUMENT_VERSION,
@@ -22244,11 +22258,14 @@ function serviceDocumentSourceTextForSnapshot(service = null, items = []) {
   return buildServiceSourceText(service, { items, ignoreSnapshotFallback: true });
 }
 
-function buildServiceDocumentSlideSnapshots(serviceId = "", items = null) {
+function buildServiceDocumentSlideSnapshots(serviceId = "", items = null, service = null) {
   const itemById = Object.fromEntries((Array.isArray(items) ? items : getServiceOutputItems(serviceId))
     .map((item) => [String(item?.id || "").trim(), item])
     .filter(([id]) => id));
-  return buildServicePresenterSlides(serviceId)
+  const slides = Array.isArray(items)
+    ? buildServicePresenterSlidesUncached(serviceId, { service, items, allowHydration: false })
+    : buildServicePresenterSlides(serviceId);
+  return slides
     .map((slide, index) => compactServiceDocumentSlide(slide, index, itemById[String(slide?.elementId || "").trim()]))
     .filter(Boolean);
 }
@@ -22867,8 +22884,9 @@ function setServiceDefaultItems(typeId, items) {
 }
 
 function getServiceOutputItems(serviceId, options = {}) {
-  const service = state.services.find((svc) => svc.id === serviceId);
-  const items = normalizeServiceItemsForTemplateHierarchy(service, normalizeServiceItems(getServiceItems(serviceId)));
+  const service = options.service || state.services.find((svc) => svc.id === serviceId);
+  const sourceItems = Array.isArray(options.items) ? options.items : getServiceItems(serviceId);
+  const items = normalizeServiceItemsForTemplateHierarchy(service, normalizeServiceItems(sourceItems));
   if (!service) return items;
   const useLegacyDefaults = !TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service.type_id));
   const defaults = useLegacyDefaults ? getServiceDefaultItems(service.type_id)
@@ -31965,12 +31983,12 @@ function buildServicePresenterSlides(serviceId, signatureOverride = "") {
   return slides;
 }
 
-function buildServicePresenterSlidesUncached(serviceId) {
-  const service = state.services.find((svc) => svc.id === serviceId);
+function buildServicePresenterSlidesUncached(serviceId, options = {}) {
+  const service = options.service || state.services.find((svc) => svc.id === serviceId);
   if (!service) return [];
 
-  const outputItems = getServiceOutputItems(serviceId);
-  const documentFallbackSlides = serviceDocumentPresenterSlides(service);
+  const outputItems = getServiceOutputItems(serviceId, options);
+  const documentFallbackSlides = Array.isArray(options.items) ? [] : serviceDocumentPresenterSlides(service);
   if (documentFallbackSlides.length && serviceItemsShouldUseDocumentSlideFallback(outputItems)) {
     return documentFallbackSlides;
   }
@@ -31978,7 +31996,7 @@ function buildServicePresenterSlidesUncached(serviceId) {
     let slides = outputItems
       .sort((a, b) => a.sort_order - b.sort_order)
       .flatMap((item, index) => {
-        const slides = buildPresenterSlidesForServiceItem(item, service, index);
+        const slides = buildPresenterSlidesForServiceItem(item, service, index, options);
         const hidden = parseServiceItemMemo(item?.memo).hiddenInPresentation;
         return hidden ? slides.map((slide) => ({ ...slide, hiddenInPresentation: true })) : slides;
       })
@@ -31988,7 +32006,7 @@ function buildServicePresenterSlidesUncached(serviceId) {
     return withPresenterElementTrailingBlanks(slides, service);
   }
 
-  const worshipSlides = state.worshipPresenterSlides[serviceId] || [];
+  const worshipSlides = Array.isArray(options.items) ? [] : state.worshipPresenterSlides[serviceId] || [];
   if (worshipSlides.length) {
     const slides = worshipSlides
       .slice()
@@ -32723,7 +32741,7 @@ function presenterReferenceMediaPendingSlide(item = {}, section = {}, index = 0)
   };
 }
 
-function buildPresenterSlidesForServiceItem(item, service, index) {
+function buildPresenterSlidesForServiceItem(item, service, index, options = {}) {
   item = serviceItemWithSharedSundayContent(item, service);
   const initialMemo = parseServiceItemMemo(item?.memo);
   if (isPublicFixedDoxologyServiceItem(item, initialMemo, service) && !item?._worshipElementTemplateModified) {
@@ -32801,7 +32819,7 @@ function buildPresenterSlidesForServiceItem(item, service, index) {
     }
     // Keep the element present while the async Bible lookup hydrates its verses.
     // The same item is rebuilt in place as soon as the lookup completes.
-    if (service?.id) {
+    if (service?.id && options.allowHydration !== false) {
       const sourceIndex = getServiceItems(service.id).findIndex((candidate) => String(candidate?.id || "") === String(item?.id || ""));
       scheduleServiceScriptureBodyResolveWithOptions(service.id, sourceIndex >= 0 ? sourceIndex : index, {
         markDirty: false,
