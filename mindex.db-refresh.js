@@ -9,9 +9,21 @@
 
   function blockedReason() {
     if (isPresenterOutputWindowOpen() || state.presenter.outputPendingAt) return "송출 중에는 DB 갱신을 보류합니다. 송출 종료 후 다시 눌러 주세요.";
-    if (hasDirtyChanges() || Object.values(state.presenterPreparationDrafts).some(Boolean)
-      || worshipSetlistLeaderDrafts.size || pendingSundayEditSync.size
-      || document.querySelector('[data-input-status="modified"], [data-input-status="error"]')) {
+    if (document.querySelector('[data-input-status="error"]')) return "저장에 실패한 입력이 있어요. 해당 입력을 다시 저장한 뒤 새로고침해 주세요.";
+    if (pendingSundayEditSync.size) return "연결된 예배에 반영하지 못한 변경이 남아 있어요. 해당 예배를 저장해 동기화를 완료해 주세요.";
+    const pendingFeedback = [...document.querySelectorAll('[data-input-status="modified"]')].some(node => {
+      const editor = node.closest('.svc-board-subgroup-control-item');
+      if (!editor) return true;
+      const fields = [...editor.querySelectorAll('[data-service-item-field]')];
+      // Only dismiss feedback when every field has a known, unchanged text baseline.
+      return !fields.length || fields.some(field => !isDeferredServiceTextInput(field)
+        || field.dataset.initialValue === undefined || field.value !== field.dataset.initialValue);
+    });
+    if (hasDirtyChanges({ reconcile: true })
+      || state.dirtyServiceElementIds.size || state.dirtyServiceStructureIds.size || state.dirtyServiceTypeIds.size
+      || Object.values(state.presenterPreparationDrafts).some(value => String(value || "").trim())
+      || [...worshipSetlistLeaderDrafts.values()].some(draft => draft.saving || cleanServiceAssignee(draft.value) !== draft.original)
+      || pendingFeedback) {
       return "미저장 입력이 있어요. 먼저 저장한 뒤 DB를 새로고침해 주세요.";
     }
     if (state.saving || state.loading || activeServiceSavePromise || songLoadPromise || serviceDataLoadPromise
