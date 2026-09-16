@@ -37,6 +37,7 @@
       "app.js",
       "mindex.worship-week.js",
       "mindex.monitor.js",
+      "mindex.db-refresh.js",
       "mindex.constants.js",
       "mindex.design-tokens.js",
       "mindex.presenter.js",

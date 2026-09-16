@@ -3142,10 +3142,10 @@ async function attachRelationalSongVersions() {
   attachRelationalSongVersionRows(versionResponse.data || [], unitResponse.data || []);
 }
 
-function attachRelationalSongVersionRows(versionRows = [], unitRows = [], targetSongIds = null) {
+function attachRelationalSongVersionRows(versionRows = [], unitRows = [], targetSongIds = null, songs = state.songs) {
   const allowedSongIds = targetSongIds ? new Set(targetSongIds) : null;
 
-  const songIds = new Set(state.songs.map((song) => song.id));
+  const songIds = new Set(songs.map((song) => song.id));
   const unitsByVersion = new Map();
   for (const row of unitRows || []) {
     if (!row.version_id) continue;
@@ -3170,7 +3170,7 @@ function attachRelationalSongVersionRows(versionRows = [], unitRows = [], target
     }
   }
 
-  for (const song of state.songs) {
+  for (const song of songs) {
     if (allowedSongIds && !allowedSongIds.has(song.id)) continue;
     const rows = sourceVersionsBySong.get(song.id) || fallbackVersionsBySong.get(song.id) || [];
     song._relationalVersionsLoaded = true;

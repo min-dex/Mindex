@@ -125,7 +125,7 @@
   --sidebar-icon-size: 16px;
   --rail-motion: 120ms cubic-bezier(.2, 0, .2, 1);
   --module-tab-w: 180px;
-  --topbar-compact-w: calc((var(--topbar-btn-size) * 2) + (var(--shell-edge-inset) * 2));
+  --topbar-compact-w: calc((var(--topbar-btn-size) * 4) + (var(--shell-edge-inset) * 2));
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-presenter: "Mindex Presenter", "Freesentation", sans-serif;
   font-family: var(--font-sans);
@@ -687,7 +687,7 @@ body[data-module="praise"] .list-filter {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: var(--topbar-btn-size);
-  grid-template-columns: repeat(2, var(--topbar-btn-size));
+  grid-template-columns: repeat(4, var(--topbar-btn-size));
   align-items: center;
   align-self: center;
   justify-content: end;
