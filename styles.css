@@ -7406,15 +7406,15 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 }
 .svc-presenter-side-panel .svc-presenter-help {
   flex: 0 0 auto;
-  height: 28px;
+  height: 34px;
 }
 .svc-presenter-side-panel .svc-presenter-help > summary,
 .svc-presenter-side-panel .svc-presenter-utility-actions > .svc-presenter-action-group {
-  height: 28px;
-  min-height: 28px;
+  height: 34px;
+  min-height: 34px;
   padding-block: 0;
 }
-.svc-presenter-side-panel .svc-presenter-help > summary { width: 28px; }
+.svc-presenter-side-panel .svc-presenter-help > summary { width: 34px; }
 .svc-presenter-side-panel .svc-presenter-input-rail { padding-top: 10px; }
 .svc-presenter-actions .icon-btn { width: var(--ui-icon-btn-inline); height: var(--ui-icon-btn-inline); }
 .svc-presenter-actions .icon-btn.is-active { background: transparent; color: var(--accent); }
@@ -9337,7 +9337,12 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-setlist-week-status { display: grid; gap: 6px; padding: 20px 0; color: var(--ink-3); font-size: var(--ui-meta-size); }
 .svc-setlist-week-status strong { color: var(--ink-2); }
 /* Media health updates stay outside the mounted live preview. */
-.svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; min-height: 40px; }
+.svc-presenter-preview-caption { display: grid; grid-column: 1 / -1; flex: 1 1 auto; min-width: 0; height: 34px; align-items: center; }
+.svc-presenter-preview-caption > strong,
+.svc-presenter-preview-caption > .svc-presenter-video-health { grid-area: 1 / 1; min-width: 0; }
+.svc-presenter-preview-caption > strong { max-height: 34px; overflow: hidden; }
+.svc-presenter-preview-caption:has(> .svc-presenter-video-health:not(:empty)) > strong { visibility: hidden; }
+.svc-presenter-video-health { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 34px; min-height: 34px; }
 .svc-presenter-video-health:empty { visibility: hidden; }
 .svc-presenter-video-health > span { min-width: 0; overflow-wrap: anywhere; font-size: var(--ui-meta-size); line-height: 1.3; }
 .svc-presenter-video-health > .icon-btn { flex: 0 0 30px; width: 30px; height: 30px; }

@@ -1,5 +1,15 @@
 # Worship / Presenter Decision Log
 
+## Preview Header Status Slot (2026-09-18)
+
+- Video health shares a fixed 34px caption slot with the slide title. Loading,
+  failure, paused and blocked states temporarily replace the title and retain
+  the retry action. Empty/healthy status restores the title without moving
+  preview, navigation or input controls; no separate empty 40px row remains.
+- Music/help utility containers and the help summary use 34px height; the
+  summary is square. Preview dimensions and expanded preparation input remain
+  unchanged.
+
 ## Output Action Hierarchy (2026-09-16)
 
 - The preview-adjacent right start command is primary while the right panel is

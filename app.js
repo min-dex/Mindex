@@ -28500,12 +28500,14 @@ function renderPresenterLiveStatusPanel(service, slides = [], options = {}) {
           ${options.mode?.label ? `<span class="svc-presenter-mode svc-presenter-mode--${escapeAttr(options.mode.tone)}" aria-label="${escapeAttr(uiText("presenter.aria.mode", { mode: options.mode.label }))}">${escapeHtml(options.mode.label)}</span>` : ""}
           ${options.warmup ? `<span class="svc-presenter-warmup svc-presenter-warmup--${escapeAttr(options.warmup.tone)}" aria-label="${escapeAttr(options.warmup.aria)}">${escapeHtml(options.warmup.label)}</span>` : ""}
         </span>
-        <strong title="${escapeAttr(previewTitle)}">${escapeHtml(previewTitle)}</strong>
+        <div class="svc-presenter-preview-caption">
+          <strong title="${escapeAttr(previewTitle)}">${escapeHtml(previewTitle)}</strong>
+          <div class="svc-presenter-video-health" data-presenter-video-health data-service-id="${escapeAttr(service.id)}">${options.outputOpen ? renderPresenterVideoHealthControl(service.id) : ""}</div>
+        </div>
       </div>
       <div class="svc-presenter-live-preview" aria-hidden="true">
         ${previewSlide ? renderPresenterSlideMiniPreview(previewSlide, service.id) : `<span class="svc-presenter-live-preview-empty"></span>`}
       </div>
-      <div class="svc-presenter-video-health" data-presenter-video-health data-service-id="${escapeAttr(service.id)}">${options.outputOpen ? renderPresenterVideoHealthControl(service.id) : ""}</div>
     </aside>`;
 }
 
