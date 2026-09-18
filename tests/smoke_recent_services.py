@@ -38,6 +38,17 @@ try:
               check(!refs.detailPane.querySelector('.service-week-board'),'search should remain list');
               check(refs.detailPane.querySelectorAll('.service-date-card').length===5,'search entries');
               state.search='';refs.detailPane.innerHTML=html;
+              state.client={};state.connectionError='';state.serviceError='';
+              state.selectedServiceId=null;state.module='service';
+              getUpcomingServiceShortcuts=()=>[state.services[3]];
+              getHomeSidebarRecentServiceShortcuts=()=>[state.services[3]];
+              finishListRender=()=>{};
+              renderServiceList();
+              check(refs.songList.textContent.includes('다가오는 예배'),'service sidebar shortcuts missing');
+              state.module='home';renderServiceList();
+              check(refs.songList.textContent.includes('다가오는 예배'),'home sidebar shortcuts missing');
+              check(renderPresenterSidebar('',[],null).includes('다가오는 예배'),'presenter sidebar shortcuts missing');
+              check(!refs.detailPane.textContent.includes('다가오는 예배'),'sidebar restoration changed dashboard');
               document.body.dataset.theme='dark';
               return 'PASS two weeks, Sunday/year boundaries, cards, absent status and search';
             }'''), flush=True)

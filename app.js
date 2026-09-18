@@ -23469,6 +23469,9 @@ function renderServiceList() {
         </div>
         ${sidebarPrimary}
       </section>
+      ${q ? "" : (state.module === "home"
+        ? renderHomeSidebarRecentServiceShortcuts()
+        : renderUpcomingServiceShortcuts())}
     </div>`;
 
   finishListRender();
@@ -23490,7 +23493,7 @@ function renderPresenterSidebar(query, services, selectedService) {
     <div class="service-sidebar service-sidebar--presenter">
       ${searchSection}
       ${selectedService ? renderPresenterSidebarServiceSummary(selectedService) : ""}
-      ${selectedService ? renderServiceCurrentSidebar(selectedService) : ""}
+      ${selectedService ? renderServiceCurrentSidebar(selectedService) : renderUpcomingServiceShortcuts()}
     </div>`;
 }
 
