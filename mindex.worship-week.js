@@ -1,10 +1,10 @@
 (function(root) {
   const slots = [
     ['sunday-main','주일예배',0], ['sunday-afternoon','주일오후예배',0],
-    ['children','어린이부 예배',0], ['youth','청소년부 예배',0],
+    ['nursery','유치부 예배',0], ['children','어린이부 예배',0], ['youth','청소년부 예배',0],
     ['young-adult','청년부 예배',0], ['wednesday','수요예배',3], ['friday','금요기도회',5],
   ];
-  const type = id => ({sun_3rd:'sunday-main',sun_1st:'sunday-first',sun_2nd:'sunday-second',young_adult:'young-adult',wed:'wednesday',fri:'friday',monthly:'friday'})[id] || id;
+  const type = id => ({sun_3rd:'sunday-main',sun_1st:'sunday-first',sun_2nd:'sunday-second',young_adult:'young-adult',wed:'wednesday',fri:'friday',monthly:'friday',kindergarten:'nursery',preschool:'nursery','유치부':'nursery','유치부 예배':'nursery'})[id] || id;
   const date = text => /^\d{4}-\d{2}-\d{2}$/.test(text || '') ? new Date(text+'T00:00:00Z') : new Date(NaN);
   const add = (text, days) => { const d=date(text); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); };
   const week = text => {const d=date(text);return Number.isNaN(+d)?'':add(text,-d.getUTCDay());};

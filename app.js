@@ -3928,13 +3928,21 @@ async function loadWorshipSetlistArchive({ force = false } = {}) {
 
 const CHILDREN_WORSHIP_AUTO_GENERATION_DEFAULT = false;
 
-function childrenWorshipAutoGenerationEnabled() {
-  const config = serviceTypeById("children")?._worshipConfig || {};
+function ministryWorshipAutoGenerationEnabled(typeId) {
+  const config = serviceTypeById(typeId)?._worshipConfig || {};
   return CHILDREN_WORSHIP_AUTO_GENERATION_DEFAULT
     || normalizeBooleanFlag(config.autoScheduleEnabled)
     || normalizeBooleanFlag(config.auto_schedule_enabled)
     || normalizeBooleanFlag(config.autoGenerateServices)
     || normalizeBooleanFlag(config.auto_generate_services);
+}
+
+function childrenWorshipAutoGenerationEnabled() {
+  return ministryWorshipAutoGenerationEnabled("children");
+}
+
+function nurseryWorshipAutoGenerationEnabled() {
+  return ministryWorshipAutoGenerationEnabled("nursery");
 }
 
 function autoUpcomingPublicServiceTargets(baseDate = new Date()) {
@@ -3970,6 +3978,7 @@ function autoUpcomingPublicServiceTargets(baseDate = new Date()) {
       ...(sundayMainVariant || {}),
     },
     ...(childrenWorshipAutoGenerationEnabled() ? [{ typeId: "children", date: sunday }] : []),
+    ...(nurseryWorshipAutoGenerationEnabled() ? [{ typeId: "nursery", date: sunday }] : []),
     { typeId: "youth", date: sunday },
     { typeId: "young-adult", date: sunday },
     { typeId: "sunday-afternoon", date: sunday },
@@ -4168,6 +4177,7 @@ function isAllGenerationsWorshipDate(date) {
 
 const CALENDAR_SERVICE_SKIP_CONTEXTS = [
   { typeId: "children", aliases: ["어린이부", "아동부", "유초등부"] },
+  { typeId: "nursery", aliases: ["유치부", "유아부"] },
   { typeId: "youth", aliases: ["청소년부", "중고등부"] },
   { typeId: "young-adult", aliases: ["청년부", "청년"] },
 ];
@@ -4281,6 +4291,11 @@ const WORSHIP_SERVICE_TYPE_ALIASES = {
   "월삭예배": "monthly",
   young_adult: "young-adult",
   "어린이부 예배": "children",
+  nursery: "nursery",
+  kindergarten: "nursery",
+  preschool: "nursery",
+  "유치부": "nursery",
+  "유치부 예배": "nursery",
   "청소년부 예배": "youth",
   "청년부 예배": "young-adult",
   holy_week_dawn: "holy-week-dawn",
@@ -12694,7 +12709,7 @@ async function createPraiseSongFromServiceItem(index) {
   const title = stripHymnNo(presenterPreparationSongContent(item.raw_title)).title.trim();
   if (!title) return;
 
-  const praiseType = service?.type_id === "children" ? "children" : "ccm";
+  const praiseType = ["children", "nursery"].includes(service?.type_id) ? "children" : "ccm";
   const defaultVersion = {
     id: createUuid(),
     name: "기본",
@@ -13741,6 +13756,7 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
 function defaultServicePrayerLeader(service = null) {
   const typeId = worshipAppServiceTypeId(service?.type_id);
   const fieldMap = {
+    nursery: ["nursery_prayer", "children_prayer"],
     children: ["children_prayer", "nursery_prayer"],
     youth: ["youth_prayer"],
     "young-adult": ["young_adult_prayer"],
@@ -14748,7 +14764,7 @@ function syncSidebarCollapsedState() {
 
 const SERVICE_CATEGORIES = {
   public: ["sunday-first","sunday-second","sunday-main","sunday-afternoon","wednesday","friday","monthly"],
-  ministry: ["children","youth","young-adult"],
+  ministry: ["nursery","children","youth","young-adult"],
   special: ["special","holy-week-dawn","omer"],
 };
 
@@ -14771,6 +14787,7 @@ const SERVICE_TYPE_DISPLAY_NAMES = {
   "주일예배": "주일예배 [3부]",
   "새벽기도회": "특별예배",
   children: "어린이부 예배",
+  nursery: "유치부 예배",
   youth: "청소년부 예배",
   "young-adult": "청년부 예배",
   special: "특별예배",
@@ -14792,6 +14809,7 @@ const SERVICE_TYPE_LEGACY_NAMES = {
   fri: "금요기도회",
   monthly: "월삭예배",
   children: "어린이부 예배",
+  nursery: "유치부 예배",
   youth: "청소년부 예배",
   young_adult: "청년부 예배",
   holy_week_dawn: "특별새벽기도회",
@@ -14820,6 +14838,7 @@ const CLEAN_OUTPUT_SERVICE_TYPES = new Set([
   "friday",
   "fri",
   "children",
+  "nursery",
   "youth",
   "young-adult",
   "young_adult",
@@ -14842,6 +14861,7 @@ const SERVICE_DEFAULT_BACKGROUND_GROUPS = {
   friday: "B",
   youth: "B",
   children: "C",
+  nursery: "C",
 };
 const SERVICE_DEFAULT_BACKGROUND_FILES = {};
 const WORSHIP_BACKGROUND_STATIC_FILES = new Set([
@@ -14918,7 +14938,7 @@ function servicePreparationElementTypeForServiceId(serviceId) {
 
 function presenterOutputTheme(typeId) {
   const id = String(typeId || "");
-  if (id === "children") return "children";
+  if (["children", "nursery"].includes(id)) return "children";
   if (id === "youth") return "youth";
   if (id === "young-adult") return "young-adult";
   if (id === "sunday-first") return "formal";
@@ -15252,6 +15272,7 @@ const SERVICE_RECURRENCE = {
   "sunday-main": { kind: "weekly", weekday: 0 },
   "sunday-afternoon": { kind: "weekly", weekday: 0 },
   children: { kind: "weekly", weekday: 0 },
+  nursery: { kind: "weekly", weekday: 0 },
   youth: { kind: "weekly", weekday: 0 },
   "young-adult": { kind: "weekly", weekday: 0 },
   wednesday: { kind: "weekly", weekday: 3 },
@@ -15267,6 +15288,7 @@ const SERVICE_TIME_WINDOWS = {
   "sunday-second": { start: "08:50", end: "10:00" },
   "sunday-main": { start: "10:50", end: "12:00" },
   children: { start: "10:50", end: "12:00" },
+  nursery: { start: "10:50", end: "12:00" },
   youth: { start: "10:50", end: "12:00" },
   "young-adult": { start: "13:10", end: "14:20" },
   "sunday-afternoon": { start: "13:20", end: "14:30" },
@@ -15284,6 +15306,7 @@ const AUTO_UPCOMING_PUBLIC_SERVICE_TYPES = [
   "sunday-second",
   "sunday-main",
   "children",
+  "nursery",
   "youth",
   "young-adult",
   "sunday-afternoon",
@@ -21212,6 +21235,7 @@ const SERVICE_ORDER_TEMPLATE_FALLBACKS = {
   omer: ["찬양", "기도", "특송", "결단"],
   special: [],
   children: ["사도신경", "찬양", "예배의 부름", "성경봉독", "설교", "결단기도", "봉헌", "봉헌찬양", "봉헌기도", "나래파송", "주기도문", "광고", "교제"],
+  nursery: ["사도신경", "찬양", "예배의 부름", "성경봉독", "설교", "결단기도", "봉헌", "봉헌찬양", "봉헌기도", "나래파송", "주기도문", "광고", "교제"],
   youth: youthWorshipTemplate(),
   "young-adult": youngAdultWorshipTemplate(),
 };
@@ -21219,6 +21243,7 @@ const SERVICE_ORDER_TEMPLATE_FALLBACKS = {
 const SERVICE_ORDER_TEMPLATE_OPTIONS = {
   friday: { appendClosing: false },
   children: { appendClosing: false },
+  nursery: { appendClosing: false },
   youth: { appendClosing: false },
   "young-adult": { appendClosing: false },
 };

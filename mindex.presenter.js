@@ -2774,7 +2774,7 @@ function presenterVersionHasUsableLyrics(version = null) {
 }
 
 function serviceTypePreferredPraiseTypes(typeId) {
-  if (typeId === "children") return ["children"];
+  if (["children", "nursery"].includes(typeId)) return ["children"];
   if (typeId === "youth" || typeId === "young-adult") return ["ccm"];
   return [];
 }

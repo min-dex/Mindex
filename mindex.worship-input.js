@@ -694,7 +694,7 @@ async function createBlankPraiseSongForServiceInput(value, service = selectedSer
   if (presenterPreparationSongContentHasConnection(title)) return null;
   if (!title) return null;
 
-  const praiseType = service?.type_id === "children" ? "children" : "ccm";
+  const praiseType = ["children", "nursery"].includes(service?.type_id) ? "children" : "ccm";
   const defaultVersion = {
     id: createUuid(),
     name: "기본",
