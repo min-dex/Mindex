@@ -762,6 +762,9 @@ const state = {
     mode: "manual",
     sourceKey: "",
     sourceLabel: "",
+    pending: false,
+    playSerial: 0,
+    repeatAllowed: true,
     playing: false,
     volumeLevel: 3,
     intentionalPauseUntil: 0,
@@ -769,7 +772,6 @@ const state = {
     resumeAttempts: 0,
     syncTimer: null,
   },
-  prayerMusic: { audio: null, serviceId: "", pending: false, serial: 0, repeat: false, volume: 0.6 },
   servicePrepEditorOpenId: null,
   calendarData: [],
   calendarLoaded: false,
@@ -8378,11 +8380,6 @@ function handleSidebarPresenterActionClick(event) {
 
 function handleDetailClick(event) {
   if (event.target.closest("button:disabled")) return;
-  const prayerAction = event.target.closest("[data-prayer-music-action]");
-  if (prayerAction) {
-    void runPrayerMusicAction(prayerAction.dataset.prayerMusicAction, prayerAction.closest("[data-prayer-music]").dataset.prayerMusic);
-    return;
-  }
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
   if (citationAdd) {
     const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
@@ -8694,7 +8691,7 @@ function handleDetailClick(event) {
 
   const serviceMusicAction = event.target.closest("[data-service-music-action]");
   if (serviceMusicAction) {
-    runServiceMusicAction(serviceMusicAction.dataset.serviceMusicAction);
+    runServiceMusicAction(serviceMusicAction.dataset.serviceMusicAction, serviceMusicAction.closest("[data-service-music-source]")?.dataset);
     return;
   }
 
@@ -9447,13 +9444,6 @@ function handleDetailSubmit(event) {
 }
 
 function handleDetailChange(event) {
-  const prayerVolume = event.target.closest("[data-prayer-music-volume]");
-  if (prayerVolume) {
-    state.prayerMusic.volume = Math.max(0, Math.min(1, Number(prayerVolume.value) / 5));
-    if (state.prayerMusic.audio) state.prayerMusic.audio.volume = state.prayerMusic.volume;
-    updatePrayerMusicControls();
-    return;
-  }
   const citationAutoOutput = event.target.closest("[data-presenter-citation-auto-output]");
   if (citationAutoOutput) {
     presenterCitationAutoOutput = citationAutoOutput.checked;
@@ -29033,32 +29023,42 @@ function presenterControllerMode(service, context = {}) {
   return { label: uiText("presenter.mode.noSlides"), tone: "empty" };
 }
 
-function renderServiceMusicPlayer() {
+function renderServiceMusicPlayer(options = {}) {
   const music = state.serviceMusic;
   const context = currentPresenterAudioContext();
   const activeLabel = music.sourceLabel && music.sourceKey ? music.sourceLabel : "";
   const fileLabel = activeLabel || context.label || (music.fileName ? music.fileName : uiText("presenter.music.default"));
-  const hasSource = Boolean(music.sourceKey || context.source || music.objectUrl);
+  const hasSource = Boolean(options.source || music.sourceKey || context.source || music.objectUrl);
+  const inline = Boolean(options.source);
+  const active = !inline || options.source === music.sourceKey;
+  const pending = active && music.pending;
+  const playing = active && !pending && music.playing;
+  const key = pending ? "loading" : playing ? "playing" : "idle";
   const volumeOptions = Array.from({ length: 6 }, (_, level) =>
     `<option value="${level}"${level === music.volumeLevel ? " selected" : ""}>${level}</option>`).join("");
   return `
-    <span class="svc-music-player">
+    <span class="svc-music-player${inline ? " svc-music-player--inline" : ""}" data-service-music-player data-service-music-source="${escapeAttr(options.source || "")}" data-service-music-label="${escapeAttr(options.label || "")}" data-service-music-repeat-allowed="${options.repeatAllowed !== false}">
+      ${inline ? `<span class="svc-music-label">${escapeHtml(options.label)}</span>` : `
       <input class="svc-music-file" type="file" accept="audio/*" data-service-music-file hidden />
       <button class="svc-music-name" type="button" data-service-music-action="choose" title="음악 선택">
         <i data-lucide="${context.source ? "volume-2" : "music"}"></i>
         <span>${escapeHtml(fileLabel)}</span>
       </button>
+      `}
+      <span class="svc-music-transport">
       ${hasSource ? `
-        <button class="icon-btn svc-music-toggle${music.playing ? " is-active" : ""}" type="button" data-service-music-action="toggle" aria-label="${escapeAttr(music.playing ? uiText("presenter.music.pause") : uiText("presenter.music.play"))}" title="${escapeAttr(music.playing ? uiText("presenter.music.pause") : uiText("presenter.music.play"))}">
-          <i data-lucide="${music.playing ? "pause" : "play"}"></i>
+        <button class="icon-btn svc-music-toggle" type="button" data-service-music-action="toggle" data-playback-state="${key}" aria-busy="${Boolean(pending)}" aria-pressed="${Boolean(playing)}" aria-label="${pending ? "음악 준비 중, 누르면 취소" : playing ? "일시정지" : "재생"}">
+          <i data-lucide="${pending ? "loader-circle" : playing ? "pause" : "play"}"></i>${inline ? pending ? "준비 중" : playing ? "일시정지" : "재생" : ""}
         </button>
-        <button class="icon-btn svc-music-repeat" type="button" data-service-music-action="repeat" aria-label="음악 반복 재생" title="음악 반복 재생" aria-pressed="${Boolean(music.repeat ?? context.playback?.loop)}"><i data-lucide="repeat"></i></button>
+        ${inline ? `<button type="button" class="icon-btn" data-service-music-action="stop" aria-label="음악 정지" ${active && (music.pending || music.playing || music.audio?.currentTime) ? "" : "disabled"}><i data-lucide="square"></i></button>` : ""}
+        ${options.repeatAllowed !== false && music.repeatAllowed !== false ? `<button class="icon-btn svc-music-repeat" type="button" data-service-music-action="repeat" aria-label="음악 반복 재생" aria-pressed="${Boolean(music.repeat ?? context.playback?.loop)}"><i data-lucide="repeat"></i></button>` : ""}
         <span class="svc-volume-control">
           <span class="svc-presenter-mini-label">${escapeHtml(uiText("presenter.label.volume"))}</span>
           <select class="svc-music-volume" data-service-music-volume aria-label="${escapeAttr(uiText("presenter.music.volume"))}">
             ${volumeOptions}
           </select>
         </span>` : ""}
+      </span>
     </span>`;
 }
 
@@ -29078,101 +29078,51 @@ function renderLiveScriptureControl(serviceId) {
     </span>`;
 }
 
-function prayerMusicButtonState(serviceId) {
-  const music = state.prayerMusic;
-  const active = music.serviceId === serviceId;
-  const pending = active && music.pending;
-  const playing = Boolean(active && !pending && music.audio && !music.audio.paused && !music.audio.ended);
-  return { active, pending, playing, key: pending ? "loading" : playing ? "playing" : "idle",
-    icon: pending ? "loader-circle" : playing ? "pause" : "play",
-    text: pending ? "준비 중" : playing ? "일시정지" : "재생" };
-}
+const SERVICE_SLOT_MUSIC = Object.freeze({
+  "prayer.meeting.free": { source: "./assets/presenter/friday-free-prayer.m4a?v=faststart-20260919", label: "자율기도 음악", repeatAllowed: false },
+});
 
-function renderPrayerMusicControl(context) {
-  if (worshipAppServiceTypeId(context?.service?.type_id) !== "friday"
-    || !(context?.item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(context?.item?.label || "") === "자율기도")) return "";
-  preparePrayerMusicAudio();
-  const music = state.prayerMusic;
-  const status = prayerMusicButtonState(context.service.id);
-  return `<div class="svc-prayer-music" data-prayer-music="${escapeAttr(context.service.id)}" role="group" aria-label="자율기도 음악">
-    <span class="svc-prayer-music-label">자율기도 음악</span>
-    <span class="svc-prayer-music-actions">
-      <button type="button" class="btn secondary" data-prayer-music-action="toggle" data-playback-state="${status.key}" aria-pressed="${status.playing}" aria-busy="${status.pending}" aria-label="${status.pending ? "음악 준비 중, 누르면 취소" : status.text}"><i data-lucide="${status.icon}"></i>${status.text}</button>
-      <button type="button" class="icon-btn" data-prayer-music-action="stop" aria-label="자율기도 음악 정지" ${status.active ? "" : "disabled"}><i data-lucide="square"></i></button>
-      <button type="button" class="icon-btn svc-music-repeat" data-prayer-music-action="repeat" aria-label="자율기도 음악 반복" aria-pressed="${music.repeat}"><i data-lucide="repeat"></i></button>
-      <select class="svc-music-volume" data-prayer-music-volume aria-label="자율기도 음악 음량">${[0,1,2,3,4,5].map(level => `<option value="${level}" ${Math.round(music.volume * 5) === level ? "selected" : ""}>${level === 0 ? "음소거" : `음량 ${level}`}</option>`).join("")}</select>
-    </span>
-  </div>`;
-}
-
-function updatePrayerMusicControls() {
-  const music = state.prayerMusic;
-  document.querySelectorAll("[data-prayer-music]").forEach(root => {
-    const status = prayerMusicButtonState(root.dataset.prayerMusic);
-    const toggle = root.querySelector('[data-prayer-music-action="toggle"]');
-    if (toggle.dataset.playbackState !== status.key) {
-      toggle.innerHTML = `<i data-lucide="${status.icon}"></i>${status.text}`;
-      toggle.dataset.playbackState = status.key;
-      refreshIcons(toggle);
-    }
-    toggle.setAttribute("aria-pressed", String(status.playing));
-    toggle.setAttribute("aria-busy", String(status.pending));
-    toggle.setAttribute("aria-label", status.pending ? "음악 준비 중, 누르면 취소" : status.text);
-    root.querySelector('[data-prayer-music-action="stop"]').disabled = !status.active;
-    root.querySelector('[data-prayer-music-action="repeat"]').setAttribute("aria-pressed", String(music.repeat));
-    root.querySelector("select").value = String(Math.round(music.volume * 5));
-  });
-}
-
-function preparePrayerMusicAudio() {
-  const music = state.prayerMusic;
-  if (!music.audio) {
-    const audio = new Audio();
-    audio.preload = "auto";
-    audio.src = "./assets/presenter/friday-free-prayer.m4a?v=faststart-20260919";
-    for (const event of ["play", "pause", "ended", "error"]) audio.addEventListener(event, updatePrayerMusicControls);
-    music.audio = audio;
+function renderServiceSlotMusic(context) {
+  const config = SERVICE_SLOT_MUSIC[context?.item?._worshipSlotKey];
+  if (!config) return "";
+  // Preparing an idle player must never interrupt an already selected source.
+  if (!state.serviceMusic.sourceKey && !state.serviceMusic.objectUrl) {
+    const audio = getServiceMusicAudio();
+    setServiceMusicSource(audio, config.source, "manual", { loop: false, repeatAllowed: config.repeatAllowed }, config.label);
     audio.load();
   }
-  return music.audio;
+  return renderServiceMusicPlayer(config);
 }
 
-async function runPrayerMusicAction(action, serviceId) {
-  const music = state.prayerMusic;
-  if (action === "repeat") {
-    music.repeat = !music.repeat;
-    if (music.audio) music.audio.loop = music.repeat;
-    updatePrayerMusicControls();
-    return;
-  }
-  if (action === "stop" || (action === "toggle" && music.serviceId === serviceId && (music.pending || (music.audio && !music.audio.paused)))) {
-    music.serial += 1;
-    music.pending = false;
-    music.audio?.pause();
-    if (action === "stop" && music.audio) music.audio.currentTime = 0;
-    updatePrayerMusicControls();
-    return;
-  }
-  if (action !== "toggle") return;
-  preparePrayerMusicAudio();
-  if (music.serviceId !== serviceId) {
-    music.audio.pause();
-    music.audio.currentTime = 0;
-  }
-  music.serviceId = serviceId;
-  music.audio.loop = music.repeat;
-  music.audio.volume = music.volume;
-  const serial = ++music.serial;
-  music.pending = true;
-  updatePrayerMusicControls();
-  try {
-    await music.audio.play();
-  } catch (error) {
-    if (serial === music.serial && error?.name !== "AbortError") showToast("자율기도 음원을 재생하지 못했어요. 연결을 확인하고 다시 눌러 주세요.", "error");
-  } finally {
-    if (serial === music.serial) music.pending = false;
-    updatePrayerMusicControls();
-  }
+function updateServiceMusicTransportControls() {
+  const music = state.serviceMusic;
+  document.querySelectorAll("[data-service-music-player]").forEach(root => {
+    const source = root.dataset.serviceMusicSource;
+    const active = !source || source === music.sourceKey;
+    const pending = active && music.pending;
+    const playing = active && !pending && music.playing;
+    const key = pending ? "loading" : playing ? "playing" : "idle";
+    const toggle = root.querySelector('[data-service-music-action="toggle"]');
+    if (toggle) {
+      if (toggle.dataset.playbackState !== key) {
+        toggle.innerHTML = `<i data-lucide="${pending ? "loader-circle" : playing ? "pause" : "play"}"></i>${source ? pending ? "준비 중" : playing ? "일시정지" : "재생" : ""}`;
+        toggle.dataset.playbackState = key;
+        refreshIcons(toggle);
+      }
+      toggle.setAttribute("aria-busy", String(Boolean(pending)));
+      toggle.setAttribute("aria-pressed", String(Boolean(playing)));
+      toggle.setAttribute("aria-label", pending ? "음악 준비 중, 누르면 취소" : playing ? "일시정지" : "재생");
+    }
+    const stop = root.querySelector('[data-service-music-action="stop"]');
+    if (stop) stop.disabled = !active || !(music.pending || music.playing || music.audio?.currentTime);
+    const repeat = root.querySelector('[data-service-music-action="repeat"]');
+    if (repeat) {
+      repeat.hidden = music.repeatAllowed === false;
+      repeat.setAttribute("aria-pressed", String(Boolean(music.repeat)));
+    }
+    const volume = root.querySelector('[data-service-music-volume]');
+    if (volume) volume.value = String(music.volumeLevel);
+  });
 }
 
 function renderLiveServiceReturnControl() {
@@ -29322,6 +29272,10 @@ function setServiceMusicSource(audio, source, mode, playback = null, label = "")
     return;
   }
   clearServiceMusicResumeTimer();
+  state.serviceMusic.playSerial += 1;
+  state.serviceMusic.pending = false;
+  state.serviceMusic.repeatAllowed = playback?.repeatAllowed !== false;
+  state.serviceMusic.repeat = Boolean(playback?.loop);
   allowIntentionalServiceMusicPause();
   audio.pause();
   audio.src = source;
@@ -29341,6 +29295,8 @@ function serviceMusicHasActivePlayback() {
 }
 
 function stopServiceMusicPlayback(options = {}) {
+  state.serviceMusic.playSerial += 1;
+  state.serviceMusic.pending = false;
   const audio = state.serviceMusic.audio;
   clearServiceMusicResumeTimer();
   clearServiceMusicSyncTimer();
@@ -29369,12 +29325,22 @@ function syncServiceMusicWithPresenterContext(serviceId = state.presenter.servic
   stopServiceMusicPlayback({ clearSource: true, mode: "manual", render: options.render });
 }
 
-function runServiceMusicAction(action) {
+function runServiceMusicAction(action, binding = null) {
+  const boundSource = binding?.serviceMusicSource || "";
+  const boundActive = !boundSource || boundSource === state.serviceMusic.sourceKey;
+  if (action === "stop") {
+    if (!boundActive) return;
+    stopServiceMusicPlayback({ render: false });
+    if (state.serviceMusic.audio) state.serviceMusic.audio.currentTime = 0;
+    renderPresenterControlState();
+    return;
+  }
   if (action === "choose") {
     document.querySelector("[data-service-music-file]")?.click();
     return;
   }
   if (action === "repeat") {
+    if (state.serviceMusic.repeatAllowed === false) return;
     const context = currentPresenterAudioContext();
     state.serviceMusic.repeat = !(state.serviceMusic.repeat ?? context.playback?.loop);
     if (state.serviceMusic.audio) state.serviceMusic.audio.loop = state.serviceMusic.repeat;
@@ -29384,7 +29350,7 @@ function runServiceMusicAction(action) {
   if (action !== "toggle") return;
   const audio = getServiceMusicAudio();
   const context = currentPresenterAudioContext();
-  if (state.serviceMusic.playing) {
+  if (boundActive && (state.serviceMusic.playing || state.serviceMusic.pending)) {
     stopServiceMusicPlayback({ render: true });
     return;
   }
@@ -29392,29 +29358,40 @@ function runServiceMusicAction(action) {
     ? state.serviceMusic.sourceKey || state.serviceMusic.objectUrl
     : state.serviceMusic.objectUrl;
   const presenterSource = state.serviceMusic.mode === "presenter-audio" ? state.serviceMusic.sourceKey : "";
-  const source = manualSource || presenterSource || context.source;
-  const mode = manualSource ? "manual" : "presenter-audio";
-  const playback = { ...(manualSource ? {} : context.playback), loop: state.serviceMusic.repeat ?? (!manualSource && Boolean(context.playback?.loop)) };
-  const label = manualSource
+  const source = boundSource || manualSource || presenterSource || context.source;
+  const mode = boundSource || manualSource ? "manual" : "presenter-audio";
+  const repeatAllowed = boundSource ? binding.serviceMusicRepeatAllowed !== "false" : state.serviceMusic.repeatAllowed;
+  const playback = { ...(manualSource ? {} : context.playback), repeatAllowed, loop: repeatAllowed !== false && (state.serviceMusic.repeat ?? (!manualSource && Boolean(context.playback?.loop))) };
+  const label = boundSource ? binding.serviceMusicLabel || "" : manualSource
     ? state.serviceMusic.sourceLabel || state.serviceMusic.fileName || ""
     : state.serviceMusic.sourceLabel || context.label || "";
   if (!source) {
     showToast("음악 파일을 먼저 선택해 주세요.", "error");
     return;
   }
-  if (!manualSource && !presenterSource && context.source && presenterMediaSourceIsYoutube(context.source)) {
+  if (!boundSource && !manualSource && !presenterSource && context.source && presenterMediaSourceIsYoutube(context.source)) {
     showToast("YouTube 링크는 아직 컨트롤러 내 재생 대신 별도 영상/오디오 파일로 등록해 주세요.", "error");
     return;
   }
   setServiceMusicSource(audio, source, mode, playback, label);
-  audio.play()
+  const serial = ++state.serviceMusic.playSerial;
+  state.serviceMusic.pending = true;
+  updateServiceMusicTransportControls();
+  return audio.play()
     .then(() => {
+      if (serial !== state.serviceMusic.playSerial) return;
       state.serviceMusic.playing = true;
       startServiceMusicSyncTimer();
       syncServiceMusicSyncedLyricsWithCurrentTime();
-      renderPresenterControlState();
     })
-    .catch(() => showToast("브라우저가 음악 재생을 막았습니다. 다시 눌러 주세요.", "error"));
+    .catch((error) => {
+      if (serial === state.serviceMusic.playSerial && error?.name !== "AbortError") showToast("브라우저가 음악 재생을 막았습니다. 다시 눌러 주세요.", "error");
+    })
+    .finally(() => {
+      if (serial !== state.serviceMusic.playSerial) return;
+      state.serviceMusic.pending = false;
+      renderPresenterControlState();
+    });
 }
 
 function loadServiceMusicFile(file) {
@@ -30666,7 +30643,7 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
           ${headerActions}
         </header>` : ""}
       ${inputControls}
-      ${renderPrayerMusicControl(context)}
+      ${renderServiceSlotMusic(context)}
       <div class="svc-board-grid">
         ${slides.map(({ slide, slideIndex, formLabel }) =>
           renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, formLabel)).join("")}
@@ -31871,6 +31848,7 @@ function stopPresenterOutputWindowMonitor() {
 }
 
 function renderPresenterControlState(serviceId = state.selectedServiceId) {
+  updateServiceMusicTransportControls();
   renderLiveServiceReturnControl();
   if (state.module === "presenter" && state.selectedServiceId === serviceId) {
     const root = document.getElementById("servicePresenterControls");

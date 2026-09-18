@@ -8,75 +8,40 @@ try:
             page = browser.new_page()
             page.route('**/*supabase*/**', lambda route: route.abort())
             page.goto(url, wait_until='domcontentloaded')
-            page.wait_for_function("typeof renderPrayerMusicControl === 'function'")
+            page.wait_for_function("typeof renderServiceSlotMusic === 'function'")
             print(engine, page.evaluate('''async () => {
-              const check=(v,m)=>{if(!v)throw Error(m)};
-              const service={id:'music-fixture',type_id:'friday'};
-              const item={id:'free',label:'자율기도',_worshipSlotKey:'prayer.meeting.free'};
-              state.services=[service];getServiceItems=()=>[item];
-              state.presenter.serviceId=service.id;
-              state.presenter.slides=[{id:'free-slide',elementId:item.id}];
-              state.presenter.index=0;state.presenter.safetyBlank=false;
-              state.presenter.liveScripture={active:false};
-              check(!currentPresenterAudioContext().source,'sidebar source leak');
-              check(!state.prayerMusic.audio,'eager audio');
-              check(!renderPrayerMusicControl({service:{type_id:'sunday'},item}),'Sunday leak');
-              const mount=document.createElement('div');mount.id='prayer-test';
-              mount.innerHTML=renderPrayerMusicControl({service,item});document.body.append(mount);refreshIcons(mount);
-              const prepared=state.prayerMusic.audio;
-              check(prepared && prepared.preload==='auto' && prepared.paused,'preload without autoplay');
-              renderPrayerMusicControl({service,item});
-              check(prepared===state.prayerMusic.audio,'audio recreated');
-              prepared.removeAttribute('src');prepared.load();
-              let plays=0;
-              const audio={paused:true,currentTime:0,play(){plays++;this.paused=false;return Promise.resolve()},pause(){this.paused=true}};
-              state.prayerMusic.audio=audio;
-              const background=JSON.stringify(state.serviceMusic);
-              const toggle=mount.querySelector('[data-prayer-music-action="toggle"]');
-              const positions=()=>[...mount.querySelectorAll('button,select')].map(el=>{const r=el.getBoundingClientRect();return [r.x,r.y,r.width]});
-              mount.style.width='254px';
-              const idlePositions=JSON.stringify(positions());
-              let finish;
-              audio.play=()=>{plays++;return new Promise(resolve=>{finish=()=>{audio.paused=false;resolve()}})};
-              const pending=runPrayerMusicAction('toggle',service.id);
-              check(toggle.textContent.includes('준비 중')&&toggle.getAttribute('aria-busy')==='true','missing pending state');
-              check(toggle.getAttribute('aria-pressed')==='false','pending claimed playback');
-              check(JSON.stringify(positions())===idlePositions,'loading shifted controls');
-              finish();await pending;
-              check(toggle.textContent.includes('일시정지')&&toggle.getAttribute('aria-busy')==='false','playback state');
-              check(JSON.stringify(positions())===idlePositions,'playback shifted controls');
-              await runPrayerMusicAction('stop',service.id);
-              audio.play=function(){plays++;this.paused=false;return Promise.resolve()};plays=0;
-
-              await runPrayerMusicAction('toggle',service.id);check(plays===1&&!audio.paused,'play');
-              const repeat=mount.querySelector('[data-prayer-music-action="repeat"]');
-              await new Promise(resolve=>setTimeout(resolve,250));
-              const inactiveColor=getComputedStyle(repeat).color;
-              await runPrayerMusicAction('repeat',service.id);check(audio.loop,'repeat');
-              await new Promise(resolve=>setTimeout(resolve,250));
-              check(getComputedStyle(repeat).color!==inactiveColor,'repeat has no visual state');
-              state.module='scripture';check(!audio.paused,'navigation paused');
-              await runPrayerMusicAction('toggle',service.id);check(audio.paused,'pause');
-              audio.currentTime=20;await runPrayerMusicAction('stop',service.id);check(audio.currentTime===0,'stop');
-              check(JSON.stringify(state.serviceMusic)===background,'background mutated');
-              for(const width of [254,390,1000]){mount.style.width=width+'px';check(mount.scrollWidth<=width,'overflow '+width)}
-              let allow=false,renders=0,loads=0,publishes=0;
-              confirmSaveBeforeLeaving=async()=>allow;isPresenterOutputWindowOpen=()=>true;
-              saveCurrentListScroll=()=>{};markWorshipServiceExplicitlyRequested=()=>{};
-              persistUiState=()=>{};syncBrowserHistory=()=>{};render=()=>{renders++};
-              loadServiceItems=()=>{loads++};publishPresenterState=()=>{publishes++};
-              state.presenter.index=7;state.presenter.viewServiceId='other';
-              renderLiveServiceReturnControl();check(!document.getElementById('returnLiveServiceBtn').hidden,'missing return');
-              await returnToLiveService();check(state.module==='scripture','cancel ignored');
-              allow=true;await returnToLiveService();
-              check(state.module==='presenter'&&state.presenter.viewServiceId===service.id,'return');
-              check(state.presenter.index===7&&!loads&&!publishes&&renders===1,'live state disturbed');
-              renderLiveServiceReturnControl();check(document.getElementById('returnLiveServiceBtn').hidden,'live page button');
-              state.module='praise';isPresenterOutputWindowOpen=()=>false;renderLiveServiceReturnControl();
-              check(document.getElementById('returnLiveServiceBtn').hidden,'stale return');
-              return 'PASS music isolation, layout, guarded return without reload/output changes';
-            }'''), flush=True)
-            page.locator('#prayer-test').screenshot(path='/tmp/mindex-prayer-controls-'+engine+'.png')
+ const check=(v,m)=>{if(!v)throw Error(m)};
+ const service={id:'fixture',type_id:'friday'},item={_worshipSlotKey:'prayer.meeting.free'};
+ const a={paused:true,currentTime:0,src:'',load(){this.loads=(this.loads||0)+1},pause(){this.paused=true},play(){this.paused=false;return Promise.resolve()}};
+ state.serviceMusic.audio=a;
+ const m=document.createElement('div');m.id='music-test';m.style.width='254px';m.innerHTML=renderServiceSlotMusic({service,item});document.body.append(m);refreshIcons(m);
+ check(!('prayerMusic' in state),'dedicated state left');
+ check(a.loads===1&&a.paused,'preload autoplay');
+ renderServiceSlotMusic({service,item});check(a.loads===1,'preload repeated');
+ check(!m.querySelector('[data-service-music-action="repeat"]'),'repeat shown');
+ const root=m.querySelector('[data-service-music-player]'),binding=root.dataset;
+ const source=state.serviceMusic.sourceKey;
+ const toggle=m.querySelector('[data-service-music-action="toggle"]');
+ const pos=()=>JSON.stringify([...m.querySelectorAll('button,select')].map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width]}));
+ const positions=pos();let finish;
+ a.play=()=>new Promise(r=>{finish=()=>{a.paused=false;r()}});
+ const first=runServiceMusicAction('toggle',binding);
+ check(toggle.textContent.includes('준비 중'),'pending label');check(toggle.getAttribute('aria-pressed')==='false','pending playing');check(pos()===positions,'pending shift');
+ finish();await first;check(toggle.textContent.includes('일시정지'),'playing label');check(pos()===positions,'playing shift');check(!a.loop,'loop');
+ setServiceMusicVolume(2);check(a.volume===0.4&&m.querySelector('select').value==='2','shared volume');
+ await runServiceMusicAction('toggle',binding);check(a.paused&&!state.serviceMusic.playing,'pause');
+ a.currentTime=12;runServiceMusicAction('stop',binding);check(a.currentTime===0,'stop reset');
+ const pending=runServiceMusicAction('toggle',binding);runServiceMusicAction('toggle',binding);check(!state.serviceMusic.pending,'cancel pending');finish();a.paused=true;await pending;check(!state.serviceMusic.playing,'stale play revived');
+ setServiceMusicSource(a,'other.mp3','manual',{loop:true},'Other');state.serviceMusic.playing=true;a.paused=false;
+ renderServiceSlotMusic({service,item});check(a.src==='other.mp3'&&!a.paused,'render interrupted music');
+ check(state.serviceMusic.repeatAllowed,'other repeat disabled');
+ a.play=function(){this.paused=false;return Promise.resolve()};await runServiceMusicAction('toggle',binding);check(a.src===source&&!a.loop&&!state.serviceMusic.repeatAllowed,'source switch');
+ check(!renderServiceMusicPlayer().includes('data-service-music-action="repeat"'),'sidebar repeat');
+ runServiceMusicAction('stop',binding);
+ for(const theme of ['light','dark']){document.body.dataset.theme=theme;for(const width of [254,390,1000]){m.style.width=width+'px';check(m.scrollWidth<=width,'overflow '+width);}}
+ clearServiceMusicSyncTimer();return 'PASS common player, preload, state, cancellation, source isolation, repeat disabled, volume, widths';
+}'''), flush=True)
+            page.locator('#music-test').screenshot(path='/tmp/mindex-prayer-controls-'+engine+'.png')
             browser.close()
 finally:
     server.shutdown()
