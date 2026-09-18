@@ -24,4 +24,4 @@
 
 ## Release Status
 
-Prepared in isolated worktree; deployment held pending resolution of the concurrent DB task's app.js/HTML deployment hold.
+Prepared and verified in an isolated worktree. The DB task confirmed that this UI-only release can proceed; its inactive atomic-storage changes in the root worktree are excluded.
