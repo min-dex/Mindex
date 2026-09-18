@@ -206,7 +206,14 @@ Manual checks when changing live presenter behavior:
 - Non-chromakey services do not flash chromakey green.
 - Output slide matches thumbnail in background, title, lyrics, and labels.
 
-## Recent Updates
+## Historical Implementation Notes
+
+The following notes preserve earlier implementation context, not a complete
+description of today's UI. In particular, old topbar-module placement and strict
+linked-song-only wording must not override later reviewed controller/input
+decisions. Use [current decisions](worship-presenter-decisions.md),
+[UI contracts](ui-contracts.md), and the
+[live citation contract](citation-live-output.md) for current behavior.
 
 2026-07-08:
 

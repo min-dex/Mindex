@@ -108,7 +108,7 @@ def main():
                   scrollPresenterBoardToIndex=(...args)=>scrolls.push(args);
                   await appendPresenterCitationReference(citationInput);
                   check(jumps.length===1 && jumps[0].index===0 && jumps[0].scroll===false,'citation duplicate scroll path');
-                  check(scrolls.length===1 && citationInput.value==='','citation scroll or input clear');
+                  check(scrolls.length===0 && citationInput.value==='','citation scroll or input clear');
                   panel.remove();
                   return 'PASS slide/element anchors, live toggles, focus/draft, latest request, clear, service switch';
                 }"""), flush=True)

@@ -1,5 +1,17 @@
 # Worship / Presenter Decision Log
 
+## Live Citation Composer And Scroll (2026-09-18)
+
+- The live scripture composer sits below the citation element's slide grid.
+  Its static multicolor border is a reviewed domain-specific distinction, not
+  a change to shared EX shell styling.
+- `추가 즉시 송출` defaults on for the controller session. Off adds/saves only;
+  on navigates output to the first added verse and opens output when needed.
+- Neither mode forces the controller to scroll to the new slide. While the
+  composer or its controls have focus, viewport restoration anchors that composer,
+  not the element header. Explicit slide navigation retains existing scrolling.
+- See [live citation contract](citation-live-output.md) for failure and draft rules.
+
 ## Preparation Input Bottom Alignment (2026-09-18)
 
 - Remove the divider above bulk worship input in the right panel. Keep input

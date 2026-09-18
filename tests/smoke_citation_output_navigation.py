@@ -74,7 +74,7 @@ def main():
                 assert(JSON.stringify(actions)==JSON.stringify(expected),'wrong navigation '+JSON.stringify(actions));
                 assert(opens-priorOpens===(autoOutput&&!isLive?1:0),'output opening');
                 assert(reservations-priorReservations===(autoOutput&&!isLive?1:0),'gesture window reservation');
-                assert(scrolls-priorScrolls===(autoOutput?1:0),'add-only scroll changed');
+                assert(scrolls===priorScrolls,'citation submission scrolled away from input');
                 assert(input.value==='' && !pendingPresenterCitationRequests.size,'input or lock not cleared');
               }
               presenterCitationAutoOutput=true;live=false;

@@ -7,3 +7,4 @@
 - A browser window is reserved synchronously within the Enter gesture when output is closed. It navigates to the presenter only after lookup succeeds, and closes on lookup failure.
 - Duplicate Enter requests for the same element are ignored while resolving. IME composition does not submit. Switching services while resolving prevents automatic navigation on completion.
 - Tests: `smoke_citation_output_navigation.py` and `smoke_citation_toggle_layout.py`.
+- Citation submission does not scroll the controller to the output slide. While the composer or its controls have focus, viewport restoration anchors the composer itself rather than the element header. Explicit slide navigation retains its normal scrolling. Regression coverage: `smoke_citation_scroll.py` (Chrome/WebKit).

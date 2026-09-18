@@ -952,8 +952,19 @@ function capturePresenterViewportSnapshot(expectedServiceId = state.selectedServ
   const serviceSelector = CSS.escape(String(expectedServiceId));
   const pane = refs.detailPane;
   const scrollTop = pane.scrollTop;
-  if (scrollTop <= 0) return null;
   const paneRect = pane.getBoundingClientRect();
+  const composer = root.contains(document.activeElement)
+    ? document.activeElement.closest?.(".svc-citation-composer") : null;
+  const citationInput = composer?.querySelector("[data-presenter-citation-reference-input]");
+  if (citationInput?.dataset.serviceId === String(expectedServiceId)) {
+    return {
+      serviceId: expectedServiceId,
+      scrollTop,
+      citationElementId: citationInput.dataset.presenterCitationElementId,
+      offsetTop: composer.getBoundingClientRect().top - paneRect.top,
+    };
+  }
+  if (scrollTop <= 0) return null;
   const focusedSubgroup = document.activeElement && root.contains(document.activeElement)
     ? document.activeElement.closest?.(".svc-board-subgroup[data-service-item-index]")
     : null;
@@ -1031,6 +1042,9 @@ function restorePresenterViewportSnapshot(snapshot) {
 function presenterViewportRestoreTarget(root, snapshot = {}) {
   if (!root?.querySelector || !snapshot) return null;
   const serviceId = CSS.escape(String(snapshot.serviceId || ""));
+  if (snapshot.citationElementId) {
+    return root.querySelector(`[data-presenter-citation-reference-input][data-service-id="${serviceId}"][data-presenter-citation-element-id="${CSS.escape(snapshot.citationElementId)}"]`)?.closest(".svc-citation-composer") || null;
+  }
   if (snapshot.elementId && !snapshot.slideId && !snapshot.elementKey) {
     const target = root.querySelector(`.svc-board-subgroup[data-service-element-id="${CSS.escape(String(snapshot.elementId))}"]`);
     if (target) return target;
@@ -29126,7 +29140,6 @@ async function appendPresenterCitationReference(input) {
         reservedWindow = null;
       }
       if (shouldOpenOutput) await openPresenterOutput(serviceId);
-      scrollPresenterBoardToIndex(serviceId, targetIndex, { force: true });
     } else {
       renderPresenterControlState(serviceId);
     }

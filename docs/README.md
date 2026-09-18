@@ -6,6 +6,9 @@ stale document in the same change.
 
 ## Current Contracts
 
+- `citation-live-output.md`: dedicated live scripture input, optional immediate
+  output, draft retention, and controller scroll anchoring.
+
 - `worship-presenter-decisions.md`: current Worship/Presenter behavior,
   service-specific rules, visual output decisions, and live-operation
   conventions.
@@ -30,6 +33,9 @@ stale document in the same change.
   migration plan unless the user asks to resume it.
 
 ## Data Review Evidence
+
+- `ux-audit-2026-09-18.md`: bounded UX/code/documentation audit, regression
+  coverage, preserved recovery data, and unverified production boundaries.
 
 - `hymn-reference-audit-2026-08-19.md`: read-only hymn audit and verified
   repair record. Use only as data review evidence, not as app behavior.
