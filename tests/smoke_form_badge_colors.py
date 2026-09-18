@@ -33,6 +33,7 @@ try:
                 const colors=badges.map(b=>getComputedStyle(b).backgroundColor);
                 check(colors[0]===colors[1] && new Set(colors.slice(1,8)).size===7,'type colors not distinct');
                 check(badges.every(b=>b.getBoundingClientRect().height===18),'badge height changed');
+                check(badges.every(b=>getComputedStyle(b).boxShadow==='none'),'form color rendered as border');
                 check(!neutral.hasAttribute('data-form-type'),'scripture received song color');
               }
               return 'PASS simplified icon, type colors, verse consistency, dimensions and jump targets';

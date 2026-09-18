@@ -8673,13 +8673,14 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-slide-form-badge[data-form-type="instrumental"] { --form-color: #64867c; }
 .svc-slide-form-badge[data-form-type="coda"] { --form-color: #6b7280; }
 .svc-slide-form-badge[data-form-type] {
-  background: color-mix(in srgb, var(--form-color, #6b7280) 24%, var(--panel));
-  box-shadow: inset 3px 0 var(--form-color, #6b7280);
-  color: var(--ink);
-  padding-left: 8px;
+  background: color-mix(in srgb, var(--form-color, #6b7280) 48%, var(--panel));
+  box-shadow: none;
+  color: color-mix(in srgb, var(--form-color, #6b7280) 68%, var(--ink));
+  padding: 0 7px;
 }
 .svc-slide-form-badge[data-form-type]:is(:hover, :focus-visible) {
-  background: color-mix(in srgb, var(--form-color, #6b7280) 38%, var(--panel));
+  background: color-mix(in srgb, var(--form-color, #6b7280) 64%, var(--panel));
+  color: var(--ink);
 }
 .svc-slide-form-badge:hover,
 .svc-slide-form-badge:focus-visible {
