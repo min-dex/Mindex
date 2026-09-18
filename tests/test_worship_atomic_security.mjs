@@ -85,6 +85,10 @@ try {
 
   const owner = (await db.query("select rolcanlogin, rolsuper, rolbypassrls from pg_roles where rolname='mindex_atomic_writer'")).rows[0];
   assert.deepEqual(owner, {rolcanlogin: false, rolsuper: false, rolbypassrls: false});
+  await db.exec('set session authorization mindex_atomic_writer');
+  await assert.rejects(db.query('update public.mindex_song_versions set id=id where id=$1', [versionId]), /row-level security/);
+  await db.exec('reset session authorization');
+  console.log('PASS writer can lock a referenced version but cannot change its row');
   const wrappers = (await db.query("select p.prosecdef, p.proconfig, pg_get_userbyid(p.proowner) as owner from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('get_worship_service_v1','save_worship_service_v1','create_worship_service_v1','delete_worship_service_v1')")).rows;
   assert.equal(wrappers.length, 4);
   for (const fn of wrappers) {

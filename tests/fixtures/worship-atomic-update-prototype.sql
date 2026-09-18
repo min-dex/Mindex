@@ -223,6 +223,9 @@ begin
     or jsonb_typeof(req->'document') is distinct from 'object'
     then raise exception 'INVALID_SHAPE'; end if;
   -- Also serializes retries after deletion, when no root row remains to lock.
+  -- Shared dependency gate precedes every service lock. Canonical writers take
+  -- its exclusive counterpart before locking canonical rows (separate key space).
+  perform pg_advisory_xact_lock_shared(1296649816, 1);
   perform pg_advisory_xact_lock(hashtextextended(sid::text, 0));
   select save_revision into revision from public.mindex_worship_services where id=sid for update;
   digest := sha256(convert_to('save:' || req::text,'UTF8'));
@@ -327,6 +330,7 @@ begin
   if req->'confirmDelete' is distinct from 'true'::jsonb then raise exception 'DELETE_INTENT_REQUIRED'; end if;
   sid := (req->>'serviceId')::uuid; v_request_id := (req->>'requestId')::uuid;
   if sid is null or v_request_id is null then raise exception 'INVALID_ID'; end if;
+  perform pg_advisory_xact_lock_shared(1296649816, 1);
   perform pg_advisory_xact_lock(hashtextextended(sid::text, 0));
   select save_revision into revision from public.mindex_worship_services where id=sid for update;
   digest := sha256(convert_to('delete:' || req::text,'UTF8'));
@@ -370,6 +374,7 @@ begin
     or jsonb_typeof(req->'serviceDate') is distinct from 'string'
     or (req->>'serviceDate') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
     then raise exception 'INVALID_SHAPE'; end if;
+  perform pg_advisory_xact_lock_shared(1296649816, 1);
   perform pg_advisory_xact_lock(hashtextextended(sid::text, 0));
   digest := sha256(convert_to('create:' || req::text,'UTF8'));
   select * into prior from mindex_atomic_lab.receipts r where r.service_id=sid and r.request_id=v_request_id;

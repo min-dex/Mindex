@@ -7,6 +7,13 @@ grant execute on all functions in schema mindex_atomic_lab to mindex_atomic_writ
 grant select on public.mindex_song_versions to mindex_atomic_writer;
 -- patch_row locks the referenced version with FOR SHARE.
 grant update(id) on public.mindex_song_versions to mindex_atomic_writer;
+-- Canonical tables also use RLS in production; table grants alone are not enough.
+alter table public.mindex_song_versions enable row level security;
+create policy atomic_version_reference on public.mindex_song_versions
+  for select to mindex_atomic_writer using (true);
+-- FOR SHARE also applies UPDATE USING under RLS. No row mutation is needed.
+create policy atomic_version_lock on public.mindex_song_versions
+  for update to mindex_atomic_writer using (true) with check (false);
 
 do $$
 declare tab text;
