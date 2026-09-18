@@ -15475,23 +15475,48 @@ function isGlobalSearchActive() {
   return Boolean(normalizeSearchValue(state.search)) && state.module !== "references";
 }
 
+let globalPraiseSearchLoad = null;
+let globalPraiseSearchError = "";
+
+function ensureGlobalPraiseSearchCatalog() {
+  if (songCatalogLoaded || globalPraiseSearchLoad || globalPraiseSearchError || !canUseClientData()) return;
+  globalPraiseSearchLoad = Promise.resolve().then(() => loadSongs()).then(() => {
+    if (!songCatalogLoaded) globalPraiseSearchError = "찬양 목록을 불러오지 못했습니다.";
+  }).catch(() => {
+    globalPraiseSearchError = "찬양 목록을 불러오지 못했습니다.";
+  }).finally(() => {
+    globalPraiseSearchLoad = null;
+    clearSearchCaches();
+    if (isGlobalSearchActive()) renderGlobalSearchList();
+  });
+}
+
 function renderGlobalSearchList() {
+  ensureGlobalPraiseSearchCatalog();
   const results = getGlobalSearchResults();
   const total = results.praise.length + results.scripture.filter((result) => result.kind !== "text").length + results.service.length;
   refs.songCount.textContent = `${formatCount(total)}개 표시`;
 
-  if (!total && !results.scripture.some((result) => result.kind === "text")) {
+  if (!total && !results.scripture.some((result) => result.kind === "text") && !globalPraiseSearchLoad && !globalPraiseSearchError) {
     refs.songList.innerHTML = renderListEmptyState("검색 결과 없음", "찬양, 말씀, 예배를 검색해 보세요.");
     return;
   }
 
   refs.songList.innerHTML = renderGlobalSearchSections(results);
+  refs.songList.querySelector("[data-global-praise-retry]")?.addEventListener("click", () => {
+    globalPraiseSearchError = "";
+    renderGlobalSearchList();
+  });
   finishListRender();
 }
 
 function renderGlobalSearchSections(results) {
   return getGlobalSearchSectionOrder().map((section) =>
-    renderGlobalSearchSection(section.label, section.items(results).join(""))
+    renderGlobalSearchSection(section.label, section.items(results).join("") + (section.id === "praise" && !songCatalogLoaded
+      ? (globalPraiseSearchError
+        ? `<button class="song-item" type="button" data-global-praise-retry>${escapeHtml(globalPraiseSearchError)} 다시 시도</button>`
+        : globalPraiseSearchLoad ? '<p class="service-no-results" role="status">찬양 검색 준비 중…</p>' : "")
+      : ""))
   ).filter(Boolean).join("");
 }
 
