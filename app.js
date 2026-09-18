@@ -2924,13 +2924,20 @@ function runModuleEntryLoads(moduleName) {
   });
 }
 
-async function loadSongs() {
-  if (songLoadPromise) return songLoadPromise;
-  songLoadPromise = loadSongsOnce();
+let songLoadContext = null;
+
+async function loadSongs(options = {}) {
+  if (songLoadPromise) {
+    if (!options.searchOnly && songLoadContext) songLoadContext.searchOnly = false;
+    return songLoadPromise;
+  }
+  songLoadContext = { searchOnly: Boolean(options.searchOnly) };
+  songLoadPromise = loadSongsOnce(songLoadContext);
   try {
     return await songLoadPromise;
   } finally {
     songLoadPromise = null;
+    songLoadContext = null;
     renderLoadingStatus();
   }
 }
@@ -2949,11 +2956,13 @@ function scheduleBackgroundSongLoad() {
   }
 }
 
-async function loadSongsOnce() {
+async function loadSongsOnce(context = {}) {
   if (!requireClient()) return;
 
-  state.loading = true;
-  renderConnectionStatus();
+  if (!context.searchOnly) {
+    state.loading = true;
+    renderConnectionStatus();
+  }
 
   let data = [];
   let error = null;
@@ -2972,6 +2981,7 @@ async function loadSongsOnce() {
   }
 
   if (error) {
+    if (context.searchOnly) throw error;
     state.loading = false;
     state.connectionError = error.message || "Could not load songs.";
     showToast(state.connectionError, "error");
@@ -2979,16 +2989,20 @@ async function loadSongsOnce() {
     return;
   }
 
-  state.connectionError = "";
+  if (!context.searchOnly) state.connectionError = "";
   state.songs = (data || []).map(normalizeServerSong).sort(sortSongs);
   clearSearchCaches();
+  if (context.searchOnly && isGlobalSearchActive()) renderGlobalSearchList();
   await yieldToBrowser();
   await attachRelationalSongVersions();
+  clearSearchCaches();
+  if (context.searchOnly && isGlobalSearchActive()) renderGlobalSearchList();
   await yieldToBrowser();
   if (!state.songs.some((song) => cleanList(song.related_song_ids).length)) {
     await attachSongRelations();
   }
   songCatalogLoaded = true;
+  if (context.searchOnly) return;
   if (state.selectedSongId && !state.songs.some((song) => song.id === state.selectedSongId)) {
     state.selectedSongId = null;
     state.selectedVersionId = null;
@@ -15480,7 +15494,7 @@ let globalPraiseSearchError = "";
 
 function ensureGlobalPraiseSearchCatalog() {
   if (songCatalogLoaded || globalPraiseSearchLoad || globalPraiseSearchError || !canUseClientData()) return;
-  globalPraiseSearchLoad = Promise.resolve().then(() => loadSongs()).then(() => {
+  globalPraiseSearchLoad = Promise.resolve().then(() => loadSongs({ searchOnly: true })).then(() => {
     if (!songCatalogLoaded) globalPraiseSearchError = "찬양 목록을 불러오지 못했습니다.";
   }).catch(() => {
     globalPraiseSearchError = "찬양 목록을 불러오지 못했습니다.";
@@ -23223,6 +23237,21 @@ function servicePraiseLeaderLabel(service) {
   return cleanServiceAssignee(service?.praiseLeader || service?.leader);
 }
 
+const serviceSearchItemTextCache = new WeakMap();
+
+function serviceSearchItemText(service) {
+  // Search reads stored data only; template projection belongs to the editor.
+  const source = [
+    ...(state.serviceItems[service.id] || []),
+    ...(serviceTypeById(service.type_id)?.fixed_items || []),
+  ].map(item => `${item.label || ""} ${item.raw_title || ""}`).join(" ");
+  const cached = serviceSearchItemTextCache.get(service);
+  if (cached?.source === source) return cached.text;
+  const text = normalizeSearchValue(source);
+  serviceSearchItemTextCache.set(service, { source, text });
+  return text;
+}
+
 function serviceMatchesSearch(svc, q) {
   if (!q) return true;
   const norm = (s) => normalizeSearchValue(s);
@@ -23235,10 +23264,7 @@ function serviceMatchesSearch(svc, q) {
   const dateFmt = `${d.getMonth()+1}/${d.getDate()}`;
   const dateDisplay = norm([dateFmt, formatServiceDate(svc, { compact: true }), formatServiceDate(svc)].join(" "));
   const type = norm([serviceTypeName(svc.type_id), serviceTypeDisplayName(svc.type_id), serviceDisplayTypeName(svc), serviceCustomTitle(svc)].join(" "));
-  const items = norm([
-    ...getServiceItems(svc.id),
-    ...getServiceDefaultItems(svc.type_id),
-  ].map((item) => `${item.label || ""} ${item.raw_title || ""}`).join(" "));
+  const items = serviceSearchItemText(svc);
   return leaders.includes(q) || alias.includes(q) || calendar.includes(q)
     || date.includes(q) || dateDisplay.includes(q) || type.includes(q) || items.includes(q);
 }
