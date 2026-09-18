@@ -23,6 +23,11 @@ try:
               check(!renderPrayerMusicControl({service:{type_id:'sunday'},item}),'Sunday leak');
               const mount=document.createElement('div');mount.id='prayer-test';
               mount.innerHTML=renderPrayerMusicControl({service,item});document.body.append(mount);refreshIcons(mount);
+              const prepared=state.prayerMusic.audio;
+              check(prepared && prepared.preload==='auto' && prepared.paused,'preload without autoplay');
+              renderPrayerMusicControl({service,item});
+              check(prepared===state.prayerMusic.audio,'audio recreated');
+              prepared.removeAttribute('src');prepared.load();
               let plays=0;
               const audio={paused:true,currentTime:0,play(){plays++;this.paused=false;return Promise.resolve()},pause(){this.paused=true}};
               state.prayerMusic.audio=audio;

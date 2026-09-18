@@ -29049,6 +29049,7 @@ function renderLiveScriptureControl(serviceId) {
 function renderPrayerMusicControl(context) {
   if (worshipAppServiceTypeId(context?.service?.type_id) !== "friday"
     || !(context?.item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(context?.item?.label || "") === "자율기도")) return "";
+  preparePrayerMusicAudio();
   const music = state.prayerMusic;
   const active = music.serviceId === context.service.id;
   const playing = active && (music.pending || (music.audio && !music.audio.paused));
@@ -29078,6 +29079,19 @@ function updatePrayerMusicControls() {
   });
 }
 
+function preparePrayerMusicAudio() {
+  const music = state.prayerMusic;
+  if (!music.audio) {
+    const audio = new Audio();
+    audio.preload = "auto";
+    audio.src = "./assets/presenter/friday-free-prayer.m4a?v=faststart-20260919";
+    for (const event of ["play", "pause", "ended", "error"]) audio.addEventListener(event, updatePrayerMusicControls);
+    music.audio = audio;
+    audio.load();
+  }
+  return music.audio;
+}
+
 async function runPrayerMusicAction(action, serviceId) {
   const music = state.prayerMusic;
   if (action === "repeat") {
@@ -29095,11 +29109,7 @@ async function runPrayerMusicAction(action, serviceId) {
     return;
   }
   if (action !== "toggle") return;
-  if (!music.audio) {
-    music.audio = new Audio("./assets/presenter/friday-free-prayer.m4a");
-    music.audio.preload = "none";
-    for (const event of ["play", "pause", "ended", "error"]) music.audio.addEventListener(event, updatePrayerMusicControls);
-  }
+  preparePrayerMusicAudio();
   if (music.serviceId !== serviceId) {
     music.audio.pause();
     music.audio.currentTime = 0;
