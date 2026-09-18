@@ -8755,18 +8755,46 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
   padding: 0 4px;
   pointer-events: none;
 }
-.svc-slide-citation-controls {
-  display: flex;
-  flex: 1;
+.svc-citation-composer {
   min-width: 0;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(110deg, #ba809a, #a99b70, #6caa9c, #759cbb, #ac86b0) border-box;
+}
+.svc-citation-composer:focus-within {
+  background: linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(110deg, #e39dbb, #d2b77f, #81c8b4, #90b9df, #c6a0dc) border-box;
+}
+.svc-citation-composer-heading {
+  display: flex;
+  justify-content: space-between;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 6px 16px;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+  font-size: var(--ui-meta-size);
 }
-.svc-slide-thumb-meta:has(.svc-slide-citation-controls) {
-  height: auto;
-  min-height: 22px;
-  align-items: flex-start;
+.svc-citation-composer-heading > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.svc-citation-composer-heading svg { width: 14px; height: 14px; }
+.svc-citation-composer-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+.svc-citation-composer-entry > .icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
 }
 .svc-slide-citation-auto-output {
   display: inline-flex;
@@ -8785,18 +8813,18 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
   accent-color: var(--accent);
 }
 .svc-slide-citation-reference-input {
-  width: min(118px, 100%);
+  width: 100%;
   min-width: 0;
-  height: 22px;
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  height: 34px;
+  border: 1px solid var(--line);
   border-radius: calc(var(--r) - 1px);
   background: var(--panel-2);
   color: var(--ink);
   font: inherit;
-  font-size: var(--ui-meta-size);
-  font-weight: 700;
+  font-size: var(--ui-body-size);
+  font-weight: 500;
   line-height: 20px;
-  padding: 0 7px;
+  padding: 0 10px;
 }
 .svc-slide-citation-reference-input::placeholder {
   color: var(--placeholder-ink);

@@ -8271,6 +8271,12 @@ function handleSidebarPresenterActionClick(event) {
 }
 
 function handleDetailClick(event) {
+  const citationAdd = event.target.closest("[data-presenter-citation-add]");
+  if (citationAdd) {
+    const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
+    if (input) void appendPresenterCitationReference(input);
+    return;
+  }
   document.querySelectorAll(".svc-reference-media-quick-add[open]").forEach((menu) => {
     if (!menu.contains(event.target)) menu.removeAttribute("open");
   });
@@ -30165,6 +30171,31 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
         ${slides.map(({ slide, slideIndex, formLabel }) =>
           renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, formLabel)).join("")}
       </div>
+      ${renderPresenterCitationComposer(subgroup, serviceId)}
+    </div>`;
+}
+
+function renderPresenterCitationComposer(subgroup, serviceId) {
+  const slide = subgroup.slides.find(({ slide }) => slide?.liveScriptureControl || (slide?.autoTrailingBlank && slide?.citationQuickInsert))?.slide;
+  if (!slide?.elementId) return "";
+  return `
+    <div class="svc-citation-composer" role="group" aria-label="실시간 말씀 입력">
+      <div class="svc-citation-composer-heading">
+        <span><i data-lucide="radio"></i>실시간 말씀</span>
+        <label class="svc-slide-citation-auto-output">
+          <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
+          <span>추가 즉시 송출</span>
+        </label>
+      </div>
+      <div class="svc-citation-composer-entry">
+        <input class="svc-slide-citation-reference-input" type="text"
+          data-presenter-citation-reference-input data-service-id="${escapeAttr(serviceId)}"
+          data-presenter-citation-element-id="${escapeAttr(slide.elementId)}"
+          placeholder="성경 구절 · 예: 롬 5:7–8; 요 15:9" aria-label="실시간 인용 구절" autocomplete="off" />
+        <button class="icon-btn" type="button" data-presenter-citation-add aria-label="인용 구절 추가" title="인용 구절 추가">
+          <i data-lucide="corner-down-left"></i>
+        </button>
+      </div>
     </div>`;
 }
 
@@ -30491,24 +30522,10 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
         aria-label="${escapeAttr(scriptureReference)}">
         ${escapeHtml(scriptureReference)}
       </button>` : "";
-  const citationReferenceInput = (slide?.liveScriptureControl || (slide?.autoTrailingBlank && slide?.citationQuickInsert)) ? `
-      <span class="svc-slide-citation-controls">
-        <input class="svc-slide-citation-reference-input" type="text"
-          data-presenter-citation-reference-input
-          data-service-id="${escapeAttr(serviceId)}"
-          data-presenter-citation-element-id="${escapeAttr(slide.elementId || "")}"
-          placeholder="예: 롬 5:7~8; 요 15:9"
-          aria-label="인용 구절 바로 추가" />
-        <label class="svc-slide-citation-auto-output">
-          <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
-          <span>추가 즉시 송출</span>
-        </label>
-      </span>` : "";
   return `
     <span class="svc-slide-thumb-wrap${active ? " active" : ""}${selected ? " selected" : ""}${hidden ? " hidden" : ""}${visibleFormLabel ? " has-form-label" : ""}">
       <span class="svc-slide-thumb-meta">
         <span class="svc-slide-thumb-no" aria-hidden="true">${slideNumber}</span>
-        ${citationReferenceInput}
         ${formBadge || scriptureReferenceBadge}
       </span>
       <button class="svc-slide-thumb${active ? " active" : ""}${selected ? " selected" : ""}" type="button"
@@ -31497,6 +31514,10 @@ function patchPresenterBoardSections(root, nextRoot, serviceId, slides, active, 
 function capturePresenterFocusedInput(root) {
   const field = document.activeElement;
   if (!root?.contains(field)) return null;
+  if (field?.matches?.("[data-presenter-citation-reference-input]")) {
+    return { type: "citation", serviceId: field.dataset.serviceId, elementId: field.dataset.presenterCitationElementId,
+      value: field.value, selectionStart: field.selectionStart, selectionEnd: field.selectionEnd };
+  }
   if (field?.matches?.("[data-presenter-preparation-input]")) {
     return {
       type: "preparation",
@@ -31545,6 +31566,14 @@ function restorePresenterFocusedThumb(root, snapshot) {
 
 function restorePresenterFocusedInput(root, snapshot) {
   if (!root || !snapshot) return;
+  if (snapshot.type === "citation") {
+    const field = root.querySelector(`[data-presenter-citation-reference-input][data-service-id="${CSS.escape(snapshot.serviceId)}"][data-presenter-citation-element-id="${CSS.escape(snapshot.elementId)}"]`);
+    if (!field) return;
+    field.value = snapshot.value;
+    field.focus({ preventScroll: true });
+    if (snapshot.selectionStart !== null) field.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
+    return;
+  }
   if (snapshot.type === "preparation") {
     const field = root.querySelector(`[data-presenter-preparation-input][data-service-id="${CSS.escape(snapshot.serviceId || "")}"]`);
     if (!field) return;
@@ -31593,6 +31622,10 @@ function patchPresenterControlTree(current, next) {
     return;
   }
   // Preview geometry belongs to the mounted frame, not the slide markup.
+  const preserveCitationDraft = current.matches?.("[data-presenter-citation-reference-input]")
+    && next.matches?.("[data-presenter-citation-reference-input]")
+    && current.dataset.serviceId === next.dataset.serviceId
+    && current.dataset.presenterCitationElementId === next.dataset.presenterCitationElementId;
   const scale = current.style?.getPropertyValue("--presenter-preview-scale");
   if (scale) next.style.setProperty("--presenter-preview-scale", scale);
   if (current.tagName === "DETAILS" && current.open) next.open = true;
@@ -31603,7 +31636,7 @@ function patchPresenterControlTree(current, next) {
     if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
   }
   const editingLiveScripture = current === document.activeElement && current.matches?.("[data-live-scripture-input]");
-  if (current instanceof HTMLInputElement && !editingLiveScripture && current.value !== next.value) current.value = next.value;
+  if (current instanceof HTMLInputElement && !editingLiveScripture && !preserveCitationDraft && current.value !== next.value) current.value = next.value;
   const previousChildren = [...current.childNodes];
   const nextChildren = [...next.childNodes];
   nextChildren.forEach((child, index) => {
