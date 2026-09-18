@@ -7936,9 +7936,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   flex: 0 0 100%;
   min-width: 0;
 }
-.svc-reference-media-input > .svc-reference-media-preview {
-  flex-basis: 100%;
-}
+.svc-reference-media-input > .svc-reference-media-preview { flex: 0 1 auto; }
 .svc-reference-media-input--asset .svc-presenter-input-control {
   min-width: 0;
   overflow: hidden;
@@ -8006,6 +8004,36 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   border-radius: calc(var(--r) - 2px);
   background: color-mix(in srgb, var(--panel-2) 68%, #000);
 }
+.svc-reference-media-preview--collapsible {
+  min-height: 0;
+  max-width: min(100%, 620px);
+  background: transparent;
+}
+.svc-reference-media-preview--collapsible > summary {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  height: 30px;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: calc(var(--r) - 2px);
+  background: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  color: var(--ink-2);
+  padding: 0 9px;
+}
+.svc-reference-media-preview--collapsible > summary::-webkit-details-marker { display: none; }
+.svc-reference-media-preview--collapsible > summary:hover,
+.svc-reference-media-preview--collapsible[open] > summary { background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); }
+.svc-reference-media-preview--collapsible > summary > i { width: var(--ui-icon-sm); height: var(--ui-icon-sm); color: var(--accent); }
+.svc-reference-media-preview--collapsible > summary > strong { min-width: 0; overflow: hidden; font-size: var(--ui-label-size); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.svc-reference-media-preview--collapsible > summary > span { color: var(--ink-4); font-size: 11px; font-weight: var(--ui-meta-weight); white-space: nowrap; }
+.svc-reference-media-preview--collapsible > summary > b { display: inline-flex; height: 22px; align-items: center; gap: 4px; border-radius: calc(var(--r) - 3px); background: color-mix(in srgb, var(--accent) 16%, var(--panel)); color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 7px; white-space: nowrap; }
+.svc-reference-media-preview--collapsible > summary > b i { width: 13px; height: 13px; }
+.svc-reference-media-preview-content { display: grid; width: min(100%, 420px); min-height: 0; margin-top: 8px; overflow: hidden; border-radius: calc(var(--r) - 2px); background: color-mix(in srgb, var(--panel-2) 68%, #000); }
+.svc-reference-media-preview-content img { display: block; width: 100%; max-height: 280px; object-fit: contain; }
+.svc-reference-media-preview-content audio { width: 100%; min-width: 260px; padding: 10px; }
 .svc-reference-media-preview img,
 .svc-reference-media-preview video { width: 100%; height: 100%; max-height: 180px; object-fit: contain; }
 .svc-reference-media-preview.is-empty {

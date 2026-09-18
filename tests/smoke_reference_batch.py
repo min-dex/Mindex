@@ -57,6 +57,8 @@ def main():
                   check(!presenterReferenceMediaBatchServices.has(id),'lock retained after success');
                   const html=renderPresenterAssetUpload(getServiceItems(id)[1],1,parseServiceItemMemo(getServiceItems(id)[1].memo),id);
                   check(html.includes('multiple'),'existing reference chooser is single');
+                  const imagePreview=renderPresenterReferenceMediaPreview({kind:'image',name:'one.png',url:'https://example.test/one.png'},'image');
+                  check(imagePreview.includes('<details') && imagePreview.includes('미리보기') && !imagePreview.includes('<details open'),'image preview is not collapsed');
                   const menu=document.createElement('div');menu.innerHTML=renderPresenterReferenceMediaQuickAdd('announcements',id);
                   check(menu.querySelector('[data-presenter-reference-media-direct-file]')?.multiple,'add chooser is single');
                   reset();sent.length=0;

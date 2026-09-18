@@ -28631,15 +28631,33 @@ function renderPresenterServiceAssetUrlInput(asset, index, serviceId, ariaLabel,
 function renderPresenterReferenceMediaPreview(asset, kind, emptyMessage = "파일을 선택하면 이 예배의 참고 화면으로 바로 송출됩니다.") {
   const source = String(asset?.url || "").trim();
   if (!source) return `<div class="svc-reference-media-preview is-empty"><i data-lucide="image-plus"></i><span>${escapeHtml(emptyMessage)}</span></div>`;
-  if (kind === "imported_deck") {
-    const slideCount = normalizeServiceAssetSlides(asset.slides).length;
-    const statusLabel = slideCount ? `슬라이드 ${slideCount}장 연결됨` : "슬라이드 연결됨";
-    return renderPresenterStaticAssetPreview(asset, "presentation", statusLabel);
-  }
-  if (kind === "video") return renderPresenterStaticAssetPreview(asset, "file-video", "영상 연결됨");
-  if (kind === "audio") return `<div class="svc-reference-media-preview svc-reference-media-preview--audio"><i data-lucide="audio-lines"></i><strong>${escapeHtml(asset.name || "음원")}</strong><audio controls preload="metadata" src="${escapeAttr(source)}"></audio></div>`;
-  if (kind === "file") return renderPresenterStaticAssetPreview(asset, "file", "파일 연결됨");
-  return `<div class="svc-reference-media-preview"><img src="${escapeAttr(source)}" alt="${escapeAttr(asset.name || "참고 화면")}" loading="lazy" /></div>`;
+  const normalizedKind = String(kind || asset?.kind || "file").trim().toLowerCase();
+  const slideCount = normalizedKind === "imported_deck" ? normalizeServiceAssetSlides(asset.slides).length : 0;
+  const statusLabel = normalizedKind === "imported_deck"
+    ? (slideCount ? `슬라이드 ${slideCount}장 연결됨` : "슬라이드 연결됨")
+    : normalizedKind === "video" ? "영상 연결됨"
+      : normalizedKind === "audio" ? "음원 연결됨"
+        : normalizedKind === "image" ? "이미지 연결됨" : "파일 연결됨";
+  const icon = normalizedKind === "imported_deck" ? "presentation"
+    : normalizedKind === "video" ? "file-video"
+      : normalizedKind === "audio" ? "audio-lines"
+        : normalizedKind === "image" ? "image" : "file";
+  const name = String(asset?.name || "").trim() || statusLabel;
+  const body = normalizedKind === "image"
+    ? `<img src="${escapeAttr(source)}" alt="${escapeAttr(name)}" loading="lazy" />`
+    : normalizedKind === "audio"
+      ? `<audio controls preload="metadata" src="${escapeAttr(source)}"></audio>`
+      : renderPresenterStaticAssetPreview(asset, icon, statusLabel);
+  return `
+    <details class="svc-reference-media-preview svc-reference-media-preview--collapsible svc-reference-media-preview--${escapeAttr(normalizedKind)}">
+      <summary>
+        <i data-lucide="${escapeAttr(icon)}"></i>
+        <strong title="${escapeAttr(name)}">${escapeHtml(name)}</strong>
+        <span>${escapeHtml(statusLabel)}</span>
+        <b><i data-lucide="eye"></i>미리보기</b>
+      </summary>
+      <div class="svc-reference-media-preview-content">${body}</div>
+    </details>`;
 }
 
 function renderPresenterStaticAssetPreview(asset, icon, statusLabel) {
