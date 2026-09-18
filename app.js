@@ -29078,34 +29078,47 @@ function renderLiveScriptureControl(serviceId) {
     </span>`;
 }
 
+function prayerMusicButtonState(serviceId) {
+  const music = state.prayerMusic;
+  const active = music.serviceId === serviceId;
+  const pending = active && music.pending;
+  const playing = Boolean(active && !pending && music.audio && !music.audio.paused && !music.audio.ended);
+  return { active, pending, playing, key: pending ? "loading" : playing ? "playing" : "idle",
+    icon: pending ? "loader-circle" : playing ? "pause" : "play",
+    text: pending ? "준비 중" : playing ? "일시정지" : "재생" };
+}
+
 function renderPrayerMusicControl(context) {
   if (worshipAppServiceTypeId(context?.service?.type_id) !== "friday"
     || !(context?.item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(context?.item?.label || "") === "자율기도")) return "";
   preparePrayerMusicAudio();
   const music = state.prayerMusic;
-  const active = music.serviceId === context.service.id;
-  const playing = active && (music.pending || (music.audio && !music.audio.paused));
+  const status = prayerMusicButtonState(context.service.id);
   return `<div class="svc-prayer-music" data-prayer-music="${escapeAttr(context.service.id)}" role="group" aria-label="자율기도 음악">
     <span class="svc-prayer-music-label">자율기도 음악</span>
-    <button type="button" class="btn secondary" data-prayer-music-action="toggle" aria-pressed="${Boolean(playing)}"><i data-lucide="${playing ? "pause" : "play"}"></i>${playing ? "일시정지" : "재생"}</button>
-    <button type="button" class="icon-btn" data-prayer-music-action="stop" aria-label="자율기도 음악 정지" title="정지" ${active ? "" : "disabled"}><i data-lucide="square"></i></button>
-    <button type="button" class="icon-btn" data-prayer-music-action="repeat" aria-label="자율기도 음악 반복" title="반복" aria-pressed="${music.repeat}"><i data-lucide="repeat"></i></button>
-    <select data-prayer-music-volume aria-label="자율기도 음악 음량">${[0,1,2,3,4,5].map(level => `<option value="${level}" ${Math.round(music.volume * 5) === level ? "selected" : ""}>${level === 0 ? "음소거" : `음량 ${level}`}</option>`).join("")}</select>
+    <span class="svc-prayer-music-actions">
+      <button type="button" class="btn secondary" data-prayer-music-action="toggle" data-playback-state="${status.key}" aria-pressed="${status.playing}" aria-busy="${status.pending}" aria-label="${status.pending ? "음악 준비 중, 누르면 취소" : status.text}"><i data-lucide="${status.icon}"></i>${status.text}</button>
+      <button type="button" class="icon-btn" data-prayer-music-action="stop" aria-label="자율기도 음악 정지" ${status.active ? "" : "disabled"}><i data-lucide="square"></i></button>
+      <button type="button" class="icon-btn svc-music-repeat" data-prayer-music-action="repeat" aria-label="자율기도 음악 반복" aria-pressed="${music.repeat}"><i data-lucide="repeat"></i></button>
+      <select class="svc-music-volume" data-prayer-music-volume aria-label="자율기도 음악 음량">${[0,1,2,3,4,5].map(level => `<option value="${level}" ${Math.round(music.volume * 5) === level ? "selected" : ""}>${level === 0 ? "음소거" : `음량 ${level}`}</option>`).join("")}</select>
+    </span>
   </div>`;
 }
 
 function updatePrayerMusicControls() {
   const music = state.prayerMusic;
   document.querySelectorAll("[data-prayer-music]").forEach(root => {
-    const active = root.dataset.prayerMusic === music.serviceId;
-    const playing = Boolean(active && (music.pending || (music.audio && !music.audio.paused)));
+    const status = prayerMusicButtonState(root.dataset.prayerMusic);
     const toggle = root.querySelector('[data-prayer-music-action="toggle"]');
-    if (toggle.getAttribute("aria-pressed") !== String(playing)) {
-      toggle.innerHTML = `<i data-lucide="${playing ? "pause" : "play"}"></i>${playing ? "일시정지" : "재생"}`;
+    if (toggle.dataset.playbackState !== status.key) {
+      toggle.innerHTML = `<i data-lucide="${status.icon}"></i>${status.text}`;
+      toggle.dataset.playbackState = status.key;
       refreshIcons(toggle);
     }
-    toggle.setAttribute("aria-pressed", String(playing));
-    root.querySelector('[data-prayer-music-action="stop"]').disabled = !active;
+    toggle.setAttribute("aria-pressed", String(status.playing));
+    toggle.setAttribute("aria-busy", String(status.pending));
+    toggle.setAttribute("aria-label", status.pending ? "음악 준비 중, 누르면 취소" : status.text);
+    root.querySelector('[data-prayer-music-action="stop"]').disabled = !status.active;
     root.querySelector('[data-prayer-music-action="repeat"]').setAttribute("aria-pressed", String(music.repeat));
     root.querySelector("select").value = String(Math.round(music.volume * 5));
   });

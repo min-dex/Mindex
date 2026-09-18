@@ -9534,15 +9534,23 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0 16px;
+  gap: 10px;
+  margin: 10px 0 15px;
 }
-.svc-prayer-music-label { font-weight: 600; margin-right: 4px; }
+.svc-prayer-music-label { font-weight: 600; color: var(--ink-2); }
+.svc-prayer-music-actions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .svc-prayer-music .btn,
 .svc-prayer-music .icon-btn,
-.svc-prayer-music select { height: 34px; min-height: 34px; }
-.svc-prayer-music .icon-btn { width: 34px; }
-.svc-prayer-music select { width: auto; }
+.svc-prayer-music select { height: 30px; min-height: 30px; }
+.svc-prayer-music [data-prayer-music-action="toggle"] { width: 95px; padding: 0 8px; justify-content: center; flex: 0 0 95px; white-space: nowrap; }
+.svc-prayer-music .icon-btn { width: 30px; flex: 0 0 30px; }
+.svc-prayer-music .svc-music-volume { width: 75px; flex: 0 0 75px; }
+.svc-prayer-music select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.svc-prayer-music [aria-busy="true"] svg { animation: prayer-music-loading 1s linear infinite; }
+@keyframes prayer-music-loading { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .svc-prayer-music [aria-busy="true"] svg { animation: none; }
+}
 #returnLiveServiceBtn[hidden] { display: none; }
 @media (max-width: 640px) {
   #returnLiveServiceBtn span { display: none; }
