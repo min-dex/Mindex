@@ -10384,8 +10384,7 @@ async function resolveServiceSongSelectionBeforeSave(serviceId, index) {
     return false;
   }
 
-  const rawTitle = String(item.raw_title || "").trim();
-  if (!rawTitle) {
+  if (item.song_id) {
     const linkedSong = serviceItemLinkedSong(item);
     if (linkedSong && !item.version_id && !item.song_version_id) {
       linkServiceItemToPraiseSong(item, linkedSong, service, { clearRawTitle: false });
@@ -10394,6 +10393,8 @@ async function resolveServiceSongSelectionBeforeSave(serviceId, index) {
     return false;
   }
 
+  const rawTitle = String(item.raw_title || "").trim();
+  if (!rawTitle) return false;
   const song = await resolveExistingPraiseSongForServiceInputAfterCatalogLoad(rawTitle, item, service);
   if (!song) return false;
   if (serviceItemRequiresNewHymnalScoreSong(item) && !isNewHymnalScoreSong(song)) return false;
@@ -11918,6 +11919,9 @@ function serviceItemVersionSelectionInvalid(item = {}, service = selectedService
 
 function serviceItemSongVersionIdForSave(item = {}, service = selectedServiceForEditor()) {
   const song = serviceItemLinkedSong(item);
+  if (item.song_id && !song) {
+    throw new Error(`${item.label || "이 항목"}의 연결된 찬양을 불러온 뒤 다시 저장해 주세요.`);
+  }
   if (!song) return null;
   const selectedId = String(
     item.version_id
@@ -13520,7 +13524,10 @@ function applyServiceSongSelectionWithService(item, service = null) {
     item.song_version_id = null;
     return;
   }
-  const song = serviceItemLinkedSong(item)
+  const linkedSong = serviceItemLinkedSong(item);
+  // A persisted ID wins over title matching, even while its catalogue row is unavailable.
+  if (item.song_id && !linkedSong) return;
+  const song = linkedSong
     || resolvePresenterPreparationSong(item.raw_title, item, service || selectedServiceForEditor())
     || findServicePraiseSong(item.raw_title);
   if (!song) {

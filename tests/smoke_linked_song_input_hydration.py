@@ -68,6 +68,28 @@ def main():
                       for (let i = 0; i < 20; i++) renderPicker();
                       check(requests === 2, 'empty response must not create render loop');
                       check(JSON.stringify(item) === before, 'failed/empty loads changed saved input');
+                      let saveBlocked = false;
+                      try { serviceItemSongVersionIdForSave(item, service); }
+                      catch (error) { saveBlocked = error.message.includes('불러온 뒤'); }
+                      check(saveBlocked, 'row serialization must not silently clear an unresolved version');
+                      const resolveByTitle = resolvePresenterPreparationSong;
+                      const findByTitle = findServicePraiseSong;
+                      resolvePresenterPreparationSong = () => ({id: 'other-song', title: item.raw_title});
+                      findServicePraiseSong = resolvePresenterPreparationSong;
+                      applyServiceSongSelectionWithService(item, service);
+                      check(JSON.stringify(item) === before, 'title fallback replaced the saved song ID');
+                      const getItems = getServiceItems;
+                      const asyncResolve = resolveExistingPraiseSongForServiceInputAfterCatalogLoad;
+                      state.services = [service];
+                      state.serviceItems[service.id] = [item];
+                      getServiceItems = () => [item];
+                      resolveExistingPraiseSongForServiceInputAfterCatalogLoad = async () => { throw Error('saved link must not be resolved by title'); };
+                      await resolveServiceSongSelectionBeforeSave(service.id, 0);
+                      check(JSON.stringify(item) === before, 'pre-save resolver replaced the saved song ID');
+                      getServiceItems = getItems;
+                      resolveExistingPraiseSongForServiceInputAfterCatalogLoad = asyncResolve;
+                      resolvePresenterPreparationSong = resolveByTitle;
+                      findServicePraiseSong = findByTitle;
                       let renders = 0;
                       renderCurrentServiceModuleDetail = () => { renders++; renderPicker(); };
                       refreshPresenterForService = () => {};

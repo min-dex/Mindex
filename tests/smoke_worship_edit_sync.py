@@ -9,7 +9,7 @@ def main():
                 browser = launch_chromium(p) if engine == 'chromium' else p.webkit.launch()
                 page = browser.new_page()
                 page.route('**/*supabase*/**', lambda r: r.abort())
-                page.goto(url+'?output=presenter', wait_until='domcontentloaded')
+                page.goto(url+'?mindexSmokeRaw=1', wait_until='domcontentloaded')
                 page.wait_for_function("typeof persistSundayEditSync === 'function'")
                 print(engine, page.evaluate('''async () => {
                   const check=(v,m)=>{if(!v)throw Error(m)};
