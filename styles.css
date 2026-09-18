@@ -4291,8 +4291,17 @@ body[data-module="presenter"] .detail-pane {
 }
 .service-list-type-stack {
   display: grid;
-  gap: var(--s4);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 1fr);
+  align-items: start;
+  gap: var(--s3);
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: var(--s2);
 }
+.service-list-type-stack .service-list-type-block { align-content: start; }
+.service-list-type-stack .service-date-grid { grid-template-columns: minmax(0, 1fr); }
+.service-list-type-stack .service-date-card { min-height: 104px; }
 .service-list-type-block {
   display: grid;
   min-width: 0;
