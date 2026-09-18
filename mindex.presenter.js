@@ -4976,17 +4976,9 @@ function renderPresenterImageSlide(slide, options = {}) {
 
 function presenterOrderDisplayLabel(value = "") {
   const label = String(value || "");
-  // Format only order labels; content and persisted values remain unchanged.
-  return label.replace(/^([가-힣A-Za-z][가-힣A-Za-z ]*?)\s*(\d+(?:\s*[·–~-]\s*\d+)*)$/u, (match, name, numbers) => {
-    const values = numbers.split(/[·–~-]/u).map((part) => Number(part.trim()));
-    if (values.some((number) => number < 1 || number > 50)) return match;
-    const circled = values.map((number) => String.fromCodePoint(
-      number <= 20 ? 0x2460 + number - 1
-        : number <= 35 ? 0x3251 + number - 21 : 0x32b1 + number - 36,
-    ));
-    let index = 0;
-    return name.trim() + " " + numbers.replace(/\d+/g, () => circled[index++]).replace(/\s*([·–~-])\s*/g, (_, separator) => separator === "·" ? "·" : "–");
-  });
+  // Hide sequence numbers only in output headings, never in stored labels/content.
+  return label.replace(/^([가-힣A-Za-z][가-힣A-Za-z ]*?)\s*(?:\d+|[①-⑳㉑-㉟㊱-㊿])(?:\s*[·–~-]\s*(?:\d+|[①-⑳㉑-㉟㊱-㊿]))*\s*$/u,
+    (_, name) => name.trim());
 }
 
 function renderPresenterTitleAssigneeSlide(slide) {
