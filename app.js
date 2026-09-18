@@ -23708,6 +23708,34 @@ function serviceElementDisplayLabel(value = "") {
   return ["청소년부광고", "청년부광고"].includes(compactSearchValue(label)) ? "광고" : label;
 }
 
+function serviceItemOrdinalDisplayLabel(item, service = null, automaticOnly = false) {
+  const label = String(item?.label || "").trim();
+  const fallback = automaticOnly ? null : label;
+  const serviceId = service?.id || item?.service_id;
+  if (!serviceId || /\d+\s*[·–~\-]\s*\d+$/u.test(label)) return fallback;
+  service ||= state.services.find(candidate => candidate.id === serviceId);
+  const sectionKey = String(item?._worshipSectionKey || item?.section_key || "");
+  const baseName = value => String(value || "").trim().replace(/\s*\d+$/u, "").trim();
+  const base = baseName(label);
+  if (!base) return fallback;
+  const items = state.serviceItems[serviceId] || [];
+  const hierarchy = serviceTemplateHierarchyIndex(worshipAppServiceTypeId(service?.type_id), {
+    service, items,
+  });
+  // Template evidence distinguishes an automatic ordinal from a custom title's number.
+  const numberedTemplate = hierarchy.sections.some(section => section.key === sectionKey
+    && section.elements.some(element => /\d$/u.test(element.label) && baseName(element.label) === base));
+  if (!numberedTemplate) return fallback;
+  const section = String(item?._worshipSectionId || item?._worshipSectionKey || "");
+  const peers = items.filter(candidate =>
+    baseName(candidate.label) === base
+    && String(candidate._worshipSectionId || candidate._worshipSectionKey || "") === section
+    && !isTemplateSuppressedServiceItem(candidate));
+  const index = peers.findIndex(candidate => candidate.id === item.id);
+  if (index < 0) return fallback;
+  return peers.length === 1 ? base : `${base} ${index + 1}`;
+}
+
 function serviceSidebarChildItemDisplayParts(item, service = null) {
   const connectedOrderTitle = serviceItemConnectedPraiseTitle(item, "order");
   const connectedSongTitle = serviceItemConnectedPraiseTitle(item, "title");
@@ -23717,7 +23745,7 @@ function serviceSidebarChildItemDisplayParts(item, service = null) {
       title: serviceSidebarOutlineFirstLine(connectedSongTitle || serviceItemDisplayText(item) || connectedOrderTitle, item),
     };
   }
-  const label = serviceElementDisplayLabel(item?.label);
+  const label = serviceElementDisplayLabel(serviceItemOrdinalDisplayLabel(item, service));
   const fallback = serviceSidebarChildItemTitle(item, service);
   if (!label) return { meta: "", title: serviceSidebarOutlineFirstLine(fallback || "항목", item) };
   const title = serviceSidebarChildItemDisplayText(item);
@@ -29934,17 +29962,6 @@ function presenterBoardSubgroupContentTitle(slide = {}, label = "") {
     return slide.contentTitle || presenterSermonContentTitle(String(slide.assignee || "").split("\n")[0]);
   }
   const title = slide.elementTitle || slide.title || presenterSlideMainText(slide);
-  const sectionTitle = serviceSectionDisplayTitle(
-    sectionKey,
-    slide.sectionHeading || slide.sectionTitle || slide.sectionLabel || "",
-  );
-  if (sectionTitle && compactSearchValue(title) === compactSearchValue(sectionTitle)) return "";
-  if (isPresenterMainPraiseSlide(slide)) {
-    const titleKey = compactSearchValue(title);
-    const elementLabelKey = compactSearchValue(slide.elementLabel || "");
-    if ((elementLabelKey && titleKey === elementLabelKey) || ["환영", "입례찬양"].includes(titleKey)) return "";
-  }
-  if (presenterTitleAssigneeTitleIsGeneric(title, label)) return "";
   return title;
 }
 
@@ -30246,7 +30263,7 @@ function renderPresenterBoardSubgroupInputControls(serviceId, subgroup = {}, opt
   const blocks = contexts.map((context) => {
     const controls = presenterServiceInputControls(context.item, context.index, context.service, { headerActions: true });
     if (!controls) return "";
-    const label = contexts.length > 1 ? String(context.item.label || "항목").trim() : "";
+    const label = contexts.length > 1 ? serviceElementDisplayLabel(serviceItemOrdinalDisplayLabel(context.item, context.service)) || "항목" : "";
     return `
       <div class="svc-board-subgroup-control-item" data-service-id="${escapeAttr(serviceId)}" data-service-item-id="${escapeAttr(context.item.id || "")}" data-service-item-index="${escapeAttr(String(context.index))}">
         ${label ? `<div class="svc-board-subgroup-control-head"><span class="svc-board-subgroup-control-label">${escapeHtml(label)}</span>${renderPresenterBoardItemActions(serviceId, context)}</div>` : ""}
@@ -30269,16 +30286,13 @@ function presenterBoardSubgroupDisplay(serviceId, subgroup = {}) {
   };
   const contexts = presenterBoardSubgroupInputContexts(serviceId, subgroup);
   const item = contexts.length === 1 ? contexts[0]?.item : null;
+  if (item && !serviceItemConnectedPraise(item)) {
+    const displayLabel = serviceItemOrdinalDisplayLabel(item, contexts[0].service, true);
+    if (displayLabel !== null) return { ...fallback, label: displayLabel };
+  }
   if (item && isAnnouncementTextInputItem(item)) fallback.title = "";
-  const sectionKey = String(item?._worshipSectionKey || item?.section_key || "").trim();
   if (serviceElementDisplayLabel(fallback.label) !== fallback.label) {
     return { ...fallback, label: serviceElementDisplayLabel(fallback.label) };
-  }
-  if (sectionKey === "announcements" && compactSearchValue(fallback.label) === "광고") {
-    return {
-      ...fallback,
-      label: "",
-    };
   }
   const sectionFallbackLabel = presenterBoardSectionFallbackLabelForContext(contexts[0], fallback.label);
   if (contexts.length === 1 && sectionFallbackLabel) {
@@ -30437,9 +30451,7 @@ function renderPresenterWarnings(warnings = []) {
 }
 
 function presenterVisibleTitle(label, title) {
-  const cleanTitle = String(title || "").trim();
-  if (!cleanTitle) return "";
-  return compactSearchValue(cleanTitle) === compactSearchValue(label) ? "" : cleanTitle;
+  return String(title || "").trim();
 }
 
 function annotatePresenterFormStarts(entries = [], initialPreviousKey = "") {
