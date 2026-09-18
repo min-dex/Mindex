@@ -11728,6 +11728,7 @@ function selectedServiceForEditor() {
 }
 
 function serviceItemAllowsManualSongText(item = {}, service = selectedServiceForEditor()) {
+  if (serviceMemoElementType(parseServiceItemMemo(item.memo)) === "praise") return true;
   if (isSongServiceLabel(item.label)) return true;
   if (isSpecialSongServiceItem(item)) return true;
   if (isAllGenerationsWorshipService(service) && isMainPraiseServiceItem(item, { allowUnlabeled: true })) return true;
@@ -11738,7 +11739,8 @@ function serviceItemRequiresSongSelection(item = {}, service = selectedServiceFo
   if (isPublicFixedDoxologyServiceItem(item, parseServiceItemMemo(item.memo), service)) return false;
   const praiseInputMode = servicePraiseInputMode(item, parseServiceItemMemo(item.memo), service);
   if (praiseInputMode === "manual_praise") return false;
-  const songLikeItem = isSongServiceLabel(item.label) || isSpecialSongServiceItem(item);
+  const songLikeItem = serviceMemoElementType(parseServiceItemMemo(item.memo)) === "praise"
+    || isSongServiceLabel(item.label) || isSpecialSongServiceItem(item);
   if (songLikeItem && ["score_db", "lyrics_db"].includes(praiseInputMode)) return true;
   return Boolean(songLikeItem && !serviceItemAllowsManualSongText(item, service));
 }
@@ -11927,7 +11929,7 @@ function serviceItemEditorModel(item = {}, options = {}) {
   const titlePerson = elementType === "title_person";
   const compactLabel = compactSearchValue(item.label || "");
   const specialSong = isSpecialSongServiceItem(item);
-  const song = isSongServiceLabel(item.label) || specialSong;
+  const song = elementType === "praise" || isSongServiceLabel(item.label) || specialSong;
   const scriptureBody = isScriptureBodyServiceItem(item);
   const scripture = isScriptureBodyServiceItem(item) || isScriptureServiceLabel(item.label);
   const worshipLeaderItem = presenterTitleAssigneeUsesWorshipLeader(compactLabel);
@@ -28374,7 +28376,7 @@ function renderPresenterServiceTextInputs(item, index, model, memo) {
     ${needsTitle ? `
       <label class="${titleFieldClass}">
         ${presenterServiceTitleFieldShowsLabel(titleLabel) ? `<span>${escapeHtml(titleLabel)}</span>` : ""}
-        ${announcementText ? `
+        ${manualPraise ? renderServiceEditorTitleControl(item, index, { service: model?.service, hideFormControls: true }, model) : announcementText ? `
           <textarea class="svc-presenter-input-control svc-presenter-input-control--multiline" data-service-item-field="raw_title" data-service-item-index="${index}"
             rows="4" placeholder="1. 다음 주 모임 안내&#10;같은 항목의 추가 내용&#10;2. 새가족 환영" onkeydown="handleDetailKeydown(event)" aria-label="${escapeAttr(`${item.label || "항목"} ${titleLabel}`)}">${escapeHtml(item.raw_title || "")}</textarea>
           <small class="svc-presenter-input-hint">줄 맨 앞의 1., 2.마다 새 항목으로 표시됩니다. 번호 없는 다음 줄은 같은 항목에 포함됩니다.</small>` : `
