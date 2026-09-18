@@ -8285,6 +8285,7 @@ function handleSidebarPresenterActionClick(event) {
 }
 
 function handleDetailClick(event) {
+  if (event.target.closest("button:disabled")) return;
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
   if (citationAdd) {
     const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
@@ -10342,6 +10343,10 @@ function updateServiceItemField(field, options = {}) {
   if (!item) return;
 
   const key = field.dataset.serviceItemField;
+  if (key === "label" && field.dataset.ordinalDisplayValue !== undefined) {
+    if (field.value === field.dataset.ordinalDisplayValue) return;
+    field.dataset.ordinalDisplayValue = field.value;
+  }
   const service = state.services.find((candidate) => candidate.id === serviceId) || selectedServiceForEditor();
   const persistenceBefore = serviceItemPersistenceSignature(item);
   item._worshipElementTemplateModified = true;
@@ -25659,6 +25664,7 @@ function renderPresenterSectionEditorLayer(service) {
 
 function renderPresenterSectionEditorItem(item, localIndex, context) {
   const origIndex = item._origIndex;
+  const displayLabel = serviceItemOrdinalDisplayLabel(item, context.service);
   const model = serviceItemEditorModel(item, { service: context.service });
   const hidden = Boolean(model.parsed?.hiddenInPresentation);
   const first = localIndex === 0;
@@ -25666,7 +25672,7 @@ function renderPresenterSectionEditorItem(item, localIndex, context) {
   return `
     <article class="presenter-section-editor-item">
       <span class="svc-edit-order">${localIndex + 1}</span>
-      <input class="svc-edit-label" type="text" data-service-item-field="label" data-service-item-index="${origIndex}" value="${escapeAttr(item.label || "")}" aria-label="엘리멘트 이름" />
+      <input class="svc-edit-label" type="text" data-service-item-field="label" data-service-item-index="${origIndex}" data-ordinal-display-value="${escapeAttr(displayLabel)}" value="${escapeAttr(displayLabel)}" aria-label="엘리멘트 이름" />
       ${renderServiceEditorAssigneeControl(item, origIndex, { service: context.service }, model)}
       ${renderServiceEditorTitleControl(item, origIndex, { service: context.service }, model)}
       <select class="presenter-section-editor-type" data-service-item-field="element_type" data-service-item-index="${origIndex}" aria-label="엘리멘트 타입">
@@ -28753,6 +28759,7 @@ function renderServiceMusicPlayer() {
         <button class="icon-btn svc-music-toggle${music.playing ? " is-active" : ""}" type="button" data-service-music-action="toggle" aria-label="${escapeAttr(music.playing ? uiText("presenter.music.pause") : uiText("presenter.music.play"))}" title="${escapeAttr(music.playing ? uiText("presenter.music.pause") : uiText("presenter.music.play"))}">
           <i data-lucide="${music.playing ? "pause" : "play"}"></i>
         </button>
+        <button class="icon-btn svc-music-repeat" type="button" data-service-music-action="repeat" aria-label="음악 반복 재생" title="음악 반복 재생" aria-pressed="${Boolean(music.repeat ?? context.playback?.loop)}"><i data-lucide="repeat"></i></button>
         <span class="svc-volume-control">
           <span class="svc-presenter-mini-label">${escapeHtml(uiText("presenter.label.volume"))}</span>
           <select class="svc-music-volume" data-service-music-volume aria-label="${escapeAttr(uiText("presenter.music.volume"))}">
@@ -28783,7 +28790,17 @@ function currentPresenterAudioContext(serviceId = state.presenter.serviceId) {
   if (state.presenter.safetyBlank || state.presenter.liveScripture?.active) return { source: "", label: "", slideId: "", playback: null };
   const slide = state.presenter.slides[clampPresenterIndex(state.presenter.index, state.presenter.slides.length)];
   const source = presenterSlideAudioSource(slide);
-  if (!source) return { source: "", label: "", slideId: "", playback: null };
+  if (!source) {
+    const service = state.services.find(candidate => candidate.id === serviceId);
+    const item = worshipAppServiceTypeId(service?.type_id) === "friday"
+      ? getServiceItems(serviceId).find(candidate => candidate.id === slide?.elementId)
+      : null;
+    if (worshipAppServiceTypeId(service?.type_id) === "friday"
+      && (item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(item?.label || "") === "자율기도")) {
+      return { source: "./assets/presenter/friday-free-prayer.m4a", label: "금요기도회 기도찬양", slideId: slide.id || "", playback: { loop: false } };
+    }
+    return { source: "", label: "", slideId: "", playback: null };
+  }
   return {
     source,
     label: presenterFileDisplayTitle(slide, presenterFileTypeLabel(slide.sourceType || slide.asset?.kind || "audio")),
@@ -28947,6 +28964,13 @@ function runServiceMusicAction(action) {
     document.querySelector("[data-service-music-file]")?.click();
     return;
   }
+  if (action === "repeat") {
+    const context = currentPresenterAudioContext();
+    state.serviceMusic.repeat = !(state.serviceMusic.repeat ?? context.playback?.loop);
+    if (state.serviceMusic.audio) state.serviceMusic.audio.loop = state.serviceMusic.repeat;
+    renderPresenterControlState();
+    return;
+  }
   if (action !== "toggle") return;
   const audio = getServiceMusicAudio();
   const context = currentPresenterAudioContext();
@@ -28960,7 +28984,7 @@ function runServiceMusicAction(action) {
   const presenterSource = state.serviceMusic.mode === "presenter-audio" ? state.serviceMusic.sourceKey : "";
   const source = manualSource || presenterSource || context.source;
   const mode = manualSource ? "manual" : "presenter-audio";
-  const playback = manualSource ? { loop: false } : context.playback;
+  const playback = { ...(manualSource ? {} : context.playback), loop: state.serviceMusic.repeat ?? (!manualSource && Boolean(context.playback?.loop)) };
   const label = manualSource
     ? state.serviceMusic.sourceLabel || state.serviceMusic.fileName || ""
     : state.serviceMusic.sourceLabel || context.label || "";

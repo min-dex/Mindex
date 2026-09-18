@@ -192,6 +192,29 @@ button:not(:disabled) {
 svg { width: var(--ui-icon-size); height: var(--ui-icon-size); stroke-width: 1.5; }
 h1, h2, h3, p { margin: 0; }
 
+:is(#servicePresenterControls, [data-presenter-right-sidebar], [data-presenter-section-editor]) :is(.icon-btn, .reference-new-btn):not(:disabled):hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--ink);
+}
+:is(#servicePresenterControls, [data-presenter-right-sidebar], [data-presenter-section-editor]) :is(.icon-btn, .reference-new-btn):not(:disabled):active {
+  background-color: var(--panel-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transform: none;
+}
+:is(#servicePresenterControls, [data-presenter-right-sidebar], [data-presenter-section-editor]) button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  transform: none;
+}
+:is(#servicePresenterControls, [data-presenter-right-sidebar], [data-presenter-section-editor]) button[aria-busy="true"] {
+  cursor: progress;
+}
+.svc-music-repeat[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
 .app-shell {
   position: relative;
   display: grid;
@@ -7573,6 +7596,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   white-space: nowrap;
 }
 .svc-music-toggle.icon-btn,
+.svc-music-repeat.icon-btn,
 .svc-live-scripture .icon-btn {
   width: var(--ui-icon-btn-inline);
   height: var(--ui-icon-btn-inline);
