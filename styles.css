@@ -8657,6 +8657,25 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.nav-rail-tab[data-home-module="service"] .lucide-church path[d="M14 21v-3a2 2 0 0 0-4 0v3"] {
+  display: none;
+}
+.svc-slide-form-badge[data-form-type="verse"] { --form-color: #4f7cac; }
+.svc-slide-form-badge[data-form-type="chorus"] { --form-color: #2f8f83; }
+.svc-slide-form-badge[data-form-type="pre-chorus"] { --form-color: #c77d33; }
+.svc-slide-form-badge[data-form-type="bridge"] { --form-color: #8e5db7; }
+.svc-slide-form-badge[data-form-type="tag"] { --form-color: #b95a78; }
+.svc-slide-form-badge[data-form-type="instrumental"] { --form-color: #64867c; }
+.svc-slide-form-badge[data-form-type="coda"] { --form-color: #6b7280; }
+.svc-slide-form-badge[data-form-type] {
+  background: color-mix(in srgb, var(--form-color, #6b7280) 24%, var(--panel));
+  box-shadow: inset 3px 0 var(--form-color, #6b7280);
+  color: var(--ink);
+  padding-left: 8px;
+}
+.svc-slide-form-badge[data-form-type]:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--form-color, #6b7280) 38%, var(--panel));
+}
 .svc-slide-form-badge:hover,
 .svc-slide-form-badge:focus-visible {
   background: color-mix(in srgb, var(--accent) 20%, var(--panel-2));

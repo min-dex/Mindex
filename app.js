@@ -30581,6 +30581,7 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
   const slideNumber = slideIndex + 1;
   const formBadge = visibleFormLabel ? `
       <button class="svc-slide-form-badge" type="button"
+        data-form-type="${escapeAttr(normalizeSongFormPresetLabel(visibleFormLabel).type)}"
         data-presenter-action="jump"
         data-presenter-index="${slideIndex}"
         data-service-id="${escapeAttr(serviceId)}"
