@@ -23,6 +23,10 @@ a superuser connection:
 - an injected receipt failure rolls back metadata, document and checkpoint even
   when invoked through the definer wrapper;
 - deletion retains a private recovery checkpoint.
+- The actual JavaScript atomic client calls all four wrappers through a test
+  adapter that checks `pg_proc.proargnames` and invokes named arguments under
+  `anon`. This caught and fixed `sid`/`service_id` and `req`/`request` mismatches
+  that positional SQL tests missed. This is not an HTTP/PostgREST integration test.
 
 Run:
 

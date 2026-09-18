@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { openWorshipTestDb } from './helpers/worship-test-db.mjs';
+import { createWorshipAtomicClient } from '../mindex.worship-atomic-client.mjs';
 
 const db = await openWorshipTestDb();
 const scalar = async (sql, args = []) => Object.values((await db.query(sql, args)).rows[0])[0];
@@ -40,6 +41,31 @@ try {
   const created = await scalar('select public.create_worship_service_v1($1)', [request]);
   assert.equal(created.committedRevision, '1');
   assert.equal((await read()).elements[0].song_version_id, versionId);
+  const journal = new Map();
+  const contractClient = createWorshipAtomicClient({journal: {
+    getItem: key => journal.get(key) ?? null,
+    setItem: (key, value) => journal.set(key, value),
+    removeItem: key => journal.delete(key),
+  }, makeId: randomUUID, rpc: async (name, args) => {
+    const allowed = ['get_worship_service_v1', 'save_worship_service_v1',
+      'create_worship_service_v1', 'delete_worship_service_v1'];
+    assert.ok(allowed.includes(name));
+    const signature = (await db.query(`select p.proargnames from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname=$1`, [name])).rows;
+    assert.equal(signature.length, 1, 'RPC must resolve unambiguously');
+    assert.deepEqual(Object.keys(args), signature[0].proargnames, 'PostgREST named-argument contract');
+    try { return {data: await scalar(`select public.${name}(${Object.keys(args)[0]} => $1)`, Object.values(args)), error: null}; }
+    catch (error) { return {data: null, error}; }
+  }});
+  await contractClient.read(serviceId);
+  const contractBaseline = contractClient.baseline(serviceId);
+  await contractClient.commit({serviceId, rows: {sections: contractBaseline.sections, elements: contractBaseline.elements},
+    document: contractBaseline.service.source_ref.mindexServiceDocument});
+  const contractId = randomUUID();
+  await contractClient.create({service: {id: contractId, service_type_id: 'fixture', service_date: '2026-09-20'},
+    rows: {sections: [], elements: []}, document: {sourceText: ''}});
+  await contractClient.remove(contractId);
+  console.log('PASS real client read/save/create/delete match named RPC arguments under anon');
   console.log('PASS anonymous create/read including canonical pair lock under least-privileged owner');
 
   for (const role of ['anon', 'authenticated']) {
@@ -56,10 +82,10 @@ try {
     await assert.rejects(db.exec('set role mindex_atomic_writer'), /permission denied/);
     console.log(`PASS ${role}: presenter reads retained, direct writes/private helpers/role escalation denied`);
   }
-  const change = {protocolVersion: 1, serviceId, requestId: randomUUID(), expectedRevision: '1',
+  const change = {protocolVersion: 1, serviceId, requestId: randomUUID(), expectedRevision: '2',
     metadataPatch: {title: 'saved'}, sectionPatches: [], elementPatches: [], document: {sourceText: 'saved'}};
   const saved = await save(change);
-  assert.equal(saved.committedRevision, '2');
+  assert.equal(saved.committedRevision, '3');
   assert.equal((await save(change)).replayed, true);
   const baseline = await read();
   await assert.rejects(save({...change, requestId: randomUUID()}), /REVISION_CONFLICT/);
@@ -75,7 +101,7 @@ try {
     for each row execute function mindex_atomic_lab.fail_receipt();`);
   const checkpoint = await scalar('select aggregate from mindex_atomic_lab.checkpoints where service_id=$1', [serviceId]);
   await db.exec('set session authorization anon');
-  await assert.rejects(save({...change, requestId: randomUUID(), expectedRevision: '2',
+  await assert.rejects(save({...change, requestId: randomUUID(), expectedRevision: '3',
     metadataPatch: {title: 'must rollback'}, document: {sourceText: 'must rollback'}}), /INJECTED_RECEIPT_FAILURE/);
   assert.deepEqual(await read(), baseline);
   await db.exec('reset session authorization');
@@ -100,12 +126,12 @@ try {
   await assert.rejects(read(), /permission denied/);
   await db.exec('reset session authorization; set session authorization anon');
   const deleted = await scalar('select public.delete_worship_service_v1($1)', [{
-    protocolVersion: 1, serviceId, requestId: randomUUID(), expectedRevision: '2', confirmDelete: true,
+    protocolVersion: 1, serviceId, requestId: randomUUID(), expectedRevision: '3', confirmDelete: true,
   }]);
   assert.equal(deleted.deleted, true);
   assert.equal(await read(), null);
   await db.exec('reset session authorization');
-  assert.equal(await scalar('select count(*)::int from mindex_atomic_lab.checkpoints'), 1);
+  assert.equal(await scalar('select count(*)::int from mindex_atomic_lab.checkpoints where service_id=$1', [serviceId]), 1);
   console.log('PASS fixed definer ownership/search_path, PUBLIC denial, delete and private recovery retained');
   console.log('NOT PRODUCTION: canonical invalidation, retention/recovery UI, operational cutover remain separate gates');
 } finally {
