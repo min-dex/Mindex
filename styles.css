@@ -8669,8 +8669,8 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-slide-form-badge[data-form-type="chorus"] { --form-color: #2f8f83; }
 .svc-slide-form-badge[data-form-type="pre-chorus"] { --form-color: #c77d33; }
 .svc-slide-form-badge[data-form-type="bridge"] { --form-color: #8e5db7; }
-.svc-slide-form-badge[data-form-type="tag"] { --form-color: #b95a78; }
-.svc-slide-form-badge[data-form-type="instrumental"] { --form-color: #64867c; }
+.svc-slide-form-badge[data-form-type="tag"],
+.svc-slide-form-badge[data-form-type="instrumental"],
 .svc-slide-form-badge[data-form-type="coda"] { --form-color: #6b7280; }
 .svc-slide-form-badge[data-form-type] {
   background: color-mix(in srgb, var(--form-color, #6b7280) 48%, var(--panel));
