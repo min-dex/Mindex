@@ -48,6 +48,29 @@ db={...db,revision:'10'};await client.read('service',{adopt:false});
 assert.equal(client.baseline('service').revision,'2');
 console.log('PASS conflict after uncertain retry and non-adopting background reads');
 
+const localDraft = {items:[{id:'element',title:'Unsaved'}],sourceText:'local'};
+const priorBaseline = client.baseline('service');
+const review = await client.inspectConflict('service', localDraft);
+assert.equal(review.latest.revision, '10');
+assert.deepEqual(client.baseline('service'), priorBaseline);
+localDraft.items[0].title = 'New typing';
+assert.equal(review.draft.items[0].title, 'Unsaved');
+await assert.rejects(client.commit(input),/RELOAD_REQUIRED/);
+db = null;
+assert.equal((await client.inspectConflict('service', localDraft)).latest, null);
+db = {...baseline, service:{id:'another-service'}};
+await assert.rejects(client.inspectConflict('service', localDraft), /INVALID_CONFLICT_SNAPSHOT/);
+db = {...baseline, revision:'not-a-revision'};
+await assert.rejects(client.inspectConflict('service', localDraft), /INVALID_CONFLICT_SNAPSHOT/);
+db = {...baseline, revision:'10'};
+await client.read('service');mode='network';
+await assert.rejects(client.commit(input), /Network lost/);
+const uncertain = client.pending('service');
+await client.inspectConflict('service', localDraft);
+assert.deepEqual(client.pending('service'), uncertain);
+assert.equal(client.baseline('service').revision, '10');
+console.log('PASS conflict inspection freezes draft, handles deletion, validates identity, never adopts or clears pending writes');
+
 const creation = {service:{...baseline.service,created_at:'client time',source_ref:{custom:true}},
   rows:{sections:baseline.sections,elements:baseline.elements},document:{sourceText:'New',updatedAt:'one'}};
 const createPayload=prepareWorshipRowsCreate(creation);

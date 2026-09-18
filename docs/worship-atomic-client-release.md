@@ -46,3 +46,8 @@ Local follow-up: named RPC argument compatibility and private checkpoint recover
 are now exercised in PostgreSQL; see [security checks](worship-atomic-security-check.md)
 and [recovery checks](worship-atomic-recovery-check.md). These tests do not satisfy
 the production catalog, operational backup restore, UI or cutover gates above.
+
+The refreshed [live audit and staged conflict review](worship-atomic-live-audit-20260919.md)
+records actual production schema/permission findings. Conflict review preserves
+drafts and supports comparison/export, but explicit reconciliation/reapply remains
+unfinished. The atomic client is still not enabled in production.

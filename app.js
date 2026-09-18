@@ -1518,6 +1518,7 @@ function bindStaticEvents() {
   });
 
   window.addEventListener("keydown", (event) => {
+    if (event.target.closest?.(".worship-conflict-dialog")) return;
     scheduleServiceMusicResume("keydown");
     const presenterJumpInput = event.target.closest?.("[data-presenter-jump-input]");
     if (presenterJumpInput && event.key === "Escape") {
@@ -1537,7 +1538,8 @@ function bindStaticEvents() {
     }
   }, { capture: true });
 
-  window.addEventListener("pointerup", () => {
+  window.addEventListener("pointerup", (event) => {
+    if (event.target.closest?.(".worship-conflict-dialog")) return;
     scheduleServiceMusicResume("pointerup");
   }, { capture: true });
 
@@ -6046,6 +6048,7 @@ function handleSaveShortcut(event) {
   if (event.code !== "KeyS" && String(event.key).toLowerCase() !== "s") return;
   event.preventDefault();
   event.stopPropagation();
+  if (worshipConflictReview) return;
   if (!event.repeat) void saveAll();
 }
 
@@ -6392,6 +6395,63 @@ function serviceSaveErrorMessage(error) {
   return message || "예배를 저장하지 못했습니다.";
 }
 
+let worshipConflictReview = null;
+async function openWorshipConflictReview(serviceId) {
+  if (worshipConflictReview || !serviceId || window.MINDEX_WORSHIP_ATOMIC_PROTOCOL !== 1) return;
+  const service = state.services.find(candidate => candidate.id === serviceId);
+  if (!service) return;
+  const items = structuredClone(getServiceItems(serviceId));
+  const draft = {
+    service: structuredClone(service), items,
+    sourceText: serviceSourceTextareaForService(serviceId)?.value
+      ?? service._worshipSourceTextDraft
+      ?? buildServiceSourceText(service, {items}),
+  };
+  const previousFocus = document.activeElement;
+  const dialog = document.createElement("dialog");
+  dialog.className = "worship-conflict-dialog";
+  dialog.innerHTML = `
+    <header><h2>저장 충돌 · 원문 비교</h2><button class="icon-btn" type="button" data-conflict-close aria-label="닫기" title="닫기"><i data-lucide="x"></i></button></header>
+    <p role="status" data-conflict-status>최신 DB 확인 중</p>
+    <div class="worship-conflict-columns">
+      <label>내 입력<textarea readonly aria-label="내 입력"></textarea></label>
+      <label>최신 서버 원문<textarea readonly aria-label="최신 서버 원문"></textarea></label>
+    </div>
+    <footer><button class="btn subtle" type="button" data-conflict-export>초안 내려받기</button><button class="btn primary" type="button" data-conflict-close>계속 편집</button></footer>`;
+  dialog.setAttribute("aria-label", "저장 충돌 원문 비교");
+  dialog.addEventListener("keydown", event => event.stopPropagation());
+  dialog.querySelector('[aria-label="내 입력"]').value = draft.sourceText;
+  let review = {serviceId, draft};
+  worshipConflictReview = dialog;
+  const close = () => dialog.close();
+  dialog.querySelectorAll("[data-conflict-close]").forEach(button => button.addEventListener("click", close));
+  dialog.querySelector("[data-conflict-export]").addEventListener("click", () => {
+    downloadTextFile(JSON.stringify(review, null, 2), `mindex-conflict-${serviceId}.json`, "application/json");
+  });
+  dialog.addEventListener("close", () => {
+    dialog.remove();
+    if (worshipConflictReview === dialog) worshipConflictReview = null;
+    if (previousFocus?.isConnected) previousFocus.focus();
+  }, {once:true});
+  document.body.append(dialog);
+  dialog.showModal();
+  dialog.querySelector("[data-conflict-close]").focus();
+  if (window.lucide) window.lucide.createIcons({root:dialog});
+  try {
+    const atomic = await worshipAtomicClient();
+    review = await atomic.inspectConflict(serviceId, draft);
+    if (!dialog.isConnected || !dialog.open) return;
+    const latest = review.latest;
+    dialog.querySelector('[aria-label="최신 서버 원문"]').value = latest?.service?.source_ref?.mindexServiceDocument?.sourceText || "";
+    dialog.querySelector("[data-conflict-status]").textContent = latest
+      ? `기준 ${review.baseline?.revision ?? "없음"} · 서버 ${latest.revision} · 내 입력 유지됨`
+      : "서버에서 삭제된 예배 · 내 입력 유지됨";
+  } catch (error) {
+    if (dialog.isConnected && dialog.open) dialog.querySelector("[data-conflict-status]").textContent = "최신 DB 조회 실패 · 내 입력 유지됨";
+    console.warn("Could not inspect worship save conflict.", error);
+  }
+}
+
 async function waitForServiceSave(options, resume, itemId = "") {
   if (!activeServiceSavePromise) {
     const message = "다른 저장이 끝나는 중입니다. 잠시 후 다시 시도해 주세요.";
@@ -6433,6 +6493,9 @@ async function runServiceSave(options, save) {
     emitMonitorSaveEvent("save_failed");
     const message = serviceSaveErrorMessage(error);
     if (!options.silent) showToast(message, "error");
+    if (!options.silent && /REVISION_CONFLICT|ATOMIC_(?:RELOAD_REQUIRED|RETRY_COMMITTED_RELOAD_REQUIRED)/.test(String(error?.message || ""))) {
+      void openWorshipConflictReview(options.feedbackServiceId).catch(reviewError => console.warn("Could not open conflict review.", reviewError));
+    }
     if (options.throwOnError) throw new Error(message);
     return false;
   } finally {
