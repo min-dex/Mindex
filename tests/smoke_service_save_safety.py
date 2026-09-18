@@ -7,7 +7,7 @@ def run(browser, url):
     context = browser.new_context()
     context.route('**/*supabase*/**', lambda route: route.abort())
     page = context.new_page()
-    page.goto(url + '?output=presenter', wait_until='domcontentloaded')
+    page.goto(url + '?mindexSmokeRaw=1', wait_until='domcontentloaded')
     page.wait_for_function("typeof saveServiceItemPatch === 'function'")
     results = page.evaluate("""async () => {
       const check = (ok, message) => { if (!ok) throw Error(message); };

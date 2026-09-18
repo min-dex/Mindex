@@ -3095,13 +3095,17 @@ function loadSongsForIdsInBackground(songIds = [], options = {}) {
     if (options.serviceId) {
       refreshPresenterForService(options.serviceId, { renderControls: false });
     }
-    if (options.render === "detail") renderCurrentServiceModuleDetail();
-    else if (options.render) render();
+    if (options.render === "detail") {
+      if (!options.serviceId || state.selectedServiceId === options.serviceId) renderCurrentServiceModuleDetail();
+    } else if (options.render) render();
     if (state.module === "presenter" && state.selectedServiceId === options.serviceId) {
       renderServiceList();
     }
   }).catch((error) => {
     console.warn("Could not hydrate linked songs in background.", error);
+    if (options.render === "detail" && (!options.serviceId || state.selectedServiceId === options.serviceId)) {
+      renderCurrentServiceModuleDetail();
+    }
   });
 }
 
@@ -8649,6 +8653,19 @@ function handleDetailClick(event) {
     return;
   }
 
+  const serviceSongRetry = event.target.closest("[data-service-song-retry]");
+  if (serviceSongRetry) {
+    const songId = serviceSongRetry.dataset.serviceSongRetry;
+    if (!linkedSongLoadPromises.has(songId) && canUseClientData()) {
+      serviceSongRetry.disabled = true;
+      loadSongsForIdsInBackground([songId], {
+        render: "detail",
+        serviceId: state.selectedServiceId,
+      });
+    }
+    return;
+  }
+
   const serviceBulletinAction = event.target.closest("[data-service-bulletin-action]");
   if (serviceBulletinAction) {
     void runServiceBulletinAction(
@@ -11866,7 +11883,7 @@ function serviceItemRequiresSongSelection(item = {}, service = selectedServiceFo
 function serviceItemSongSelectionInvalid(item = {}, service = selectedServiceForEditor(), resolvedSong = null) {
   if (!serviceItemRequiresSongSelection(item, service)) return false;
   const song = resolvedSong || serviceItemLinkedSong(item);
-  if (!song) return Boolean(String(item.raw_title || "").trim());
+  if (!song) return Boolean(item.song_id || String(item.raw_title || "").trim());
   if (serviceItemRequiresNewHymnalScoreSong(item) && !isNewHymnalScoreSong(song)) return true;
   if (resolvedSong && !item.song_id) return false;
   return serviceItemVersionSelectionInvalid(item, service);
@@ -11909,6 +11926,7 @@ function serviceInputSaveProblem(service = selectedServiceForEditor()) {
   });
   if (!item) return "";
   const label = String(item.label || "이 항목").trim();
+  if (item.song_id && !serviceItemLinkedSong(item)) return `${label}의 연결된 찬양을 불러온 뒤 다시 저장해 주세요.`;
   if (serviceItemVersionSelectionInvalid(item, service)) return `${label}의 찬양 버전을 선택해 주세요.`;
   if (serviceItemSongSelectionInvalid(item, service)) return `${label}에서 찬양 DB 곡을 선택해 주세요.`;
   return `${label}의 성경 주소를 확인해 주세요.`;
@@ -26401,15 +26419,9 @@ function renderServiceSongPicker(item, index, model = serviceItemEditorModel(ite
   const song = model.linkedSong;
   const linkedSongId = String(item?.song_id || "").trim();
   if (linkedSongId && !song) {
-    // A persisted link is authoritative. It may arrive before the compact song
-    // catalogue, so never present it as a failed title search or clear its IDs.
-    if (songNeedsRelationalHydration(linkedSongId) && canUseClientData()) {
-      loadSongsForIdsInBackground([linkedSongId], {
-        render: "detail",
-        serviceId: model.service?.id || item?.service_id || state.selectedServiceId,
-      });
-    }
-    return `<div class="svc-song-picker svc-song-picker--linked svc-song-picker--loading"><span class="svc-song-picker-hint">연결된 찬양 불러오는 중</span></div>`;
+    // Loading belongs to the service loader or an explicit retry, never rendering.
+    const pending = linkedSongLoadPromises.has(linkedSongId);
+    return `<div class="svc-song-picker svc-song-picker--linked"><span class="svc-song-picker-hint">${pending ? "연결된 찬양 불러오는 중" : "연결된 찬양을 불러오지 못했습니다"}</span>${pending ? "" : `<button class="icon-btn" type="button" data-service-song-retry="${escapeHtml(linkedSongId)}" aria-label="연결된 찬양 다시 불러오기" title="연결된 찬양 다시 불러오기"><i data-lucide="refresh-cw"></i></button>`}</div>`;
   }
   const query = String(item?.raw_title || "").trim();
   const versionPicker = renderServiceSongVersionPicker(item, index, model);
