@@ -95,6 +95,67 @@ def main():
                       return 'PASS actual save conflict opens review; deleted service identified and save lock released';
                     }"""), flush=True)
                     page.wait_for_selector(".worship-conflict-dialog", state="detached")
+                    print(page.evaluate("""async () => {
+                      const check = (ok, why) => { if (!ok) throw Error(why); };
+                      const {createWorshipAtomicClient} = await import('./mindex.worship-atomic-client.mjs');
+                      const id = 'review-fixture', other = {id:'other',title:'다른 예배'};
+                      const original = {id,title:'내 초안',_worshipSourceTextDraft:'보관할 입력'};
+                      state.services = [original,other];
+                      state.serviceItems = {[id]:[{id:'old-item',raw_title:'미저장'}],other:[{id:'other-item'}]};
+                      getServiceItems = id => state.serviceItems[id];
+                      state.worshipSections = [{id:'old-section',service_id:id},{id:'other-section',service_id:'other'}];
+                      state.worshipElements = [{id:'old-item',section_id:'old-section'},{id:'other-item',section_id:'other-section'}];
+                      state.dirtyServiceElementIds = new Map([[id,new Set(['old-item'])],['other',new Set(['other-item'])]]);
+                      state.dirtyServiceStructureIds = new Set([id,'other']);
+                      projectWorshipServiceItemsFromTemplate = (service,items) => items;
+                      renderServiceList = () => {};
+                      renderCurrentServiceModuleDetail = () => {};
+                      let publishes = 0, writes = 0, failStorage = true, waitRead = null;
+                      publishPresenterState = () => {publishes++};
+                      const realSet = safeStorageSet;
+                      safeStorageSet = (...args) => failStorage ? false : realSet(...args);
+                      let db = {revision:'1',service:{id,title:'서버',service_date:'2026-09-19'},sections:[],elements:[]};
+                      const memory = new Map();
+                      const atomic = createWorshipAtomicClient({journal:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)},rpc:async name => {
+                        if(name !== 'get_worship_service_v1'){writes++;throw Error('unexpected write')}
+                        if(waitRead) await waitRead();
+                        return {data:structuredClone(db)};
+                      }});
+                      worshipAtomicClient = async () => atomic;
+                      await atomic.read(id);
+                      db.revision = '2';
+                      let review = await atomic.inspectConflict(id,worshipConflictDraft(id));
+                      try {await reopenWorshipConflict(review);throw Error('storage failure accepted')}
+                      catch(e){check(e.message === 'DRAFT_NOT_PRESERVED',e.message)}
+                      check(state.services[0] === original && atomic.baseline(id).revision === '1','storage failure altered state');
+                      failStorage = false;
+                      let release;
+                      waitRead = () => new Promise(resolve => {release = resolve});
+                      const loading = reopenWorshipConflict(review);
+                      await new Promise(resolve=>setTimeout(resolve,0));
+                      state.serviceItems[id][0].raw_title = '새 입력';
+                      release();
+                      try {await loading;throw Error('new input overwritten')}
+                      catch(e){check(e.message === 'LOCAL_DRAFT_CHANGED',e.message)}
+                      waitRead = null;
+                      check(atomic.baseline(id).revision === '1','changed draft adopted revision');
+                      await openWorshipConflictReview(id);
+                      const dialog = document.querySelector('.worship-conflict-dialog');
+                      const button = dialog.querySelector('[data-conflict-reopen]');
+                      check(!button.disabled,'latest action unavailable');
+                      const closed = new Promise(resolve=>dialog.addEventListener('close',resolve,{once:true}));
+                      button.click(); await closed;
+                      check(atomic.baseline(id).revision === '2','review not adopted');
+                      check(state.services[0].title === '서버' && state.serviceItems[id].length === 0,'latest data not installed');
+                      check(state.services[1] === other && state.serviceItems.other[0].id === 'other-item','other draft modified');
+                      check(state.dirtyServiceElementIds.has('other') && state.dirtyServiceStructureIds.has('other'),'other dirty flags lost');
+                      check(state.worshipElements.length === 1 && state.worshipElements[0].id === 'other-item','other rows lost');
+                      const archived = latestWorshipRecoverySnapshotForService(id);
+                      check(archived.draft.items[0].raw_title === '새 입력' && archived.serviceDocument.sourceText === '보관할 입력','complete draft not archived');
+                      check(writes === 0 && publishes === 0,'reopen wrote DB or published output');
+                      safeStorageSet = realSet;
+                      return 'PASS recovery action archives full draft; quota and in-flight edits block; unrelated drafts and live output untouched';
+                    }"""), flush=True)
                     page.close()
                 browser.close()
     finally:

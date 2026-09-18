@@ -6396,17 +6396,57 @@ function serviceSaveErrorMessage(error) {
 }
 
 let worshipConflictReview = null;
+function worshipConflictDraft(serviceId) {
+  const service = state.services.find(candidate => candidate.id === serviceId);
+  if (!service) return null;
+  const items = structuredClone(getServiceItems(serviceId));
+  return {service: structuredClone(service), items,
+    sourceText: serviceSourceTextareaForService(serviceId)?.value
+      ?? service._worshipSourceTextDraft ?? buildServiceSourceText(service, {items})};
+}
+
+async function reopenWorshipConflict(review, isOpen = () => true) {
+  const id = review.serviceId;
+  const signature = JSON.stringify(review.draft);
+  const atomic = await worshipAtomicClient();
+  await atomic.reopenReviewed(review, {beforeAdopt: latest => {
+    if (!isOpen() || state.saving || JSON.stringify(worshipConflictDraft(id)) !== signature) {
+      throw new Error('LOCAL_DRAFT_CHANGED');
+    }
+    const service = normalizeWorshipService(latest.service);
+    const items = projectWorshipServiceItemsFromTemplate(service,
+      groupWorshipElements(latest.sections, latest.elements)[id] || []);
+    const archive = {schema:1, reason:'before-conflict-reopen', capturedAt:new Date().toISOString(),
+      serviceId:id, service:review.draft.service, draft:review.draft,
+      serviceDocument:{sourceText:review.draft.sourceText},
+      baseline:review.baseline, sections:review.baseline?.sections || [], elements:review.baseline?.elements || []};
+    const serialized = JSON.stringify(archive);
+    const archiveKey = `${worshipRecoveryLatestSnapshotKey(id)}:conflict:${crypto.randomUUID()}`;
+    if (!safeStorageSet('local', archiveKey, serialized)
+      || safeStorageGet('local', archiveKey, '') !== serialized
+      || !safeStorageSet('local', worshipRecoveryLatestSnapshotKey(id), serialized)) {
+      throw new Error('DRAFT_NOT_PRESERVED');
+    }
+    // No DB write or presenter publish: only this service's editable baseline changes.
+    const sectionIds = new Set(state.worshipSections.filter(row => row.service_id === id).map(row => row.id));
+    state.worshipElements.filter(row => sectionIds.has(row.section_id))
+      .forEach(row => state.templateElementSuppressions.delete(row.id));
+    state.worshipSections = state.worshipSections.filter(row => row.service_id !== id).concat(latest.sections);
+    state.worshipElements = state.worshipElements.filter(row => !sectionIds.has(row.section_id)).concat(latest.elements);
+    state.services = state.services.map(row => row.id === id ? service : row);
+    state.serviceItems[id] = items;
+    state.loadedWorshipServiceIds.add(id);
+    state.dirtyServiceElementIds.delete(id);
+    state.dirtyServiceStructureIds.delete(id);
+    return true;
+  }});
+}
+
 async function openWorshipConflictReview(serviceId) {
   if (worshipConflictReview || !serviceId || window.MINDEX_WORSHIP_ATOMIC_PROTOCOL !== 1) return;
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service) return;
-  const items = structuredClone(getServiceItems(serviceId));
-  const draft = {
-    service: structuredClone(service), items,
-    sourceText: serviceSourceTextareaForService(serviceId)?.value
-      ?? service._worshipSourceTextDraft
-      ?? buildServiceSourceText(service, {items}),
-  };
+  const draft = worshipConflictDraft(serviceId);
   const previousFocus = document.activeElement;
   const dialog = document.createElement("dialog");
   dialog.className = "worship-conflict-dialog";
@@ -6417,11 +6457,34 @@ async function openWorshipConflictReview(serviceId) {
       <label>내 입력<textarea readonly aria-label="내 입력"></textarea></label>
       <label>최신 서버 원문<textarea readonly aria-label="최신 서버 원문"></textarea></label>
     </div>
-    <footer><button class="btn subtle" type="button" data-conflict-export>초안 내려받기</button><button class="btn primary" type="button" data-conflict-close>계속 편집</button></footer>`;
+    <footer><button class="btn subtle" type="button" data-conflict-export>초안 내려받기</button><button class="btn subtle" type="button" data-conflict-close>계속 편집</button><button class="btn primary" type="button" data-conflict-reopen disabled>초안 보관 후 최신본 열기</button></footer>`;
   dialog.setAttribute("aria-label", "저장 충돌 원문 비교");
   dialog.addEventListener("keydown", event => event.stopPropagation());
   dialog.querySelector('[aria-label="내 입력"]').value = draft.sourceText;
   let review = {serviceId, draft};
+  const reopen = dialog.querySelector('[data-conflict-reopen]');
+  reopen.addEventListener('click', async () => {
+    reopen.disabled = true;
+    try {
+      await reopenWorshipConflict(review, () => dialog.isConnected && dialog.open);
+    } catch (error) {
+      const messages = {
+        REVIEW_OUTDATED:'서버 내용이 다시 변경됐습니다. 닫고 다시 비교해 주세요.',
+        LOCAL_DRAFT_CHANGED:'내 입력이 변경됐습니다. 닫고 다시 비교해 주세요.',
+        DRAFT_NOT_PRESERVED:'초안을 보관하지 못해 전환하지 않았습니다. 초안을 내려받아 주세요.',
+        PENDING_REQUEST_REQUIRES_RESOLUTION:'이전 저장 결과를 먼저 확인해야 합니다. 내 입력을 유지합니다.',
+        SERVICE_NOT_FOUND:'서버에서 삭제된 예배입니다. 내 입력을 유지합니다.',
+      };
+      if (dialog.isConnected) dialog.querySelector('[data-conflict-status]').textContent = messages[error.message] || '최신본 열기 실패 · 내 입력 유지됨';
+      return;
+    }
+    dialog.close();
+    renderServiceList();
+    renderCurrentServiceModuleDetail();
+    finishServiceSaveDirtyState(true);
+    updateSaveState();
+    showToast('최신본을 열었습니다. 기존 입력은 예배 원문의 로컬 복구본에서 확인할 수 있습니다.', 'info');
+  });
   worshipConflictReview = dialog;
   const close = () => dialog.close();
   dialog.querySelectorAll("[data-conflict-close]").forEach(button => button.addEventListener("click", close));
@@ -6442,6 +6505,7 @@ async function openWorshipConflictReview(serviceId) {
     review = await atomic.inspectConflict(serviceId, draft);
     if (!dialog.isConnected || !dialog.open) return;
     const latest = review.latest;
+    reopen.disabled = !latest || Boolean(review.pending);
     dialog.querySelector('[aria-label="최신 서버 원문"]').value = latest?.service?.source_ref?.mindexServiceDocument?.sourceText || "";
     dialog.querySelector("[data-conflict-status]").textContent = latest
       ? `기준 ${review.baseline?.revision ?? "없음"} · 서버 ${latest.revision} · 내 입력 유지됨`
@@ -25228,6 +25292,7 @@ function renderServiceSourceRecovery(service) {
 
 function serviceSourceRecoveryLabel(snapshot = {}) {
   const reason = String(snapshot.reason || "").trim();
+  if (reason === "before-conflict-reopen") return "충돌 전 내 입력";
   if (reason === "before-full-save") return "저장 직전";
   if (reason === "before-element-patch") return "항목 저장 직전";
   if (reason === "before-service-delete") return "삭제 직전";

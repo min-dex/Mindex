@@ -38,9 +38,26 @@ freezes the local draft before the read, validates server identity/revision and
 preserves both the committed baseline and any uncertain pending request.
 The staged app opens a source-text comparison on non-silent atomic save conflicts,
 allows a local JSON export (draft/baseline/latest/pending) and leaves editing intact.
-The comparison is not a complete field diff or a merge/reapply implementation.
+The comparison is not a complete field diff or an automatic merge.
 Background/silent conflicts still do not open a modal. No force-save or automatic
 baseline adoption was introduced.
+
+Explicit recovery now offers "archive draft and open latest". It re-reads and
+requires the exact reviewed aggregate, no uncertain pending write, and an
+unchanged local draft. Before replacing local editable rows it verifies durable
+local storage of the full draft (including raw items and source text). A unique
+conflict archive is kept separately from the rolling latest recovery pointer.
+The existing source recovery picker exposes "pre-conflict input" for deliberate
+reapplication; it does not automatically merge fields, attachments or structure.
+The local JSON export remains available. Storage failure, a dismissed review or
+intervening local/server changes prevent adoption. Reopening performs no DB write
+and does not publish presenter output. The next normal save uses the reviewed
+revision and can conflict again if another editor has saved meanwhile.
+
+Client tests cover these guards and subsequent revision CAS. Browser tests cover
+the real recovery action, quota failure, editing during the read, archived raw
+items, unrelated service drafts/dirty flags and absence of DB writes/publishing.
+These are local fixtures, not an operational cutover or real backup restore test.
 
 Chromium/WebKit desktop/mobile tests cover visibility, bounded layout, literal
 text rendering, frozen export, failed/deleted server reads, duplicate opens,

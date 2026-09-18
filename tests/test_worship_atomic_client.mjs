@@ -71,6 +71,38 @@ assert.deepEqual(client.pending('service'), uncertain);
 assert.equal(client.baseline('service').revision, '10');
 console.log('PASS conflict inspection freezes draft, handles deletion, validates identity, never adopts or clears pending writes');
 
+const recoveryMemory = new Map();
+let recoveryDb = structuredClone(baseline), releaseRead = null, recoveryWrites = [];
+const recovery = createWorshipAtomicClient({
+  journal:{getItem:k=>recoveryMemory.get(k)||null,setItem:(k,v)=>recoveryMemory.set(k,v),removeItem:k=>recoveryMemory.delete(k)},
+  makeId:()=> 'recovery-save', rpc:async (name,args)=> {
+    if (name === 'get_worship_service_v1') {
+      if (releaseRead) await releaseRead();
+      return {data:structuredClone(recoveryDb)};
+    }
+    recoveryWrites.push(args.req);
+    return {data:{aggregate:{...recoveryDb,revision:'12'},committedRevision:'12',replayed:false}};
+  },
+});
+await recovery.read('service');
+recoveryDb = {...recoveryDb,revision:'11'};
+const recoveryReview = await recovery.inspectConflict('service', localDraft);
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>false}),/DRAFT_NOT_PRESERVED/);
+assert.equal(recovery.baseline('service').revision,baseline.revision);
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{throw Error('LOCAL_DRAFT_CHANGED')}}),/LOCAL_DRAFT_CHANGED/);
+recoveryDb = {...recoveryDb,revision:'12'};
+let guardCalls = 0;
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{guardCalls++;return true}}),/REVIEW_OUTDATED/);
+assert.equal(guardCalls,0);
+recoveryDb = {...recoveryDb,revision:'11'};
+await recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{guardCalls++;return true}});
+assert.equal(recovery.baseline('service').revision,'11');
+assert.equal(recoveryWrites.length,0);
+await recovery.commit(input);
+assert.equal(recoveryWrites[0].expectedRevision,'11');
+await assert.rejects(client.reopenReviewed(await client.inspectConflict('service',localDraft),{beforeAdopt:()=>true}),/PENDING_REQUEST/);
+console.log('PASS explicit recovery refuses changed review, unarchived/changed draft and pending write; next save uses reviewed revision');
+
 const creation = {service:{...baseline.service,created_at:'client time',source_ref:{custom:true}},
   rows:{sections:baseline.sections,elements:baseline.elements},document:{sourceText:'New',updatedAt:'one'}};
 const createPayload=prepareWorshipRowsCreate(creation);
