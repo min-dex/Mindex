@@ -2,10 +2,11 @@
 
 ## Scope
 
-- Friday free-prayer items (slot `prayer.meeting.free` or exact label `자율기도`) offer the bundled music in the existing controller player.
-- A slide's explicit audio takes precedence. Other service types do not receive the default.
+- Friday free-prayer items (slot `prayer.meeting.free` or exact label `자율기도`) offer a dedicated player at the element, separate from sidebar background music.
+- Other service types do not receive this player. Existing explicit slide audio is unchanged.
 - Selection and rendering never start playback. The operator starts music explicitly.
-- Repeat is a session-only control; volume uses the existing player. No worship records or schema are changed.
+- Play/pause, stop, repeat and volume have independent session state and a persistent, lazily created Audio instance. Navigation does not stop playback. No worship records or schema are changed.
+- While output is open, the topbar offers a return to the live service from other views, protecting unsaved edits and preserving output/index without reloading service data.
 - Presenter/editor button hover, pressed, busy and disabled states use existing theme tokens. Disabled pointer handling remains unchanged.
 - The section editor uses the existing ordinal display helper without rewriting untouched labels.
 
@@ -18,7 +19,7 @@
 
 ## Verification
 
-- `tests/smoke_friday_music.py`: Chrome/WebKit context isolation, explicit playback, repeat, volume, compact layout, AAC metadata.
+- `tests/smoke_friday_music.py`: Chrome/WebKit player isolation, explicit playback, repeat, stop, compact layout and guarded live-service return. Audio playback is stubbed; original AAC metadata was verified in the initial release.
 - `tests/smoke_section_label_display.py`: singleton/peer/custom labels and unchanged-source preservation.
 - Physical church audio routing is not covered by these local tests.
 

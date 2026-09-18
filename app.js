@@ -769,6 +769,7 @@ const state = {
     resumeAttempts: 0,
     syncTimer: null,
   },
+  prayerMusic: { audio: null, serviceId: "", pending: false, serial: 0, repeat: false, volume: 0.6 },
   servicePrepEditorOpenId: null,
   calendarData: [],
   calendarLoaded: false,
@@ -1239,6 +1240,7 @@ function bindStaticEvents() {
     button.addEventListener("click", () => handleNavigationRailClick(button));
   });
   refs.themeBtn.addEventListener("click", toggleTheme);
+  document.getElementById("returnLiveServiceBtn")?.addEventListener("click", returnToLiveService);
   refs.newSongBtn?.addEventListener("click", () => createPraiseSong());
   refs.presenterRightSidebarBtn?.addEventListener("click", togglePresenterRightSidebar);
   refs.saveAllBtn.addEventListener("click", saveAll);
@@ -8357,6 +8359,11 @@ function handleSidebarPresenterActionClick(event) {
 
 function handleDetailClick(event) {
   if (event.target.closest("button:disabled")) return;
+  const prayerAction = event.target.closest("[data-prayer-music-action]");
+  if (prayerAction) {
+    void runPrayerMusicAction(prayerAction.dataset.prayerMusicAction, prayerAction.closest("[data-prayer-music]").dataset.prayerMusic);
+    return;
+  }
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
   if (citationAdd) {
     const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
@@ -9408,6 +9415,13 @@ function handleDetailSubmit(event) {
 }
 
 function handleDetailChange(event) {
+  const prayerVolume = event.target.closest("[data-prayer-music-volume]");
+  if (prayerVolume) {
+    state.prayerMusic.volume = Math.max(0, Math.min(1, Number(prayerVolume.value) / 5));
+    if (state.prayerMusic.audio) state.prayerMusic.audio.volume = state.prayerMusic.volume;
+    updatePrayerMusicControls();
+    return;
+  }
   const citationAutoOutput = event.target.closest("[data-presenter-citation-auto-output]");
   if (citationAutoOutput) {
     presenterCitationAutoOutput = citationAutoOutput.checked;
@@ -14249,6 +14263,7 @@ function adventStartDate(churchYear) {
 }
 
 function renderModuleSwitcher() {
+  renderLiveServiceReturnControl();
   const moduleButtons = Array.isArray(refs.moduleButtons)
     ? refs.moduleButtons
     : [...document.querySelectorAll(".module-tab[data-module]")];
@@ -28989,20 +29004,114 @@ function renderLiveScriptureControl(serviceId) {
     </span>`;
 }
 
+function renderPrayerMusicControl(context) {
+  if (worshipAppServiceTypeId(context?.service?.type_id) !== "friday"
+    || !(context?.item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(context?.item?.label || "") === "자율기도")) return "";
+  const music = state.prayerMusic;
+  const active = music.serviceId === context.service.id;
+  const playing = active && (music.pending || (music.audio && !music.audio.paused));
+  return `<div class="svc-prayer-music" data-prayer-music="${escapeAttr(context.service.id)}" role="group" aria-label="자율기도 음악">
+    <span class="svc-prayer-music-label">자율기도 음악</span>
+    <button type="button" class="btn secondary" data-prayer-music-action="toggle" aria-pressed="${Boolean(playing)}"><i data-lucide="${playing ? "pause" : "play"}"></i>${playing ? "일시정지" : "재생"}</button>
+    <button type="button" class="icon-btn" data-prayer-music-action="stop" aria-label="자율기도 음악 정지" title="정지" ${active ? "" : "disabled"}><i data-lucide="square"></i></button>
+    <button type="button" class="icon-btn" data-prayer-music-action="repeat" aria-label="자율기도 음악 반복" title="반복" aria-pressed="${music.repeat}"><i data-lucide="repeat"></i></button>
+    <select data-prayer-music-volume aria-label="자율기도 음악 음량">${[0,1,2,3,4,5].map(level => `<option value="${level}" ${Math.round(music.volume * 5) === level ? "selected" : ""}>${level === 0 ? "음소거" : `음량 ${level}`}</option>`).join("")}</select>
+  </div>`;
+}
+
+function updatePrayerMusicControls() {
+  const music = state.prayerMusic;
+  document.querySelectorAll("[data-prayer-music]").forEach(root => {
+    const active = root.dataset.prayerMusic === music.serviceId;
+    const playing = Boolean(active && (music.pending || (music.audio && !music.audio.paused)));
+    const toggle = root.querySelector('[data-prayer-music-action="toggle"]');
+    if (toggle.getAttribute("aria-pressed") !== String(playing)) {
+      toggle.innerHTML = `<i data-lucide="${playing ? "pause" : "play"}"></i>${playing ? "일시정지" : "재생"}`;
+      refreshIcons(toggle);
+    }
+    toggle.setAttribute("aria-pressed", String(playing));
+    root.querySelector('[data-prayer-music-action="stop"]').disabled = !active;
+    root.querySelector('[data-prayer-music-action="repeat"]').setAttribute("aria-pressed", String(music.repeat));
+    root.querySelector("select").value = String(Math.round(music.volume * 5));
+  });
+}
+
+async function runPrayerMusicAction(action, serviceId) {
+  const music = state.prayerMusic;
+  if (action === "repeat") {
+    music.repeat = !music.repeat;
+    if (music.audio) music.audio.loop = music.repeat;
+    updatePrayerMusicControls();
+    return;
+  }
+  if (action === "stop" || (action === "toggle" && music.serviceId === serviceId && (music.pending || (music.audio && !music.audio.paused)))) {
+    music.serial += 1;
+    music.pending = false;
+    music.audio?.pause();
+    if (action === "stop" && music.audio) music.audio.currentTime = 0;
+    updatePrayerMusicControls();
+    return;
+  }
+  if (action !== "toggle") return;
+  if (!music.audio) {
+    music.audio = new Audio("./assets/presenter/friday-free-prayer.m4a");
+    music.audio.preload = "none";
+    for (const event of ["play", "pause", "ended", "error"]) music.audio.addEventListener(event, updatePrayerMusicControls);
+  }
+  if (music.serviceId !== serviceId) {
+    music.audio.pause();
+    music.audio.currentTime = 0;
+  }
+  music.serviceId = serviceId;
+  music.audio.loop = music.repeat;
+  music.audio.volume = music.volume;
+  const serial = ++music.serial;
+  music.pending = true;
+  updatePrayerMusicControls();
+  try {
+    await music.audio.play();
+  } catch (error) {
+    if (serial === music.serial && error?.name !== "AbortError") showToast("자율기도 음원을 재생하지 못했어요. 연결을 확인하고 다시 눌러 주세요.", "error");
+  } finally {
+    if (serial === music.serial) music.pending = false;
+    updatePrayerMusicControls();
+  }
+}
+
+function renderLiveServiceReturnControl() {
+  const button = document.getElementById("returnLiveServiceBtn");
+  if (!button) return;
+  const id = state.presenter.serviceId;
+  button.hidden = !id || !isPresenterOutputWindowOpen()
+    || (state.module === "presenter" && presenterViewServiceId() === id);
+}
+
+async function returnToLiveService() {
+  if (!isPresenterOutputWindowOpen() || !(await confirmSaveBeforeLeaving())) return;
+  const id = state.presenter.serviceId;
+  const service = state.services.find(item => item.id === id);
+  if (!service || !isPresenterOutputWindowOpen()) return;
+  saveCurrentListScroll();
+  markWorshipServiceExplicitlyRequested(id);
+  state.presenter.viewServiceId = id;
+  state.selectedServiceId = id;
+  state.selectedServiceTypeId = service.type_id;
+  state.presenterBulletinServiceId = null;
+  state.module = "presenter";
+  state.search = "";
+  refs.searchInput.value = "";
+  clearBibleTextSearch();
+  persistUiState();
+  render();
+  syncBrowserHistory();
+}
+
 function currentPresenterAudioContext(serviceId = state.presenter.serviceId) {
   if (!serviceId || state.presenter.serviceId !== serviceId) return { source: "", label: "", slideId: "", playback: null };
   if (state.presenter.safetyBlank || state.presenter.liveScripture?.active) return { source: "", label: "", slideId: "", playback: null };
   const slide = state.presenter.slides[clampPresenterIndex(state.presenter.index, state.presenter.slides.length)];
   const source = presenterSlideAudioSource(slide);
   if (!source) {
-    const service = state.services.find(candidate => candidate.id === serviceId);
-    const item = worshipAppServiceTypeId(service?.type_id) === "friday"
-      ? getServiceItems(serviceId).find(candidate => candidate.id === slide?.elementId)
-      : null;
-    if (worshipAppServiceTypeId(service?.type_id) === "friday"
-      && (item?._worshipSlotKey === "prayer.meeting.free" || compactSearchValue(item?.label || "") === "자율기도")) {
-      return { source: "./assets/presenter/friday-free-prayer.m4a", label: "금요기도회 기도찬양", slideId: slide.id || "", playback: { loop: false } };
-    }
     return { source: "", label: "", slideId: "", playback: null };
   }
   return {
@@ -30425,6 +30534,7 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
           ${headerActions}
         </header>` : ""}
       ${inputControls}
+      ${renderPrayerMusicControl(context)}
       <div class="svc-board-grid">
         ${slides.map(({ slide, slideIndex, formLabel }) =>
           renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, formLabel)).join("")}
@@ -31629,6 +31739,7 @@ function stopPresenterOutputWindowMonitor() {
 }
 
 function renderPresenterControlState(serviceId = state.selectedServiceId) {
+  renderLiveServiceReturnControl();
   if (state.module === "presenter" && state.selectedServiceId === serviceId) {
     const root = document.getElementById("servicePresenterControls");
     const sideRoot = refs.rightSidebar?.querySelector("[data-presenter-right-sidebar]");

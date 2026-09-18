@@ -9492,3 +9492,20 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .svc-setlist-entry--missing .svc-setlist-week-status > strong { color: var(--accent); }
 .svc-setlist-status-open { justify-self: start; padding: 0; border: 0; background: none; color: var(--ink-2); font: inherit; cursor: pointer; }
 .svc-setlist-status-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+.svc-prayer-music {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.svc-prayer-music-label { font-weight: 600; margin-right: 4px; }
+.svc-prayer-music .btn,
+.svc-prayer-music .icon-btn,
+.svc-prayer-music select { height: 34px; min-height: 34px; }
+.svc-prayer-music .icon-btn { width: 34px; }
+.svc-prayer-music select { width: auto; }
+#returnLiveServiceBtn[hidden] { display: none; }
+@media (max-width: 640px) {
+  #returnLiveServiceBtn span { display: none; }
+}
