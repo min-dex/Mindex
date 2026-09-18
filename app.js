@@ -7622,7 +7622,7 @@ function worshipDbElementTypeForSave(elementType = "") {
 }
 
 function serviceElementTitleForSave(item = {}, elementType = "") {
-  const rawTitle = String(item.raw_title || "").trim();
+  const rawTitle = independentServiceContentTitle(item.label, item.raw_title, serviceMemoElementType(parseServiceItemMemo(item.memo)) || elementType);
   if (item.song_id && (isSongServiceLabel(item.label) || isSpecialSongServiceItem(item))) return "";
   if (["video", "image", "score", "audio", "file"].includes(normalizeServiceElementType(elementType))) {
     const parsed = parseServiceItemMemo(item.memo);
@@ -13734,7 +13734,7 @@ function buildWorshipServiceScaffold(serviceId, typeId, options = {}) {
         section_id: sectionId,
         sort_order: elementIndex + 1,
         element_type: elementType,
-        title: ready ? "" : (defaultSong ? "" : String(elementStep.default_text || elementStep.title || "").trim()),
+        title: ready ? "" : (defaultSong ? "" : independentServiceContentTitle(elementLabel, elementStep.default_text || elementStep.title, elementStep.elementType || elementStep.element_type || elementType)),
         person: cleanServiceAssignee(elementStep.person || elementStep.assignee || ""),
         body: "",
         scripture_reference: "",
@@ -21063,7 +21063,7 @@ function normalizeServiceItem(item = {}, index = 0) {
     sort_order: Number(item.sort_order) || index + 1,
     label,
     assignee: item.assignee || "",
-    raw_title: normalizeServiceItemRawTitle(label, item.raw_title || ""),
+    raw_title: normalizeServiceItemRawTitle(label, item.raw_title || "", serviceMemoElementType(parseServiceItemMemo(item.memo))),
     song_id: item.song_id || null,
     version_id: item.version_id || item.song_version_id || null,
     memo: item.memo || "",
@@ -21089,7 +21089,7 @@ function normalizeServiceDefaultItem(item = {}, index = 0) {
     sort_order: Number(item.sort_order) || index + 1,
     label,
     assignee: item.assignee || "",
-    raw_title: normalizeServiceItemRawTitle(label, item.raw_title || item.title || item.default_text || ""),
+    raw_title: normalizeServiceItemRawTitle(label, item.raw_title || item.title || item.default_text || "", item.elementType || item.element_type || serviceMemoElementType(parseServiceItemMemo(item.memo))),
   };
 }
 
@@ -27165,14 +27165,20 @@ function serviceItemScriptureReferences(item = {}, memo = parseServiceItemMemo(i
   return direct;
 }
 
-function normalizeServiceItemRawTitle(label, value) {
-  const raw = String(value || "").trim();
+function independentServiceContentTitle(label, value, elementType) {
+  const text = String(value || "").trim();
+  return ["title", "title_person"].includes(elementType)
+    && compactSearchValue(text) === compactSearchValue(label) ? "" : text;
+}
+
+function normalizeServiceItemRawTitle(label, value, elementType = "") {
+  const raw = independentServiceContentTitle(label, value, elementType);
   if (isSongServiceLabel(label) && compactSearchValue(raw) === compactSearchValue(label)) return "";
   return isScriptureServiceLabel(label) ? normalizeServiceItemReferenceSpacing(raw) : raw;
 }
 
 function normalizeServiceItemRawTitleForItem(item = {}, value = "") {
-  const raw = String(value || "").trim();
+  const raw = independentServiceContentTitle(item.label, value, serviceMemoElementType(parseServiceItemMemo(item.memo)));
   if (serviceItemSupportsScriptureReferenceList(item)) {
     const references = normalizeServiceScriptureReferenceList(raw);
     return references.length ? formatServiceScriptureReferenceList(references) : raw;
@@ -28076,7 +28082,7 @@ function presenterServiceInputIsStatic(item = {}, memo = parseServiceItemMemo(it
   const service = state.services.find((service) => service.id === item?.service_id) || null;
   const usesSharedSundayContent = Boolean(sharedSundayContentSourceItem(item, service));
   return !isPresenterReferenceMediaItem(item, memo) && (isServicePreparationItemForEditor(item, memo)
-    || Boolean(presenterFixedTitleText(item))
+    || (Boolean(presenterFixedTitleText(item)) && !independentServiceContentTitle(item.label, item.raw_title, serviceMemoElementType(memo)))
     || isPublicFixedDoxologyServiceItem(
       item,
       memo,
@@ -32692,6 +32698,10 @@ function presenterSlideIsTitleContent(slide) {
 
 function presenterFixedTitleText(item = {}) {
   if (isAnnouncementTextInputItem(item)) return "";
+  const memo = parseServiceItemMemo(item.memo);
+  if (serviceMemoElementType(memo) === "title" && String(item.label || "").trim()) {
+    return independentServiceContentTitle(item.label, item.raw_title || item.title, "title") || String(item.label).trim();
+  }
   const label = compactSearchValue(item?.label || item?.raw_title || "");
   const sectionKey = String(item?._worshipSectionKey || item?.sectionKey || item?.section_key || "").trim();
   if (sectionKey === "confession" && label === "사죄의선언") return "사죄의 선언";
