@@ -26399,6 +26399,18 @@ function renderServicePraiseInputModeControl(item, index, model = serviceItemEdi
 function renderServiceSongPicker(item, index, model = serviceItemEditorModel(item)) {
   if (!model.strictSong) return "";
   const song = model.linkedSong;
+  const linkedSongId = String(item?.song_id || "").trim();
+  if (linkedSongId && !song) {
+    // A persisted link is authoritative. It may arrive before the compact song
+    // catalogue, so never present it as a failed title search or clear its IDs.
+    if (songNeedsRelationalHydration(linkedSongId) && canUseClientData()) {
+      loadSongsForIdsInBackground([linkedSongId], {
+        render: "detail",
+        serviceId: model.service?.id || item?.service_id || state.selectedServiceId,
+      });
+    }
+    return `<div class="svc-song-picker svc-song-picker--linked svc-song-picker--loading"><span class="svc-song-picker-hint">연결된 찬양 불러오는 중</span></div>`;
+  }
   const query = String(item?.raw_title || "").trim();
   const versionPicker = renderServiceSongVersionPicker(item, index, model);
   if (song) {
