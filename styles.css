@@ -681,6 +681,10 @@ body[data-module="praise"] .list-filter {
   gap: var(--s2);
   padding: 0 var(--sidebar-item-end) 0 var(--sidebar-item-x);
 }
+body[data-module="home"] .sidebar-list-head,
+body[data-module="calendar"] .sidebar-list-head,
+body[data-module="references"] .sidebar-list-head,
+body[data-module="backgrounds"] .sidebar-list-head,
 .sidebar-list-head:has(.sidebar-count:empty) {
   display: none;
 }
@@ -1119,6 +1123,7 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 .song-count-badge { display: inline-flex; min-width: 14px; height: 14px; flex: 0 0 auto; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: var(--sidebar-active-bg); color: var(--sidebar-label); font-size: 9px; line-height: 1; }
 .global-search-section { display: grid; gap: 1px; padding: 2px 0 6px; }
 .global-search-section + .global-search-section { margin-top: 5px; }
+.global-search-actions { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .global-search-heading {
   display: inline-flex;
   align-items: center;

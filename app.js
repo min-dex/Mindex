@@ -15511,19 +15511,21 @@ function renderGlobalSearchList() {
 }
 
 function renderGlobalSearchSections(results) {
-  return getGlobalSearchSectionOrder().map((section) =>
+  const sections = getGlobalSearchSectionOrder().map((section) =>
     renderGlobalSearchSection(section.label, section.items(results).join("") + (section.id === "praise" && !songCatalogLoaded
       ? (globalPraiseSearchError
         ? `<button class="song-item" type="button" data-global-praise-retry>${escapeHtml(globalPraiseSearchError)} 다시 시도</button>`
         : globalPraiseSearchLoad ? '<p class="service-no-results" role="status">찬양 검색 준비 중…</p>' : "")
       : ""))
   ).filter(Boolean).join("");
+  const actions = results.scripture.filter(result => result.kind === "text").map(renderGlobalScriptureResult).join("");
+  return sections + (actions ? `<section class="global-search-actions" aria-label="검색 바로가기">${actions}</section>` : "");
 }
 
 function getGlobalSearchSectionOrder() {
   const sections = [
     { id: "praise", label: "찬양", items: (results) => results.praise.map(renderGlobalPraiseResult) },
-    { id: "scripture", label: "말씀", items: (results) => results.scripture.map(renderGlobalScriptureResult) },
+    { id: "scripture", label: "말씀", items: (results) => results.scripture.filter(result => result.kind !== "text").map(renderGlobalScriptureResult) },
     { id: "service", label: "예배", items: (results) => results.service.map(renderGlobalServiceResult) },
   ];
   const modulePriority = {
@@ -15652,7 +15654,7 @@ function renderGlobalScriptureResult(result) {
   if (result.kind === "text") {
     const query = String(result.query || "").trim();
     return `
-      <button class="song-item global-search-result global-search-result--primary" type="button" data-global-bible-text="true">
+      <button class="song-item global-search-result" type="button" data-global-bible-text="true">
         <span class="song-title">
           <span class="song-title-text">성경 본문 검색</span>
         </span>
