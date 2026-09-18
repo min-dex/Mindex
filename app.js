@@ -29729,15 +29729,50 @@ function mountDeferredPresenterBoardSections(root, serviceId, slides) {
   if (!root?.isConnected || !serviceId || typeof IntersectionObserver === "undefined") return;
   const deferredSections = [...root.querySelectorAll("[data-presenter-deferred-board-section]")];
   if (!deferredSections.length) return;
+  const viewport = refs.detailPane?.isConnected ? refs.detailPane : null;
+  const hydrateVisible = () => hydrateVisibleDeferredPresenterBoardSections(root, serviceId, slides, viewport);
+  if (root._presenterBoardDeferredScrollHandler && root._presenterBoardDeferredScrollViewport) {
+    root._presenterBoardDeferredScrollViewport.removeEventListener("scroll", root._presenterBoardDeferredScrollHandler);
+  }
+  if (viewport) {
+    root._presenterBoardDeferredScrollViewport = viewport;
+    root._presenterBoardDeferredScrollHandler = () => {
+      if (!root.isConnected) {
+        viewport.removeEventListener("scroll", root._presenterBoardDeferredScrollHandler);
+        return;
+      }
+      // A fast wheel/touch scroll can cross the observer margin before its callback.
+      // Fill visible placeholders in the scroll event so the controller never rests blank.
+      hydrateVisible();
+    };
+    viewport.addEventListener("scroll", root._presenterBoardDeferredScrollHandler, { passive: true });
+  }
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       observer.unobserve(entry.target);
       hydrateDeferredPresenterBoardSection(root, serviceId, slides, Number(entry.target.dataset.presenterBoardGroupIndex));
     });
-  }, { rootMargin: "720px 0px" });
+  }, { root: viewport, rootMargin: "720px 0px" });
   root._presenterBoardObserver = observer;
   deferredSections.forEach((section) => observer.observe(section));
+  hydrateVisible();
+}
+
+function hydrateVisibleDeferredPresenterBoardSections(root, serviceId, slides, viewport = refs.detailPane) {
+  if (!root?.isConnected || !viewport?.isConnected) return 0;
+  const viewportRect = viewport.getBoundingClientRect();
+  const padding = 180;
+  const candidates = [...root.querySelectorAll("[data-presenter-deferred-board-section]")]
+    .filter((section) => {
+      const rect = section.getBoundingClientRect();
+      return rect.bottom > viewportRect.top - padding && rect.top < viewportRect.bottom + padding;
+    })
+    .slice(0, 3);
+  candidates.forEach((section) => {
+    hydrateDeferredPresenterBoardSection(root, serviceId, slides, Number(section.dataset.presenterBoardGroupIndex));
+  });
+  return candidates.length;
 }
 
 function hydrateDeferredPresenterBoardSection(root, serviceId, slides, groupIndex) {
