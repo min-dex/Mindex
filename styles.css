@@ -8755,6 +8755,35 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
   padding: 0 4px;
   pointer-events: none;
 }
+.svc-slide-citation-controls {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.svc-slide-thumb-meta:has(.svc-slide-citation-controls) {
+  height: auto;
+  min-height: 22px;
+  align-items: flex-start;
+}
+.svc-slide-citation-auto-output {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  white-space: nowrap;
+  font-size: var(--ui-meta-size);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.svc-slide-citation-auto-output input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+}
 .svc-slide-citation-reference-input {
   width: min(118px, 100%);
   min-width: 0;

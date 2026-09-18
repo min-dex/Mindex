@@ -9316,6 +9316,14 @@ function handleDetailSubmit(event) {
 }
 
 function handleDetailChange(event) {
+  const citationAutoOutput = event.target.closest("[data-presenter-citation-auto-output]");
+  if (citationAutoOutput) {
+    presenterCitationAutoOutput = citationAutoOutput.checked;
+    document.querySelectorAll("[data-presenter-citation-auto-output]").forEach((control) => {
+      control.checked = presenterCitationAutoOutput;
+    });
+    return;
+  }
   const backgroundTarget = event.target.closest("[data-background-target]");
   if (backgroundTarget) {
     state.selectedWorshipBackgroundFile = backgroundTarget.value;
@@ -29012,6 +29020,7 @@ function updateLiveScriptureDraft(value) {
 }
 
 const pendingPresenterCitationRequests = new Set();
+let presenterCitationAutoOutput = true;
 
 async function appendPresenterCitationReference(input) {
   const serviceId = String(input?.dataset?.serviceId || state.selectedServiceId || "").trim();
@@ -29034,6 +29043,13 @@ async function appendPresenterCitationReference(input) {
   if (!addedReferences.length || addedReferences.some((reference) => !parseBibleReference(reference))) {
     showToast("성경 주소를 확인해 주세요.", "error");
     return;
+  }
+
+  const autoOutput = presenterCitationAutoOutput;
+  // Reserve within the Enter gesture; navigate only after the verse resolves.
+  let reservedWindow = null;
+  if (autoOutput && !isPresenterOutputWindowOpen() && !window.mindexElectron?.openPresenterOutput) {
+    reservedWindow = window.open("about:blank", "mindexPresenterOutput", presenterOutputWindowFeatures(resolvePresenterTargetScreenRect()));
   }
 
   const memo = clearGeneratedServiceScriptureSlides(item);
@@ -29064,18 +29080,27 @@ async function appendPresenterCitationReference(input) {
       showToast("해당 성구를 찾지 못했습니다.", "error");
       return;
     }
-    input.value = "";
-    if (presenterControllerIsLive(serviceId)) {
+    if (input.value.trim() === rawValue) input.value = "";
+    if (autoOutput && state.selectedServiceId === serviceId) {
+      const shouldOpenOutput = !presenterControllerIsLive(serviceId);
       runPresenterAction("jump", serviceId, { index: targetIndex, scroll: false });
+      if (reservedWindow && !reservedWindow.closed) {
+        const url = new URL(presenterOutputUrl());
+        url.searchParams.set("fullscreen", "start");
+        reservedWindow.location.replace(url.toString());
+        state.presenter.outputWindow = reservedWindow;
+        reservedWindow = null;
+      }
+      if (shouldOpenOutput) await openPresenterOutput(serviceId);
+      scrollPresenterBoardToIndex(serviceId, targetIndex, { force: true });
     } else {
-      setPresenterPendingSlide(serviceId, targetIndex, { render: false });
       renderPresenterControlState(serviceId);
     }
-    scrollPresenterBoardToIndex(serviceId, targetIndex, { force: true });
     void saveServiceItemPatch(serviceId, index, { renderAfterSave: false, silent: true });
   } catch (error) {
     showToast(error.message || "성구를 불러오지 못했습니다.", "error");
   } finally {
+    if (reservedWindow && !reservedWindow.closed) reservedWindow.close();
     pendingPresenterCitationRequests.delete(requestKey);
   }
 }
@@ -30467,12 +30492,18 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
         ${escapeHtml(scriptureReference)}
       </button>` : "";
   const citationReferenceInput = (slide?.liveScriptureControl || (slide?.autoTrailingBlank && slide?.citationQuickInsert)) ? `
+      <span class="svc-slide-citation-controls">
         <input class="svc-slide-citation-reference-input" type="text"
           data-presenter-citation-reference-input
           data-service-id="${escapeAttr(serviceId)}"
           data-presenter-citation-element-id="${escapeAttr(slide.elementId || "")}"
           placeholder="예: 롬 5:7~8; 요 15:9"
-          aria-label="인용 구절 바로 추가" />` : "";
+          aria-label="인용 구절 바로 추가" />
+        <label class="svc-slide-citation-auto-output">
+          <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
+          <span>추가 즉시 송출</span>
+        </label>
+      </span>` : "";
   return `
     <span class="svc-slide-thumb-wrap${active ? " active" : ""}${selected ? " selected" : ""}${hidden ? " hidden" : ""}${visibleFormLabel ? " has-form-label" : ""}">
       <span class="svc-slide-thumb-meta">
