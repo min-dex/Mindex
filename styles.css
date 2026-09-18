@@ -6424,6 +6424,16 @@ body[data-theme="dark"] .service-week-empty:hover {
 }
 .right-sidebar .svc-presenter-side-panel {
   padding: 0;
+  grid-template-rows: auto 1fr;
+  align-content: stretch;
+}
+.right-sidebar:has(> .svc-presenter-side-panel) {
+  grid-template-rows: minmax(min-content, 1fr);
+  align-content: stretch;
+}
+.right-sidebar .svc-presenter-input-rail {
+  align-self: end;
+  border-top: 0;
 }
 .svc-presenter-input-rail {
   display: grid;

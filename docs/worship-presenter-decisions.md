@@ -1,5 +1,13 @@
 # Worship / Presenter Decision Log
 
+## Preparation Input Bottom Alignment (2026-09-18)
+
+- Remove the divider above bulk worship input in the right panel. Keep input
+  expanded and bottom-align it within the panel's normal grid flow.
+- When the panel is shorter than its content, scroll the panel rather than
+  overlaying output controls or shrinking the input. Preserve draft, focus,
+  text selection, preview dimensions and input height.
+
 ## Preview Header Status Slot (2026-09-18)
 
 - Video health shares a fixed 34px caption slot with the slide title. Loading,

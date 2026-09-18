@@ -1326,6 +1326,7 @@ function bindStaticEvents() {
       await openGlobalBookResult(globalBookItem.dataset.globalBookCode, {
         chapter: globalBookItem.dataset.globalChapter,
         verse: globalBookItem.dataset.globalVerse,
+        verseEnd: globalBookItem.dataset.globalVerseEnd,
       });
       return;
     }
@@ -1867,9 +1868,13 @@ function handlePresenterBoardPointerOver(event) {
 }
 
 async function handleSearchKeydown(event) {
-  if (event.key !== "Enter") return;
+  if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
+  const query = state.search;
+  const moduleName = state.module;
+  if (!normalizeSearchValue(query)) return;
 
-  const scriptureShortcut = await getScriptureSearchShortcut(state.search);
+  const scriptureShortcut = await getScriptureSearchShortcut(query);
+  if (state.search !== query || state.module !== moduleName) return;
   if (state.module !== "references" && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
     event.preventDefault();
     await runScriptureSearchShortcut(scriptureShortcut);
@@ -1879,11 +1884,11 @@ async function handleSearchKeydown(event) {
   if (["home", "praise", "service", "presenter"].includes(state.module)) {
     const results = getGlobalSearchResults();
     for (const section of getGlobalSearchSectionOrder()) {
-      const firstResult = section.items(results)[0];
+      const firstResult = results[section.id]?.[0];
       if (!firstResult) continue;
       event.preventDefault();
       if (section.id === "praise") {
-        await openGlobalSongResult(firstResult.id);
+        await openGlobalSongResult(firstResult.song.id);
       } else if (section.id === "scripture") {
         if (firstResult.kind === "text") {
           await openGlobalBibleTextResult();
@@ -1891,6 +1896,7 @@ async function handleSearchKeydown(event) {
           await openGlobalBookResult(firstResult.book.code, {
             chapter: firstResult.chapter,
             verse: firstResult.verse,
+            verseEnd: firstResult.verseEnd,
           });
         }
       } else if (section.id === "service") {
@@ -8316,6 +8322,7 @@ function handleDetailClick(event) {
     void openGlobalBookResult(globalBookItem.dataset.globalBookCode, {
       chapter: globalBookItem.dataset.globalChapter,
       verse: globalBookItem.dataset.globalVerse,
+      verseEnd: globalBookItem.dataset.globalVerseEnd,
     });
     return;
   }
@@ -15341,10 +15348,10 @@ function isGlobalSearchActive() {
 
 function renderGlobalSearchList() {
   const results = getGlobalSearchResults();
-  const total = results.praise.length + results.scripture.length + results.service.length;
-  refs.songCount.textContent = `${formatCount(total)}개 결과`;
+  const total = results.praise.length + results.scripture.filter((result) => result.kind !== "text").length + results.service.length;
+  refs.songCount.textContent = `${formatCount(total)}개 표시`;
 
-  if (!total) {
+  if (!total && !results.scripture.some((result) => result.kind === "text")) {
     refs.songList.innerHTML = renderListEmptyState("검색 결과 없음", "찬양, 말씀, 예배를 검색해 보세요.");
     return;
   }
@@ -15412,9 +15419,9 @@ function getGlobalSearchResults() {
 
 function getGlobalPraiseResults(tokens) {
   if (!tokens.length) return [];
-  const includeLyrics = state.module === "praise";
+  const includeLyrics = true;
   return state.songs
-    .map((song) => ({ song, match: getSongSearchMatch(song, tokens, { includeLyrics }) }))
+    .map((song) => ({ song, match: getSongSearchMatch(song, tokens, { includeLyrics, crossFields: true }) }))
     .filter((item) => item.match)
     .sort((a, b) => b.match.score - a.match.score || sortSongsForCurrentList(a.song, b.song))
     .slice(0, 8);
@@ -15432,7 +15439,7 @@ function getGlobalScriptureResults(query, tokens) {
     || findBibleBookByName(restoredQuery);
 
   if (reference) {
-    results.push({ kind: "reference", book: reference.book, chapter: reference.chapter, verse: reference.verse });
+    results.push({ kind: "reference", book: reference.book, chapter: reference.chapter, verse: reference.verse, verseEnd: reference.verseEnd });
   } else if (exactBook) {
     results.push({ kind: "book", book: exactBook });
   }
@@ -15502,7 +15509,7 @@ function renderGlobalScriptureResult(result) {
 
   const book = result.book;
   const suffix = result.kind === "reference"
-    ? ` ${result.chapter}${result.verse ? `:${result.verse}` : ""}`
+    ? ` ${result.chapter}${result.verse ? `:${result.verse}${result.verseEnd ? `–${result.verseEnd}` : ""}` : ""}`
     : "";
   const marker = formatBookMarker(book.sortOrder);
   const meta = [book.englishName, book.testament].filter(Boolean).join(META_SEPARATOR);
@@ -15513,6 +15520,7 @@ function renderGlobalScriptureResult(result) {
       data-global-book-code="${escapeAttr(book.code)}"
       ${result.chapter ? `data-global-chapter="${escapeAttr(result.chapter)}"` : ""}
       ${result.verse ? `data-global-verse="${escapeAttr(result.verse)}"` : ""}
+      ${result.verseEnd ? `data-global-verse-end="${escapeAttr(result.verseEnd)}"` : ""}
     >
       <span class="song-title">
         <span class="song-hymn-no">${escapeHtml(marker)}</span>
@@ -15558,6 +15566,7 @@ async function openGlobalBookResult(bookCode, options = {}) {
   await selectScriptureBook(bookCode, {
     chapter: toPositiveNumber(options.chapter),
     verse: toPositiveNumber(options.verse),
+    verseEnd: toPositiveNumber(options.verseEnd),
     force: Boolean(options.chapter || options.verse),
   });
 }
@@ -19018,7 +19027,18 @@ function getSongSearchMatch(song, tokens = getSearchTokens(state.search), option
     }
   }
 
-  return bestMatch;
+  if (bestMatch || tokens.length < 2 || options.crossFields !== true) return bestMatch;
+  // Allow a title and artist (or hymn number) to match separate fields.
+  const combined = tokens.map((token) => fields.reduce((best, field) => {
+    const match = matchSearchField(field, token);
+    return match && (!best || match.score > best.score) ? match : best;
+  }, null));
+  if (combined.some((match) => !match)) return null;
+  return {
+    score: combined.reduce((sum, match) => sum + match.score, 0) / combined.length,
+    field: { kind: "meta", label: "복합 검색" },
+    phraseMatched: false,
+  };
 }
 
 function getSongSearchFields(song, options = {}) {
@@ -19032,6 +19052,9 @@ function getSongSearchFields(song, options = {}) {
     searchField("title", song.title, 120, "제목"),
     searchField("hymn", song.hymn_no, 125, "찬송가 번호"),
     searchField("hymn", formatHymnMarker(song.hymn_no), 125, "찬송가 번호"),
+    ...(/^\d+$/.test(String(song.hymn_no || "")) ? [
+      `${Number(song.hymn_no)}장`, `찬 ${Number(song.hymn_no)}`, `찬송가 ${Number(song.hymn_no)}장`,
+    ].map((label) => searchField("hymn", label, 125, "찬송가 번호")) : []),
     searchField("meta", song.subtitle, 88, "부제"),
     searchField("meta", song.original_title, 88, "원제"),
     ...cleanList(song.scripture).map((reference) => searchField("meta", reference, 70, "성구")),
