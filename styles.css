@@ -9354,7 +9354,6 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
     min-width: 0;
   }
   .service-week-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .service-week-day { min-height: 180px; }
 }
 
 @media (max-width: 980px) {

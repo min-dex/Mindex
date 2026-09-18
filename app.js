@@ -518,8 +518,8 @@ const SERVICE_LIST_PANEL_ID = "__list";
 const SERVICE_TEMPLATES_PANEL_ID = "__templates";
 const SERVICE_SETLIST_ARCHIVE_PANEL_ID = "__setlist_archive";
 const SERVICE_NAVIGATION_LABELS = MINDEX_DESIGN_TOKENS.serviceNavigation || {};
-const SERVICE_HOME_WEEK_TITLE = SERVICE_NAVIGATION_LABELS.homeWeekTitle || "이번 주 예배";
-const SERVICE_WEEK_PANEL_TITLE = SERVICE_NAVIGATION_LABELS.serviceWeekTitle || "이번 주 예배";
+const SERVICE_HOME_WEEK_TITLE = SERVICE_NAVIGATION_LABELS.homeWeekTitle || "최근 예배";
+const SERVICE_WEEK_PANEL_TITLE = SERVICE_NAVIGATION_LABELS.serviceWeekTitle || "최근 예배";
 const SERVICE_LIST_PANEL_TITLE = SERVICE_NAVIGATION_LABELS.serviceListTitle || "전체 예배";
 const SERVICE_TEMPLATES_PANEL_TITLE = SERVICE_NAVIGATION_LABELS.templatesTitle || "템플릿";
 const SERVICE_SETLIST_ARCHIVE_PANEL_TITLE = "역대 콘티";
@@ -23242,8 +23242,24 @@ function getExpectedServicesForType(typeId, daySpan = SERVICE_FUTURE_LOOKAHEAD_D
   return [];
 }
 
-function getServiceDashboardServices() {
-  const { start, end } = currentServiceWeekRange();
+function recentServiceWeeks(base = new Date()) {
+  const start = serviceBaseDateTime(base);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - start.getDay());
+  return ["이번 주", "다음 주"].map((label, week) => {
+    const days = Array.from({ length: 7 }, (_, day) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + week * 7 + day);
+      return date;
+    });
+    return { label, start: days[0], end: days[6], days };
+  });
+}
+
+function getServiceDashboardServices(base = new Date()) {
+  const weeks = recentServiceWeeks(base);
+  const start = weeks[0].start;
+  const end = weeks[1].end;
   const upcoming = getFilteredServices().filter((service) => {
     const serviceDate = new Date(`${service.date}T00:00:00`);
     return serviceDate >= start && serviceDate <= end;
@@ -23453,9 +23469,6 @@ function renderServiceList() {
         </div>
         ${sidebarPrimary}
       </section>
-      ${q ? "" : (state.module === "home"
-        ? renderHomeSidebarRecentServiceShortcuts()
-        : renderUpcomingServiceShortcuts())}
     </div>`;
 
   finishListRender();
@@ -23477,7 +23490,7 @@ function renderPresenterSidebar(query, services, selectedService) {
     <div class="service-sidebar service-sidebar--presenter">
       ${searchSection}
       ${selectedService ? renderPresenterSidebarServiceSummary(selectedService) : ""}
-      ${selectedService ? renderServiceCurrentSidebar(selectedService) : renderUpcomingServiceShortcuts()}
+      ${selectedService ? renderServiceCurrentSidebar(selectedService) : ""}
     </div>`;
 }
 
@@ -26728,46 +26741,41 @@ function renderServiceDashboard(options = {}) {
   }
 
   const services = getServiceDashboardServices();
-  const upcomingServices = getUpcomingServiceShortcuts(12);
   const q = normalizeSearchValue(state.search);
   const title = options.title || SERVICE_HOME_WEEK_TITLE;
-  const weekDays = serviceWeekDays();
+  const weeks = recentServiceWeeks();
   const servicesByDate = new Map();
   for (const service of services) {
     const key = service.date;
     if (!servicesByDate.has(key)) servicesByDate.set(key, []);
     servicesByDate.get(key).push(service);
   }
-  const { start, end } = currentServiceWeekRange();
   refs.detailPane.innerHTML = `
     <div class="service-dashboard">
       <section class="service-dashboard-section">
         <div class="service-section-head">
           <div>
             <h2 class="service-date-list-title">${q ? "검색 결과" : escapeHtml(title)}</h2>
-            ${!q ? `<p class="service-week-range">${escapeHtml(formatServiceWeekRange(start, end))}</p>` : ""}
           </div>
+          <button class="reference-new-btn secondary" type="button" data-service-list>전체 예배</button>
         </div>
         ${q ? (services.length ? `<div class="service-date-grid service-date-grid--dashboard">
           ${services.map((service) => renderServiceDateCard(service, { showType: true })).join("")}
-        </div>` : `<p class="service-no-results">검색 결과가 없습니다.</p>`) : `
-          <div class="service-week-board">
-            ${weekDays.map((date) => renderServiceWeekDay(date, servicesByDate.get(toLocalDateStr(date)) || [])).join("")}
-          </div>`}
+        </div>` : `<p class="service-no-results">검색 결과가 없습니다.</p>`) : ""}
       </section>
-      ${!q && upcomingServices.length ? `
+      ${!q ? weeks.map(week => `
         <section class="service-dashboard-section">
           <div class="service-section-head">
-            <h2 class="service-date-list-title">다가오는 예배</h2>
-            <button class="reference-new-btn secondary" type="button" data-service-list aria-label="전체 예배 보기">
-              <span>전체</span>
-            </button>
+            <div>
+              <h3 class="service-date-list-title">${week.label}</h3>
+              <p class="service-week-range">${escapeHtml(formatServiceWeekRange(week.start, week.end))}</p>
+            </div>
           </div>
-          <div class="service-date-grid service-date-grid--dashboard">
-            ${upcomingServices.map((service) => renderServiceDateCard(service, { showType: true })).join("")}
+          <div class="service-week-board">
+            ${week.days.map(date => renderServiceWeekDay(date, servicesByDate.get(toLocalDateStr(date)) || [])).join("")}
           </div>
         </section>
-      ` : ""}
+      `).join("") : ""}
     </div>`;
   refreshIcons();
 }

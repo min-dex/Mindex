@@ -42,8 +42,8 @@
   });
 
   const SERVICE_NAVIGATION = Object.freeze({
-    homeWeekTitle: "이번 주 예배",
-    serviceWeekTitle: "이번 주 예배",
+    homeWeekTitle: "최근 예배",
+    serviceWeekTitle: "최근 예배",
     serviceListTitle: "전체 예배",
     templatesTitle: "템플릿",
   });
