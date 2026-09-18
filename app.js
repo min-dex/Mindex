@@ -28475,7 +28475,7 @@ function renderPresenterControlsTop(service, slides, active, index) {
             <span class="svc-presenter-mini-label">${escapeHtml(uiText("presenter.label.slide"))}</span>
             <input class="svc-slide-jump-input" type="number" inputmode="numeric" min="0" max="${escapeAttr(count || 1)}" value="${escapeAttr(jumpInputValue)}" data-presenter-jump-input data-service-id="${escapeAttr(service.id)}" aria-label="${escapeAttr(uiText("presenter.aria.slideNumber"))}" ${count ? "" : "disabled"} />
             <span>/ ${escapeHtml(count)}</span>
-            <button class="svc-slide-jump-btn" type="button" data-presenter-jump-button data-service-id="${escapeAttr(service.id)}" aria-label="${escapeAttr(uiText("presenter.action.jumpToSlide"))}" ${count ? "" : "disabled"}>
+            <button class="svc-slide-jump-btn" type="button" data-presenter-jump-button data-service-id="${escapeAttr(service.id)}" aria-label="${escapeAttr(uiText("presenter.action.jumpToSlide"))}" title="${escapeAttr(uiText("presenter.action.jumpToSlide"))}" ${count ? "" : "disabled"}>
               <i data-lucide="corner-down-left"></i>
               <span>${escapeHtml(uiText("presenter.action.jump"))}</span>
             </button>

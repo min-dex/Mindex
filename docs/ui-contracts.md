@@ -125,6 +125,12 @@ Inactive module tabs should stay visually quiet. Active tabs may show a clearer 
 
 ## Presenter
 
+- The right-panel slide navigation row groups number input, total count and
+  jump command on the left; previous/next remain on the right. Use a 48px
+  input, 34px square command buttons and a 34px row with tabular numerals.
+  The jump icon has a tooltip and accessible label. Do not change keyboard
+  navigation or blank/invalid-number behavior for visual alignment.
+
 - With the right panel open, the start command beside the preview is primary;
   the left start command remains available with a neutral surface. Closing the
   right panel restores the left command's accent. Stop styling and button
