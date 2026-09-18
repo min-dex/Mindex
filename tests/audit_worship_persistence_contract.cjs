@@ -41,6 +41,7 @@ function fixture(failDocument) {
   const context = {
     state, structuredClone, getServiceItems: () => items,
     serviceDocumentSnapshotFromRef: () => null,
+    worshipAtomicClient: async () => null,
     ensureWorshipServiceRowsLoadedForPersistence: async () => {},
     normalizeServiceItemsInCurrentOrder: x => x,
     normalizeServiceItemsForTemplateHierarchy: (_s, x) => x,

@@ -114,14 +114,14 @@ class WorshipRuleGuardTests(unittest.TestCase):
     def test_sunday_shared_content_contract_stays_linked(self) -> None:
         shared = function_block(self.source, "sundaySharedContentTypesForItem")
         sync_after_save = function_block(self.source, "syncSharedSundayContentAfterSave")
-        sync_to_service = function_block(self.source, "syncSharedSundayContentToService")
         source_lookup = function_block(self.source, "sharedSundayContentSourceItem")
         participant_guard = function_block(self.source, "worshipServiceParticipatesInSharedSundayContent")
         self.assertIn("!isAllGenerationsWorshipService(service)", participant_guard)
         self.assertIn("worshipServiceParticipatesInSharedSundayContent(service)", shared)
         self.assertNotIn("syncSharedSundayContentToService(", sync_after_save)
         self.assertNotIn("state.client", sync_after_save)
-        self.assertIn("worshipServiceParticipatesInSharedSundayContent(targetService)", sync_to_service)
+        self.assertNotIn("function syncSharedSundayContentToService(", self.source)
+        self.assertNotIn("function persistSharedSundayServiceItems(", self.source)
         self.assertIn("return null", source_lookup)
         self.assertIn("previousItems", sync_after_save)
         self.assertIn("persistSundayEditSync(job, options)", sync_after_save)
@@ -185,7 +185,7 @@ class WorshipRuleGuardTests(unittest.TestCase):
 
     def test_persistence_rows_are_sanitized_before_validation(self) -> None:
         save = function_block(self.source, "saveWorshipServiceInstance")
-        shared = function_block(self.source, "persistSharedSundayServiceItems")
+        shared = function_block(self.source, "persistSundayEditSync")
         sanitizer = function_block(self.source, "sanitizeWorshipPersistenceRows")
         for save_path in (save, shared):
             self.assertIn("sanitizeWorshipPersistenceRows(rows", save_path)
@@ -201,20 +201,20 @@ class WorshipRuleGuardTests(unittest.TestCase):
 
     def test_shared_sunday_sync_loads_and_merges_target_rows(self) -> None:
         helper = function_block(self.source, "ensureWorshipServiceRowsLoadedForPersistence")
-        shared = function_block(self.source, "persistSharedSundayServiceItems")
+        shared = function_block(self.source, "persistSundayEditSync")
         self.assertIn("fetchWorshipRowsForServiceIds([id])", helper)
         self.assertIn("state.loadedWorshipServiceIds.add(id)", helper)
         self.assertLess(
-            shared.index("await ensureWorshipServiceRowsLoadedForPersistence(serviceId)"),
-            shared.index("const existingSections"),
+            shared.index("fetchWorshipRowsForServiceIds([target.id])"),
+            shared.index("const existing = elements.find"),
         )
         self.assertNotIn("removedElementIds", shared)
         self.assertNotIn("removedSectionIds", shared)
         self.assertNotIn(".delete()", shared)
-        self.assertIn("savedSectionIds", shared)
-        self.assertIn("savedElementIds", shared)
+        self.assertIn("const sectionIds = new Set", shared)
+        self.assertIn("element.id === saved.id ? saved : element", shared)
         self.assertIn('.from("mindex_worship_elements")', shared)
-        self.assertIn('.from("mindex_worship_sections")', shared)
+        self.assertIn("atomic.commit({ serviceId: target.id", shared)
 
     def test_committed_item_edits_use_element_patch_save(self) -> None:
         patch = function_block(self.source, "saveWorshipServiceElementPatch")
