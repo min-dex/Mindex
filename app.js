@@ -22497,6 +22497,17 @@ function serviceIsNoGathering(service = null) {
   return Boolean(sourceRef.no_gathering || text.includes("집회없음"));
 }
 
+function serviceNavigationBlocked(serviceId) {
+  if (!serviceIsNoGathering(state.services.find(service => service.id === serviceId))) return false;
+  showToast("집회가 없는 날입니다.", "info");
+  return true;
+}
+
+function renderNoGatheringServiceDetail(service) {
+  setRightSidebarContent("");
+  refs.detailPane.innerHTML = `<div class="service-dashboard"><h2>${escapeHtml(serviceDisplayTypeName(service))}</h2><p class="service-no-results">${escapeHtml(formatServiceDate(service))} · 집회 없음</p></div>`;
+}
+
 function serviceOrderTemplate(typeId, options = {}) {
   const appTypeId = worshipAppServiceTypeId(typeId);
   if (serviceIsNoGathering(options.service)) return [];
@@ -23174,6 +23185,7 @@ function getHomeNextService(baseDate = new Date()) {
   const now = new Date(baseDate);
   if (Number.isNaN(now.getTime())) return null;
   const candidates = state.services
+    .filter(service => !serviceIsNoGathering(service))
     .map((service) => ({ service, window: serviceTimeWindow(service) }))
     .filter(({ window }) => window && window.end >= now);
   const ongoing = candidates
@@ -24798,6 +24810,11 @@ function renderServiceDetail() {
   const svc = state.services.find((s) => s.id === serviceId);
   if (!svc) return;
 
+  if (serviceIsNoGathering(svc)) {
+    renderNoGatheringServiceDetail(svc);
+    return;
+  }
+
   const items = state.serviceItems[serviceId];
   if (!items) {
     if (shouldDeferPastWorshipServiceLoad(serviceId)) {
@@ -24892,6 +24909,11 @@ function renderPresenterDetail() {
   if (!svc) {
     setRightSidebarContent("");
     renderPresenterDashboard();
+    return;
+  }
+
+  if (serviceIsNoGathering(svc)) {
+    renderNoGatheringServiceDetail(svc);
     return;
   }
 
@@ -26664,6 +26686,7 @@ function renderServiceWeekDay(date, services) {
 }
 
 function renderServiceWeekCard(service) {
+  const noGathering = serviceIsNoGathering(service);
   const preview = serviceItemPreviewParts(service.id);
   const variant = serviceVariantDisplayName(service);
   const serviceName = serviceDisplayTypeName(service);
@@ -26671,15 +26694,17 @@ function renderServiceWeekCard(service) {
     <button
       class="service-week-card"
       type="button"
-      data-service-id="${escapeAttr(service.id)}"
+      ${noGathering ? 'disabled aria-disabled="true"' : `data-service-id="${escapeAttr(service.id)}"`}
     >
       <strong>${escapeHtml(serviceName)}</strong>
+      ${noGathering ? '<span class="service-week-card-preview">집회 없음</span>' : ""}
       ${variant && compactSearchValue(variant) !== compactSearchValue(serviceName) ? `<span class="service-week-card-preview">${escapeHtml(variant)}</span>` : ""}
       ${preview.text ? renderServiceCardPreviewHtml(preview, "service-week-card-preview") : ""}
     </button>`;
 }
 
 function renderServiceDateCard(service, options = {}) {
+  const noGathering = serviceIsNoGathering(service);
   const preview = serviceItemPreviewParts(service.id);
   const calendarRow = (state.calendarData || []).find((row) => String(row?.date || "").trim() === String(service?.date || "").trim());
   const variant = serviceVariantDisplayName(service);
@@ -26693,12 +26718,12 @@ function renderServiceDateCard(service, options = {}) {
     <button
       class="service-date-card"
       type="button"
-      data-service-id="${escapeAttr(service.id)}"
-      aria-label="${escapeAttr(`${formatServiceDate(service, { compact: true })} ${cleanList([serviceName, variant]).join(" ")} 열기`)}"
+      ${noGathering ? 'disabled aria-disabled="true"' : `data-service-id="${escapeAttr(service.id)}"`}
+      aria-label="${escapeAttr(`${formatServiceDate(service, { compact: true })} ${cleanList([serviceName, variant]).join(" ")} ${noGathering ? "집회 없음" : "열기"}`)}"
     >
       <span class="service-date-card-top">
         <span class="service-date-card-date">${escapeHtml(formatServiceDate(service, { compact: true }))}</span>
-        <span class="service-date-card-open">열기</span>
+        ${noGathering ? "" : '<span class="service-date-card-open">열기</span>'}
       </span>
       ${options.showType ? `<span class="service-date-card-type">${escapeHtml(serviceName)}</span>` : ""}
       ${note ? `<span class="service-date-card-note">${escapeHtml(note)}</span>` : ""}
@@ -31254,6 +31279,7 @@ function setPresenterPendingSlide(serviceId, index, options = {}) {
 
 async function openPresenterOutput(serviceId = state.selectedServiceId) {
   if (!serviceId) return;
+  if (serviceNavigationBlocked(serviceId)) return;
   preparePresenterService(serviceId);
   publishPresenterState({ force: true });
   state.presenter.outputStopAt = 0;
@@ -33314,6 +33340,7 @@ async function deleteService(serviceId) {
 }
 
 function selectService(id) {
+  if (serviceNavigationBlocked(id)) return;
   if (id !== state.selectedServiceId && !confirmDiscardServiceChanges()) return;
   markWorshipServiceExplicitlyRequested(id);
   if (state.module === "presenter") state.presenter.viewServiceId = id;
@@ -33334,6 +33361,7 @@ async function openHomeNextService(action = "presenter", serviceId = "") {
     showToast("준비된 다음 예배가 없습니다.", "info");
     return;
   }
+  if (serviceNavigationBlocked(id)) return;
   markWorshipServiceExplicitlyRequested(id);
   if (action === "presenter") {
     await openServiceInPresenter(id);
@@ -33350,6 +33378,7 @@ async function openHomeNextService(action = "presenter", serviceId = "") {
 
 async function openServiceInPresenter(id) {
   if (!id) return;
+  if (serviceNavigationBlocked(id)) return;
   if (id !== state.selectedServiceId && !confirmDiscardServiceChanges()) return;
   markWorshipServiceExplicitlyRequested(id);
   state.presenter.viewServiceId = id;
