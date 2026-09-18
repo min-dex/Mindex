@@ -24055,6 +24055,9 @@ function filterWorshipSetlistArchiveEntries(entries = []) {
       worshipSetlistArchiveTypeName(source.service_type_id),
       source.source_name,
       worshipSetlistArchiveAliases(source),
+      entry.weeklyStatus,
+      entry.weeklyStatus === "기록 없음" ? "집회 여부 미확인" : "",
+      entry.weeklyReason,
       source.weekly_status,
       source.weekly_reason,
       source.leader,
@@ -24070,7 +24073,10 @@ function renderServiceSetlistArchiveDetail() {
     void loadWorshipSetlistArchive();
   }
   const archive = state.worshipSetlistArchive;
-  const allEntries = worshipSetlistArchiveEntries();
+  const rawEntries = worshipSetlistArchiveEntries();
+  const allEntries = window.MindexWorshipWeek
+    ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || []).flatMap(group => group.entries)
+    : rawEntries;
   const entries = filterWorshipSetlistArchiveEntries(allEntries);
   refs.detailPane.innerHTML = `
     <div class="service-date-list service-date-list--setlists">
@@ -24134,10 +24140,7 @@ function groupWorshipSetlistArchiveEntries(entries = [], view = state.worshipSet
 }
 
 function renderWorshipSetlistArchiveGroups(entries = []) {
-  const weekly = state.worshipSetlistArchiveView !== "service" && !String(state.search || "").trim();
-  const groups = weekly && window.MindexWorshipWeek
-    ? window.MindexWorshipWeek.build(entries, state.worshipSetlistArchive.live?.services || [])
-    : groupWorshipSetlistArchiveEntries(entries);
+  const groups = groupWorshipSetlistArchiveEntries(entries);
   if (!groups.length) return `<p class="service-no-results">표시할 역대 콘티가 없습니다.</p>`;
   return `
     <div class="svc-setlist-month-groups">
@@ -24240,24 +24243,36 @@ function handleSetlistLeaderFocusOut(event) {
   if (input) void saveWorshipSetlistLeader(input.dataset.setlistLeaderInput);
 }
 
+function updateWorshipSetlistLeaderInputs(id, value, saving, original) {
+  document.querySelectorAll("[data-setlist-leader-input]").forEach(input => {
+    if (input.dataset.setlistLeaderInput !== id) return;
+    input.readOnly = saving;
+    input.value = value;
+    input.style.width = `${worshipSetlistLeaderInputWidth(value)}em`;
+    if (original !== undefined) input.dataset.leaderOriginal = original;
+  });
+}
+
 async function saveWorshipSetlistLeader(id) {
   const draft = worshipSetlistLeaderDrafts.get(id);
   if (!draft || draft.saving) return;
-  if (cleanServiceAssignee(draft.value) === draft.original) {
+  const value = cleanServiceAssignee(draft.value);
+  if (value === draft.original) {
     worshipSetlistLeaderDrafts.delete(id);
-    renderCurrentServiceModuleDetail();
+    updateWorshipSetlistLeaderInputs(id, value, false, value);
     return;
   }
   draft.saving = true;
-  renderCurrentServiceModuleDetail();
+  updateWorshipSetlistLeaderInputs(id, draft.value, true);
   try {
-    await persistWorshipSetlistLeader(id, draft.value, draft.original);
+    const leader = await persistWorshipSetlistLeader(id, draft.value, draft.original);
     worshipSetlistLeaderDrafts.delete(id);
+    updateWorshipSetlistLeaderInputs(id, leader, false, leader);
   } catch (error) {
     draft.saving = false;
+    updateWorshipSetlistLeaderInputs(id, draft.value, false);
     showToast(error.message || "저장하지 못했어요. 다시 시도해 주세요.", "error");
   }
-  if (state.module === "service" && state.selectedServiceTypeId === SERVICE_SETLIST_ARCHIVE_PANEL_ID) renderCurrentServiceModuleDetail();
 }
 
 function worshipSetlistArchiveServiceId(source = {}) {

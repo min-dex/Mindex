@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const c={console,document:{addEventListener(){}},localStorage:{getItem(){return null}},setTimeout,clearTimeout,URL,URLSearchParams,crypto:require('node:crypto').webcrypto};c.window=c;c.location={search:'',hash:'',pathname:'/'};vm.createContext(c);
+const c={console,document:{addEventListener(){},querySelectorAll(){return []}},localStorage:{getItem(){return null}},setTimeout,clearTimeout,URL,URLSearchParams,crypto:require('node:crypto').webcrypto};c.window=c;c.location={search:'',hash:'',pathname:'/'};vm.createContext(c);
 for(const f of ['mindex.constants.js','mindex.presenter.js','mindex.worship-input.js','mindex.setlist-links.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 c.assert=assert;
 (async()=>{try{await vm.runInContext(`(async()=>{
@@ -15,7 +15,7 @@ c.assert=assert;
  await persistWorshipSetlistLeader('archive','이재희 청년','old');assert.deepEqual(db.mindex_worship_import_sources.raw_payload.service.songs,['keep']);assert.equal(db.mindex_worship_import_sources.raw_payload.other,'keep');
  fail=true;await assert.rejects(persistWorshipSetlistLeader('archive','bad','이재희 청년'),/failure/);assert.equal(state.worshipSetlistArchive.sources[0].leader,'이재희 청년');fail=false;
  await persistWorshipSetlistLeader('archive','','이재희 청년');assert.equal(state.worshipSetlistArchive.sources[0].leader,'');
- renderCurrentServiceModuleDetail=()=>{};showToast=()=>{};
+ renderCurrentServiceModuleDetail=()=>{throw new Error("Unexpected full rerender during leader save")};showToast=()=>{};
  worshipSetlistLeaderDrafts.set('archive',{original:'',value:'서영윤 선생님',saving:false});
  assert.equal(renderWorshipSetlistLeaderEditor({id:'archive',leader:''}).includes('data-setlist-leader-save'),false);
  await saveWorshipSetlistLeader('archive');assert.equal(db.mindex_worship_import_sources.raw_payload.service.leader,'서영윤 선생님');
