@@ -92,8 +92,10 @@ def table_count(supa_url: str, supa_key: str, table: str) -> int:
     req = Request(f"{supa_url}/rest/v1/{table}?select=id", headers=headers)
     with urlopen(req, timeout=30) as response:
         content_range = response.headers.get("Content-Range", "")
-    match = re.search(r"/(\d+)$", content_range)
-    return int(match.group(1)) if match else 0
+    match = re.fullmatch(r"(?:\d+-\d+|\*)/(\d+)", content_range.strip())
+    if not match:
+        raise RuntimeError(f"Exact row count unavailable for {table}; audit cannot treat it as zero.")
+    return int(match.group(1))
 
 
 def column_exists(supa_url: str, supa_key: str, table: str, column: str) -> bool:

@@ -1,5 +1,6 @@
 import sys
 import unittest
+from unittest.mock import MagicMock, patch
 from pathlib import Path
 
 
@@ -10,6 +11,19 @@ import audit_mindex_content  # type: ignore  # noqa: E402
 
 
 class AuditMindexContentTest(unittest.TestCase):
+    def test_count_requires_an_exact_total(self):
+        for header, expected in [('0-0/12', 12), ('*/0', 0), ('0-0/0', 0)]:
+            response = MagicMock()
+            response.__enter__.return_value.headers = {'Content-Range': header}
+            with patch.object(audit_mindex_content, 'urlopen', return_value=response):
+                self.assertEqual(audit_mindex_content.table_count('https://example.test', 'fake', 'fixture'), expected)
+        for header in ['', '0-0/*', 'garbage/17', '0-0/-1']:
+            response = MagicMock()
+            response.__enter__.return_value.headers = {'Content-Range': header}
+            with patch.object(audit_mindex_content, 'urlopen', return_value=response):
+                with self.assertRaisesRegex(RuntimeError, 'count unavailable'):
+                    audit_mindex_content.table_count('https://example.test', 'fake', 'fixture')
+
     def test_structural_warnings_find_worship_order_drift(self):
         warnings = []
 
