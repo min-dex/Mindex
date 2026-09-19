@@ -21,7 +21,7 @@ https://gdwrchurch.github.io/Mindex/church/
 That redirect opens:
 
 ```text
-https://gdwrchurch.github.io/Mindex/?preset=gwc
+https://gdwrchurch.github.io/Mindex/#preset=gwc
 ```
 
 The deployed `index.html` owns the browser-safe Supabase config for that preset,
