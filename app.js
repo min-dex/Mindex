@@ -11213,6 +11213,11 @@ function hasServiceAsset(asset) {
   return Boolean(asset && (asset.kind || asset.name || asset.url || asset.slides?.length));
 }
 
+// A kind alone (e.g. a freshly added 참고 화면) marks the asset type, not content.
+function hasServiceAssetContent(asset) {
+  return Boolean(asset && (asset.name || asset.url || asset.slides?.length));
+}
+
 function normalizeServicePlaybackConfig(value, elementType = "") {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const output = String(value.output || value.mode || value.target || "").trim().toLowerCase().replace(/[-\s]+/g, "_");
@@ -33429,7 +33434,7 @@ function resolvePresenterServiceItemContentState(item = {}, memo = emptyServiceI
   if (elementType === "blank") return filled("blank");
   if (elementType === "live_scripture" && compactSearchValue(item?.label || "").includes("실시간성구송출")) return filled("live_scripture");
   if (inputMode === "asset") {
-    return hasServiceAsset(asset) ? filled("asset") : missing("asset_empty");
+    return hasServiceAssetContent(asset) ? filled("asset") : missing("asset_empty");
   }
   if (["praise_db", "score_db", "lyrics_db"].includes(effectiveInputMode) || requiresSongSelection) {
     if (item?.song_id && !song && songNeedsRelationalHydration(item.song_id)) return loading("song_hydrating");
