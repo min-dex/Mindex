@@ -8332,6 +8332,12 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-board-subgroup-controls--stacked .svc-presenter-input-field--assignee {
   grid-column: 1;
 }
+/* Medley rows: let the song input yield space so the 음원/저장 actions stay on the
+   same line even for the row that also carries a version select and a form hint. */
+.svc-board-subgroup-controls.svc-board-subgroup-controls--stacked .svc-presenter-input-field--song .svc-edit-title {
+  flex: 1 1 96px;
+  min-width: 96px;
+}
 .svc-board-subgroup-controls--stacked .svc-board-subgroup-audio {
   grid-column: 2;
 }
@@ -8558,6 +8564,9 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 }
 .svc-board-subgroup-controls .svc-presenter-input-field--song .svc-form-hint.compact {
   height: 30px;
+  /* Keep the base width for wrapping, but use spare room so long forms stay readable. */
+  flex: 1 1 144px;
+  max-width: 240px;
 }
 .svc-board-subgroup-control-item > .svc-presenter-input-field--song,
 .svc-board-subgroup-control-item > .svc-presenter-input-field--song > .svc-edit-title-wrap {
