@@ -2213,8 +2213,8 @@ def main() -> int:
                         "renderedTitle": "함께 지어져 가네 + 성도의 노래",
                         "titleSlides": ["함께 지어져 가네 + 성도의 노래"],
                         "elementIds": ["__smoke_medley_6__", "__smoke_medley_7__"],
-                        "inputLabels": ["찬양 6", "찬양 7"],
-                        "primaryOnlyInputLabels": ["찬양 6", "찬양 7"],
+                        "inputLabels": [],  # medley rows are song pickers; no per-row "찬양 n"
+                        "primaryOnlyInputLabels": [],
                         "songFieldCount": 2,
                         "primaryOnlySongFieldCount": 2,
                         "stacked": True,
@@ -2225,7 +2225,7 @@ def main() -> int:
                         "subgroupLabel": "교회소식",
                         "subgroupTitle": "교회소식",
                         "renderedLabel": "교회소식",
-                        "renderedTitle": "교회소식",
+                        "renderedTitle": "",  # a title equal to the label is not printed twice
                         "hasHead": True,
                         "collapsed": False,
                         "slideTitle": "교회소식",
@@ -2545,7 +2545,7 @@ def main() -> int:
                         "label": "봉헌기도",
                         "title": "봉헌기도",
                         "span": "봉헌기도",
-                        "strong": "봉헌기도",
+                        "strong": "",
                     }
                     and title_assignee_state["cleanSlides"] == [
                         {

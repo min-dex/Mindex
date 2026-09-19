@@ -30965,10 +30965,14 @@ function renderPresenterBoardItemActions(serviceId, context) {
 function renderPresenterBoardSubgroupInputControls(serviceId, subgroup = {}, options = {}) {
   const contexts = presenterBoardSubgroupInputContexts(serviceId, subgroup);
   if (!contexts.length) return "";
+  // Every row of a medley is a song picker whose value already names the song, so a
+  // per-row "찬양 n" label only repeats the header range. Other multi-item groups
+  // (e.g. 설교 제목/본문) hold different fields and keep their labels.
+  const medleyRows = contexts.length > 1 && contexts.every((context) => serviceItemConnectedPraise(context.item));
   const blocks = contexts.map((context) => {
     const controls = presenterServiceInputControls(context.item, context.index, context.service, { headerActions: true });
     if (!controls) return "";
-    const label = contexts.length > 1 ? serviceElementDisplayLabel(serviceItemOrdinalDisplayLabel(context.item, context.service)) || "항목" : "";
+    const label = contexts.length > 1 && !medleyRows ? serviceElementDisplayLabel(serviceItemOrdinalDisplayLabel(context.item, context.service)) || "항목" : "";
     return `
       <div class="svc-board-subgroup-control-item" data-service-id="${escapeAttr(serviceId)}" data-service-item-id="${escapeAttr(context.item.id || "")}" data-service-item-index="${escapeAttr(String(context.index))}">
         ${label ? `<div class="svc-board-subgroup-control-head"><span class="svc-board-subgroup-control-label">${escapeHtml(label)}</span>${renderPresenterBoardItemActions(serviceId, context)}</div>` : ""}
@@ -31156,7 +31160,9 @@ function renderPresenterWarnings(warnings = []) {
 }
 
 function presenterVisibleTitle(label, title) {
-  return String(title || "").trim();
+  const cleanTitle = String(title || "").trim();
+  // Titles stay in the model; the header just does not print the label twice.
+  return compactSearchValue(cleanTitle) === compactSearchValue(label) ? "" : cleanTitle;
 }
 
 function annotatePresenterFormStarts(entries = [], initialPreviousKey = "") {
