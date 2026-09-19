@@ -4617,8 +4617,6 @@ function explicitWorshipSlotKey(...sources) {
 }
 
 function deriveWorshipSlotKey(context = {}) {
-  const explicit = explicitWorshipSlotKey(context.element, context.sourceRef, context.config, context.item, context.parsed);
-  if (explicit) return explicit;
   const sectionKey = String(context.sectionKey || context.section?.section_key || context.item?._worshipSectionKey || "").trim();
   const elementType = normalizeWorshipElementType(context.elementType || context.element?.element_type || context.parsed?.elementType || context.parsed?.componentType);
   const inputMode = normalizeServiceInputMode(context.inputMode || context.element?.input_mode || context.contentState?.inputMode || context.config?.inputMode || context.config?.input_mode || context.parsed?.inputMode);
@@ -4634,6 +4632,16 @@ function deriveWorshipSlotKey(context = {}) {
   const hasAsset = hasServiceAsset(normalizeServiceAsset(context.asset || context.parsed?.asset || context.config?.asset || context.element?.asset));
   const elementOrder = Number(context.element?.sort_order || context.item?._worshipElementOrder || context.item?.elementOrder || 0) || 0;
 
+  // A duplicated praise item can retain its source slot while the operator
+  // renames it. Numbered main-praise labels are canonical and must win.
+  if (sectionKey === "praise") {
+    const numberedPraise = label.match(/^찬양(\d+)$/);
+    if (numberedPraise) return `praise.song.${Number(numberedPraise[1])}`;
+  }
+
+  const explicit = explicitWorshipSlotKey(context.element, context.sourceRef, context.config, context.item, context.parsed);
+  if (explicit) return explicit;
+
   if (sectionKey === "ready") return "ready.waiting";
   if (sectionKey === "silent_prayer") return "prayer.silent";
   if (sectionKey === "creed") return "faith.creed";
@@ -4645,8 +4653,6 @@ function deriveWorshipSlotKey(context = {}) {
   if (sectionKey === "praise") {
     if (label === "환영") return "praise.welcome";
     if (["입례찬양", "입례 찬양"].includes(label)) return "praise.entrance";
-    const match = label.match(/^찬양(\d+)$/);
-    if (match) return `praise.song.${Number(match[1])}`;
     if (label === "찬양" && elementOrder > 0) return `praise.song.${elementOrder}`;
     return "praise.main";
   }
@@ -4708,8 +4714,6 @@ function deriveWorshipSlotKey(context = {}) {
 }
 
 function serviceItemSlotKey(item = {}, memo = null) {
-  const explicit = normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slotKey || item?.slot_key);
-  if (explicit) return explicit;
   const parsed = memo || parseServiceItemMemo(item?.memo);
   return deriveWorshipSlotKey({
     item,
@@ -13008,6 +13012,7 @@ function runServiceItemAction(action, index, label = "", title = "") {
       _worshipSectionTitle: "",
       _worshipSectionOrder: 0,
       _worshipElementOrder: 0,
+      _worshipSlotKey: "",
     }, index + 1));
     nextSelectedIndex = index + 1;
   }
