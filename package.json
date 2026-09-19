@@ -27,7 +27,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "studexx",
+        "owner": "gdwrchurch",
         "repo": "Mindex",
         "releaseType": "release"
       }

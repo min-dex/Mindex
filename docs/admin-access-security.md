@@ -15,13 +15,13 @@ For church users, prefer the short preset URL instead of copying the full config
 hash:
 
 ```text
-https://studexx.github.io/Mindex/church/
+https://gdwrchurch.github.io/Mindex/church/
 ```
 
 That redirect opens:
 
 ```text
-https://studexx.github.io/Mindex/?preset=gwc
+https://gdwrchurch.github.io/Mindex/?preset=gwc
 ```
 
 The deployed `index.html` owns the browser-safe Supabase config for that preset,
