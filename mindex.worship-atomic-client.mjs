@@ -90,7 +90,7 @@ export function prepareWorshipRowsCreate({service, rows, document}) {
 }
 
 export function createWorshipAtomicClient({rpc, journal, namespace = '', makeId = () => crypto.randomUUID()}) {
-  const store = createWorshipStore({rpc, journal, makeId, methods:{
+  const store = createWorshipStore({rpc, journal, namespace, makeId, methods:{
     save:'save_worship_service_v1', create:'create_worship_service_v1', delete:'delete_worship_service_v1',
   }});
   const reloadRequired = new Set();

@@ -6377,6 +6377,9 @@ async function saveScripture() {
 
 function serviceSaveErrorMessage(error) {
   const message = String(error?.message || error || "").trim();
+  if (/PENDING_PROJECT_UNKNOWN/.test(message)) {
+    return "이전 저장 요청의 프로젝트를 확인할 수 없어 재전송하지 않았습니다. 입력과 이전 요청은 유지됩니다.";
+  }
   if (/REVISION_CONFLICT|ATOMIC_RELOAD_REQUIRED/.test(message)) {
     return "다른 저장과 충돌해 덮어쓰지 않았습니다. 입력은 유지됩니다. 최신 DB와 비교한 뒤 다시 저장해 주세요.";
   }

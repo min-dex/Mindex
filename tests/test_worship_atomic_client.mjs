@@ -132,3 +132,37 @@ assert.equal(replayCalls.length,4);
 lifecycle.finishCreation(identity,'stable-id');
 assert.equal([...memory.keys()].length,0);
 console.log('PASS creation identity, ignored client timestamps, exact create/delete retry and tombstone receipt');
+
+const sharedMemory = new Map();
+const sharedJournal = {getItem:k=>sharedMemory.get(k)||null,setItem:(k,v)=>sharedMemory.set(k,v),removeItem:k=>sharedMemory.delete(k)};
+const projectCalls = [];
+let disconnected = true;
+const projectClient = namespace => createWorshipAtomicClient({namespace,journal:sharedJournal,makeId:()=>`${namespace}-request`,
+  rpc:async(name,args)=> {
+    if (name === 'get_worship_service_v1') return {data:structuredClone(baseline)};
+    projectCalls.push({namespace,request:structuredClone(args.req)});
+    if (disconnected) throw Error('offline');
+    return {data:{replayed:true,committedRevision:'2',aggregate:{...baseline,revision:'2'}}};
+  }});
+const projectA = projectClient('project-A'), projectB = projectClient('project-B');
+await projectA.read('service'); await projectB.read('service');
+await assert.rejects(projectA.commit(input),/offline/);
+const projectARequest = projectA.pending('service');
+assert.equal(projectB.pending('service'),null);
+await assert.rejects(projectB.commit({...input,document:{sourceText:'B draft'}}),/offline/);
+assert.notDeepEqual(projectB.pending('service'),projectARequest);
+disconnected = false;
+const reloadedA = projectClient('project-A');
+assert.deepEqual(reloadedA.pending('service'),projectARequest);
+await assert.rejects(reloadedA.commit(input),/RETRY_COMMITTED/);
+assert.equal(projectB.pending('service').request.document.sourceText,'B draft');
+assert.deepEqual(projectCalls[2].request,projectARequest.request);
+assert.equal(projectCalls[2].namespace,'project-A');
+sharedJournal.setItem('mindex.atomic.pending.v1:service',JSON.stringify(projectARequest));
+const unknownProject = projectClient('project-C');
+await unknownProject.read('service');
+const priorCalls = projectCalls.length;
+await assert.rejects(unknownProject.commit(input),/PENDING_PROJECT_UNKNOWN/);
+assert.equal(projectCalls.length,priorCalls);
+assert.ok(sharedJournal.getItem('mindex.atomic.pending.v1:service'));
+console.log('PASS project-scoped durable retries survive reload, preserve sibling project requests and block unscoped legacy replay');
