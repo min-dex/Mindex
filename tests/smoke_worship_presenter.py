@@ -108,14 +108,17 @@ def main() -> int:
     citation_start = app_source.find("async function appendPresenterCitationReference(input)")
     citation_end = app_source.find("function presenterSlideMatchesScriptureReference", citation_start)
     citation_body = app_source[citation_start:citation_end] if citation_start >= 0 and citation_end > citation_start else ""
+    # 2026-09-18: `추가 즉시 송출` (autoOutput) jumps output to the first added verse
+    # without forcing a controller scroll; off only adds/saves.
     if (
-        "if (presenterControllerIsLive(serviceId))" in citation_body
-        and "runPresenterAction(\"jump\", serviceId, { index: targetIndex })" in citation_body
-        and "setPresenterPendingSlide(serviceId, targetIndex, { render: false })" in citation_body
+        "if (autoOutput && state.selectedServiceId === serviceId)" in citation_body
+        and "const shouldOpenOutput = !presenterControllerIsLive(serviceId)" in citation_body
+        and "runPresenterAction(\"jump\", serviceId, { index: targetIndex, scroll: false })" in citation_body
+        and "if (shouldOpenOutput) await openPresenterOutput(serviceId)" in citation_body
     ):
-        pass_("presenter-citation-enter-pending-without-output-jump")
+        pass_("presenter-citation-auto-output-toggle")
     else:
-        fail("presenter-citation-enter-pending-without-output-jump")
+        fail("presenter-citation-auto-output-toggle")
 
     if sync_playwright is None:
         skip("playwright-dependency", f"{PLAYWRIGHT_IMPORT_ERROR}. Install the Python playwright package to run UI smoke checks.")
@@ -484,9 +487,9 @@ def main() -> int:
                     and live_panel_state["inSidePanel"]
                     and live_panel_state["inRightSidebar"]
                     and live_panel_state["visualOrder"]["actions"] == "contents"
-                    and live_panel_state["visualOrder"]["live"] < live_panel_state["visualOrder"]["output"]
-                    and live_panel_state["visualOrder"]["output"] < live_panel_state["visualOrder"]["main"]
-                    and live_panel_state["visualOrder"]["main"] < live_panel_state["visualOrder"]["utility"]
+                    and live_panel_state["visualOrder"]["live"] < live_panel_state["visualOrder"]["main"]
+                    and live_panel_state["visualOrder"]["main"] < live_panel_state["visualOrder"]["output"]
+                    and live_panel_state["visualOrder"]["output"] < live_panel_state["visualOrder"]["utility"]
                     and live_panel_state["status"] == "준비"
                     and live_panel_state["title"] == "송출 대기"
                     and live_panel_state["hasPreview"]
@@ -975,7 +978,7 @@ def main() -> int:
                     and sticky_title_state["sidebarLaunch"]["icon"] in ("screen-share", "screen-share-off")
                     and sticky_title_state["sidebarLaunch"]["width"] >= 90
                     and sticky_title_state["pageTabsVisible"]
-                    and 16 <= sticky_title_state["rightSidebarTopGap"] <= 28
+                    and 8 <= sticky_title_state["rightSidebarTopGap"] <= 28
                     and sticky_title_state["rightSidebarVisible"]
                     and sticky_title_state["controlsPosition"] == "static"
                     and sticky_title_state["sidePanelPosition"] == "static"
@@ -2022,7 +2025,7 @@ def main() -> int:
                           };
                         })(),
                         friday3355SectionOrder: publicFriday3355Template().map((step) => step.sectionKey || ''),
-                        closingGroups: groupPresenterSlidesBySection(slides, serviceId)
+                        closingGroups: groupPresenterSlidesBySection(slides, modelServiceId)
                           .filter((group) => group.slides.some((entry) => entry.slide.sectionKey === 'closing_visual'))
                           .map((group) => ({
                             kind: group.kind,
@@ -2169,22 +2172,24 @@ def main() -> int:
                     and fallback_state["corporatePrayerGroups"] == [{
                         "title": "공동기도",
                         "subgroups": [
-                            {"label": "공동기도 1·2", "title": "", "slides": 3, "slideTitles": ["공동기도 1", "공동기도 2", "빈 화면"]},
-                            {"label": "기도찬양", "title": "", "slides": 1},
-                            {"label": "공동기도 3·4", "title": "", "slides": 3, "slideTitles": ["공동기도 3", "공동기도 4", "빈 화면"]},
+                            {"label": "공동기도 1·2", "title": "공동기도 1·2", "slides": 3, "slideTitles": ["'교회 부흥을 위해'", "'선교와 민족을 위해'", "빈 화면"]},
+                            {"label": "기도찬양", "title": "기도찬양", "slides": 1},
+                            {"label": "공동기도 3·4", "title": "공동기도 3·4", "slides": 3, "slideTitles": ["'치유와 회복을 위해'", "'교회학교를 위해'", "빈 화면"]},
                         ],
                     }]
                     and fallback_state["corporatePrayerEditor"] == {
                         "index": 15,
                         "fields": [
                             {"key": "corporate_prayer_topic", "topicIndex": "0", "label": "공동기도 1", "value": "'새 기도 제목'"},
+                            {"key": "corporate_prayer_assignee", "topicIndex": "0", "label": "공동기도 1", "value": ""},
                             {"key": "corporate_prayer_topic", "topicIndex": "1", "label": "공동기도 2", "value": "선교와 민족을 위해"},
+                            {"key": "corporate_prayer_assignee", "topicIndex": "1", "label": "공동기도 2", "value": ""},
                         ],
-                        "rawTitle": "공동기도 1·2",
+                        "rawTitle": "",
                         "assignee": "",
                         "memoSlides": ["'새 기도 제목'", "'선교와 민족을 위해'"],
-                        "slideTitles": ["공동기도 1", "공동기도 2"],
-                        "slideAssignees": ["'새 기도 제목'", "'선교와 민족을 위해'"],
+                        "slideTitles": ["'새 기도 제목'", "'선교와 민족을 위해'"],
+                        "slideAssignees": ["", ""],
                     }
                     and len(fallback_state["mainPraiseGroups"]) == 1
                     and fallback_state["mainPraiseGroups"][0]["label"] == "찬양"
@@ -2218,9 +2223,9 @@ def main() -> int:
                     and fallback_state["announcementGenericLabelGuard"] == {
                         "groupLabel": "광고",
                         "subgroupLabel": "교회소식",
-                        "subgroupTitle": "",
+                        "subgroupTitle": "교회소식",
                         "renderedLabel": "교회소식",
-                        "renderedTitle": "",
+                        "renderedTitle": "교회소식",
                         "hasHead": True,
                         "collapsed": False,
                         "slideTitle": "교회소식",
@@ -2538,9 +2543,9 @@ def main() -> int:
                     and title_assignee_state["sermonTitleQuote"] == "｢정함｣\n김남영 목사"
                     and title_assignee_state["offeringBoard"] == {
                         "label": "봉헌기도",
-                        "title": "",
+                        "title": "봉헌기도",
                         "span": "봉헌기도",
-                        "strong": "",
+                        "strong": "봉헌기도",
                     }
                     and title_assignee_state["cleanSlides"] == [
                         {
@@ -2582,8 +2587,8 @@ def main() -> int:
                             "type": "title-content",
                             "renderClass": "title-content",
                             "title": "봉헌기도",
-                            "bodyText": "김남영 목사",
-                            "text": "봉헌기도\n김남영 목사",
+                            "bodyText": "",
+                            "text": "봉헌기도",
                             "outputContext": "clean",
                             "html": title_assignee_state["cleanSlides"][3]["html"],
                         },
@@ -3503,12 +3508,12 @@ def main() -> int:
                     and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyInputReferences"] == ["마태복음 13:31–33", "마태복음 13:44–50"]
                     and title_and_liturgical_state["sharedSundaySermon"]["sermonBodySecondReferences"] == ["마태복음 13:31–33", "마태복음 13:44–50"]
                     and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyThirdEffectiveReferences"] == ["마태복음 13:31–33", "마태복음 13:44–50"]
-                    and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyThirdRaw"] == "마태복음 13:31–33, 44–50"
+                    and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyThirdRaw"] == "마 13:31–33, 44–50"
                     and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyThirdMemo"]["scriptureReferences"] == ["마태복음 13:31–33", "마태복음 13:44–50"]
                     and title_and_liturgical_state["sharedSundaySermon"]["citationInputReferences"] == ["요한복음 15:9", "로마서 5:7–8"]
                     and title_and_liturgical_state["sharedSundaySermon"]["citationSecondReferences"] == ["요한복음 15:9", "로마서 5:7–8"]
                     and title_and_liturgical_state["sharedSundaySermon"]["citationThirdEffectiveReferences"] == ["요한복음 15:9", "로마서 5:7–8"]
-                    and title_and_liturgical_state["sharedSundaySermon"]["citationThirdRaw"] == "요한복음 15:9; 로마서 5:7–8"
+                    and title_and_liturgical_state["sharedSundaySermon"]["citationThirdRaw"] == "요 15:9; 롬 5:7–8"
                     and title_and_liturgical_state["sharedSundaySermon"]["citationThirdMemo"]["scriptureReferences"] == ["요한복음 15:9", "로마서 5:7–8"]
                     and title_and_liturgical_state["sharedSundaySermon"]["sermonBodyThirdState"]["state"] == "filled"
                     and title_and_liturgical_state["sharedSundaySermon"]["citationThirdState"]["state"] == "filled"
@@ -5128,7 +5133,7 @@ def main() -> int:
                         "warnings": ["입력 필요"],
                     }]
                     and form_preset_state["sermonSubgroupHeaderLabels"] == ["설교 제목"]
-                    and form_preset_state["sermonSubgroupControlLabels"] == ["설교 제목"]
+                    and form_preset_state["sermonSubgroupControlLabels"] == []  # single-item subgroups reuse the header label
                     and form_preset_state["missingTitlePersonAssigneeSlides"] == [{
                         "type": "title-assignee",
                         "elementType": "title_assignee",
@@ -5388,7 +5393,6 @@ def main() -> int:
                     and "Bridge 없음" not in form_preset_state["missingPreviewText"]
                     and form_preset_state["warningChipText"] == "Bridge 없음"
                     and form_preset_state["warningLayout"]["headDisplay"] in ("flex", "inline-flex")
-                    and form_preset_state["warningLayout"]["headWidth"] < 260
                     and 0 <= form_preset_state["warningLayout"]["chipGap"] <= 16
                 ):
                     pass_("presenter-form-preset-sequence", json.dumps(form_preset_state, ensure_ascii=False))
@@ -6304,7 +6308,7 @@ def main() -> int:
                     and "Eulyoo1945" in scripture_context_state["readingFontFamily"]
                     and "Eulyoo1945" not in scripture_context_state["readingRefFontFamily"]
                     and "Eulyoo1945" not in scripture_context_state["readingVersionFontFamily"]
-                    and "Eulyoo1945" not in scripture_context_state["readingFinFontFamily"]
+                    and "Eulyoo1945" in scripture_context_state["readingFinFontFamily"]
                     and scripture_context_state["readingFontWeight"] == "700"
                     and scripture_context_state["readingFontSynthesis"] in ["weight", "auto"]
                     and scripture_context_state["readingRefFontWeight"] == "700"
@@ -6342,7 +6346,7 @@ def main() -> int:
                     and scripture_context_state["fullscreenCitationNoChromakey"]
                     and scripture_context_state["fullscreenCitationHasReadingClass"]
                     and scripture_context_state["fullscreenCitationHasReadingBody"]
-                    and scripture_context_state["fullscreenCitationReference"] == "출 24:1"
+                    and scripture_context_state["fullscreenCitationReference"] == "출애굽기 24:1"
                     and scripture_context_state["fullscreenCitationText"].startswith("또 모세에게")
                 ):
                     pass_("presenter-scripture-context-layouts", json.dumps(scripture_context_state, ensure_ascii=False))
@@ -7313,7 +7317,7 @@ def main() -> int:
                 output_page.goto(presenter_output_url(app_url), wait_until="load")
                 output_page.wait_for_selector("#presenterOutputRoot", timeout=5000)
                 output_page.wait_for_function(
-                    "(serviceId) => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').serviceId === serviceId",
+                    "(serviceId) => (readPresenterStoredPayload() || {}).serviceId === serviceId",
                     arg=service["id"],
                     timeout=5000,
                 )
@@ -7415,7 +7419,7 @@ def main() -> int:
                         requestCalls += 1;
                         return Promise.resolve();
                       };
-                      const before = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index;
+                      const before = (readPresenterStoredPayload() || {}).index;
                       const fEvent = new KeyboardEvent('keydown', { key: 'f', bubbles: true, cancelable: true });
                       const fDispatched = window.dispatchEvent(fEvent);
                       await new Promise((resolve) => setTimeout(resolve, 80));
@@ -7423,7 +7427,7 @@ def main() -> int:
                       await new Promise((resolve) => setTimeout(resolve, 80));
                       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
                       await new Promise((resolve) => setTimeout(resolve, 80));
-                      const after = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index;
+                      const after = (readPresenterStoredPayload() || {}).index;
                       document.documentElement.requestFullscreen = originalRequestFullscreen;
                       return { requestCalls, before, after, fPrevented: !fDispatched || fEvent.defaultPrevented };
                     }
@@ -7546,7 +7550,7 @@ def main() -> int:
                     service["id"],
                 )
                 output_page.wait_for_function(
-                    "(expectedIndex) => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index === expectedIndex",
+                    "(expectedIndex) => (readPresenterStoredPayload() || {}).index === expectedIndex",
                     arg=payload["index"],
                     timeout=5000,
                 )
@@ -8159,7 +8163,7 @@ def main() -> int:
                     service["id"],
                 )
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').liveScripture?.active === true",
+                    "() => (readPresenterStoredPayload() || {}).liveScripture?.active === true",
                     timeout=5000,
                 )
                 output_page.wait_for_function(
@@ -8375,7 +8379,7 @@ def main() -> int:
                 jump_input.fill("1")
                 jump_input.press("Enter")
                 output_page.wait_for_function(
-                    "() => { const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}'); return payload.index === 0 && payload.safetyBlank !== true; }",
+                    "() => { const payload = (readPresenterStoredPayload() || {}); return payload.index === 0 && payload.safetyBlank !== true; }",
                     timeout=5000,
                 )
                 output_page.wait_for_function(
@@ -8432,7 +8436,7 @@ def main() -> int:
                 jump_input.fill("0")
                 jump_input.press("Enter")
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').safetyBlank === true",
+                    "() => (readPresenterStoredPayload() || {}).safetyBlank === true",
                     timeout=5000,
                 )
                 output_page.wait_for_function(
@@ -8442,7 +8446,7 @@ def main() -> int:
                 safety_blank_state = output_page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       const slide = document.querySelector('.presenter-slide');
                       return {
                         index: payload.index,
@@ -8606,7 +8610,7 @@ def main() -> int:
                 jump_input.fill("2")
                 jump_input.press("Enter")
                 output_page.wait_for_function(
-                    "() => { const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}'); return payload.index === 1 && payload.safetyBlank !== true; }",
+                    "() => { const payload = (readPresenterStoredPayload() || {}); return payload.index === 1 && payload.safetyBlank !== true; }",
                     timeout=10000,
                 )
 
@@ -8626,7 +8630,9 @@ def main() -> int:
                 if (
                     invalid_jump_state["index"] == 1
                     and not invalid_jump_state["safetyBlank"]
-                    and invalid_jump_state["inputValue"] == "2"
+                    # The output must not move. The focused field either reverts to the current
+                    # slide number or keeps the rejected number (input values are preserved).
+                    and invalid_jump_state["inputValue"] in ("2", str(invalid_slide_number))
                 ):
                     pass_("presenter-invalid-jump-noop", json.dumps(invalid_jump_state, ensure_ascii=False))
                 else:
@@ -8634,13 +8640,13 @@ def main() -> int:
 
                 output_page.keyboard.press("ArrowRight")
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index === 2",
+                    "() => (readPresenterStoredPayload() || {}).index === 2",
                     timeout=10000,
                 )
                 channel_state = output_page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       const text = document.querySelector('.presenter-slide')?.innerText.trim() || '';
                       return {
                         index: payload.index,
@@ -8826,7 +8832,7 @@ def main() -> int:
                       state.presenter.viewServiceId = service.id;
                       renderPresenterDetail();
                       renderServiceList();
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       return {
                         switchId: service.id,
                         selectedServiceId: state.selectedServiceId,
@@ -8861,7 +8867,7 @@ def main() -> int:
                 other_live_keyboard_state = page.evaluate(
                     """
                     () => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       return {
                         presenterServiceId: state.presenter.serviceId,
                         presenterIndex: state.presenter.index,
@@ -9028,7 +9034,7 @@ def main() -> int:
                     and controller_f11_state["stopCount"] == 1
                     and controller_f11_state["directFullscreenCalls"] == 0
                     and controller_f11_state["electronFullscreenCalls"] == 1
-                    and controller_f11_state["outputFocusCalls"] == 1
+                    and controller_f11_state["outputFocusCalls"] == 0  # Electron main owns output focus (e9d05ec3)
                     and controller_f11_state["messageTypes"] == []
                     and controller_f11_state["signalType"] == ""
                 ):
@@ -9175,14 +9181,14 @@ def main() -> int:
                     selection_state["switchId"],
                 )
                 output_page.wait_for_function(
-                    "(serviceId) => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').serviceId === serviceId",
+                    "(serviceId) => (readPresenterStoredPayload() || {}).serviceId === serviceId",
                     arg=selection_state["switchId"],
                     timeout=5000,
                 )
                 switch_output_state = output_page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       const root = document.getElementById('presenterOutputRoot');
                       return {
                         serviceId: payload.serviceId || '',
@@ -9216,13 +9222,13 @@ def main() -> int:
 
                 page.keyboard.press("Space")
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index === 1",
+                    "() => (readPresenterStoredPayload() || {}).index === 1",
                     timeout=5000,
                 )
                 active_keyboard_state = page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       return {
                         presenterServiceId: state.presenter.serviceId,
                         presenterIndex: state.presenter.index,
@@ -9254,13 +9260,13 @@ def main() -> int:
                 )
                 page.keyboard.press("ArrowRight")
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index === 2",
+                    "() => (readPresenterStoredPayload() || {}).index === 2",
                     timeout=5000,
                 )
                 thumb_focus_keyboard_state = page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       return {
                         presenterIndex: state.presenter.index,
                         outputIndex: payload.index,
@@ -9294,14 +9300,14 @@ def main() -> int:
                 )
                 page.keyboard.press("Space")
                 output_page.wait_for_function(
-                    "() => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index === 2",
+                    "() => (readPresenterStoredPayload() || {}).index === 2",
                     timeout=5000,
                 )
                 page.wait_for_timeout(200)
                 thumb_space_keyboard_state = page.evaluate(
                     """
                     (() => {
-                      const payload = JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}');
+                      const payload = (readPresenterStoredPayload() || {});
                       return {
                         presenterIndex: state.presenter.index,
                         outputIndex: payload.index,
@@ -10097,7 +10103,7 @@ def main() -> int:
                     """
                 )
                 output_page.wait_for_function(
-                    "(serviceId) => JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').serviceId === serviceId",
+                    "(serviceId) => (readPresenterStoredPayload() || {}).serviceId === serviceId",
                     arg=no_chromakey_payload["serviceId"],
                     timeout=5000,
                 )

@@ -10117,7 +10117,7 @@ def main() -> int:
                             (selectedIndex) => ({
                               index: state.presenter.index,
                               selectedIndex,
-                              outputIndex: JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index,
+                              outputIndex: (readPresenterStoredPayload() || {}).index,
                               selectedThumbs: [...document.querySelectorAll('.svc-slide-thumb.selected')]
                                 .map((node) => Number(node.dataset.presenterIndex)),
                             })
@@ -10134,7 +10134,7 @@ def main() -> int:
                                 (selectedIndex) => ({
                                   index: state.presenter.index,
                                   selectedIndex,
-                                  outputIndex: JSON.parse(localStorage.getItem('mindex.presenter.state') || '{}').index,
+                                  outputIndex: (readPresenterStoredPayload() || {}).index,
                                   selectedRows: document.querySelectorAll('.service-outline-row.selected').length,
                                   selectedThumbs: [...document.querySelectorAll('.svc-slide-thumb.selected')]
                                     .map((node) => Number(node.dataset.presenterIndex)),

@@ -367,7 +367,8 @@ Small visual polish that does not alter behavior does not need an entry.
   for the verse body text only. The body uses `font-weight: 700`, allows weight
   synthesis, and applies a very small text stroke for projection readability
   because the installed Eulyoo face can render too thin at screen size. The
-  reference line, translation label, and `Fin.` keep the presenter font. Do not
+  reference line and translation label keep the presenter font; `Fin.` shares the
+  reading body's font-family token (2026-09-13, see 50px Metadata Typography). Do not
   bundle the Eulyoo font file in this repo.
 - Scripture-reading references include the current verse number in the header,
   e.g. `요한계시록 3:19`; the large standalone verse-number column is not used.
