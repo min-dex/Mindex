@@ -27,7 +27,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "ministryindex",
+        "owner": "min-dex",
         "repo": "Mindex",
         "releaseType": "release"
       }
