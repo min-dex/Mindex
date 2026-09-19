@@ -947,6 +947,10 @@ function isServiceDataModule(moduleName = state.module) {
 }
 
 function renderCurrentServiceModuleDetail() {
+  return withServiceItemsScope(() => renderCurrentServiceModuleDetailUnscoped());
+}
+
+function renderCurrentServiceModuleDetailUnscoped() {
   if (state.module === "presenter") renderPresenterDetail();
   else renderServiceDetail();
 }
@@ -14285,6 +14289,10 @@ function runCopyAction(action, index, versionId = "") {
 }
 
 function render() {
+  return withServiceItemsScope(() => renderUnscoped());
+}
+
+function renderUnscoped() {
   const viewportSnapshot = captureDetailViewportSnapshot();
   document.body.dataset.module = state.module;
   renderModuleSwitcher();
@@ -23326,14 +23334,35 @@ function renderServiceFormHintInput(item, index, options = {}) {
     />`;
 }
 
+// A synchronous render asks for the same service's items hundreds of times, and each
+// ask re-projects the template. Inside a render scope the first projection is reused
+// while state.serviceItems[serviceId] is still the array that projection produced;
+// replacing that array (a real change) makes the next ask project again.
+let serviceItemsScopeDepth = 0;
+const serviceItemsScopeCache = new Map();
+function withServiceItemsScope(callback) {
+  serviceItemsScopeDepth += 1;
+  try {
+    return callback();
+  } finally {
+    serviceItemsScopeDepth -= 1;
+    if (!serviceItemsScopeDepth) serviceItemsScopeCache.clear();
+  }
+}
+
 function getServiceItems(serviceId) {
   if (!serviceId) return [];
   const service = state.services.find((svc) => svc.id === serviceId);
   if (!service || !TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service.type_id))) {
     return state.serviceItems[serviceId] || [];
   }
+  if (serviceItemsScopeDepth) {
+    const cached = serviceItemsScopeCache.get(serviceId);
+    if (cached && cached.service === service && cached.projected === state.serviceItems[serviceId]) return cached.projected;
+  }
   const projected = projectWorshipServiceItemsFromTemplate(service, state.serviceItems[serviceId] || []);
   state.serviceItems[serviceId] = projected;
+  if (serviceItemsScopeDepth) serviceItemsScopeCache.set(serviceId, { service, projected });
   return projected;
 }
 
@@ -23859,6 +23888,10 @@ function patchPresenterSidebarServiceSummary(serviceId = state.selectedServiceId
 }
 
 function patchPresenterSidebarOutline(service, slides) {
+  return withServiceItemsScope(() => patchPresenterSidebarOutlineUnscoped(service, slides));
+}
+
+function patchPresenterSidebarOutlineUnscoped(service, slides) {
   const current = refs.songList?.querySelector(".service-sidebar-section--current");
   if (!current || !service) return;
   const markup = renderServiceCurrentSidebar(service, slides).trim();
@@ -25333,6 +25366,10 @@ function renderServiceAuthoringPanel(kicker, title, body) {
 }
 
 function renderPresenterDetail() {
+  return withServiceItemsScope(() => renderPresenterDetailUnscoped());
+}
+
+function renderPresenterDetailUnscoped() {
   if (!state.client) {
     setRightSidebarContent("");
     refs.detailPane.innerHTML = renderConnectionEmptyDetail();
@@ -30103,6 +30140,10 @@ function hydrateVisibleDeferredPresenterBoardSections(root, serviceId, slides, v
 }
 
 function hydrateDeferredPresenterBoardSection(root, serviceId, slides, groupIndex) {
+  return withServiceItemsScope(() => hydrateDeferredPresenterBoardSectionUnscoped(root, serviceId, slides, groupIndex));
+}
+
+function hydrateDeferredPresenterBoardSectionUnscoped(root, serviceId, slides, groupIndex) {
   if (!root?.isConnected || !Number.isInteger(groupIndex)) return false;
   const placeholder = root.querySelector(`[data-presenter-deferred-board-section][data-presenter-board-group-index="${groupIndex}"]`);
   if (!placeholder) return false;
