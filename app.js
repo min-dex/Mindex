@@ -28285,6 +28285,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
             groupIndexes.push(materializeSecondaryConnectedPraiseItem(service, items, item, ordinal));
           }
           const groupItemIds = groupIndexes.map((index) => items[index].id);
+          const groupTitle = resolvedSongs.map((song) => song.title).filter(Boolean).join(" + ");
           groupIndexes.forEach((index, ordinal) => {
             const groupItem = items[index];
             const song = resolvedSongs[ordinal];
@@ -28306,6 +28307,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
                 role: ordinal === 0 ? "primary" : "secondary",
                 primaryItemId: groupItemIds[0],
                 itemIds: groupItemIds,
+                title: groupTitle,
               },
             });
           });

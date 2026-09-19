@@ -79,6 +79,7 @@ vm.runInContext(app.slice(start,app.indexOf('\n}\n',start)+2),context);
   assert.deepEqual(primaryMemo.connectedPraise.itemIds, [primary.id, secondary.id]);
   assert.deepEqual(secondaryMemo.connectedPraise.itemIds, [primary.id, secondary.id]);
   assert.equal(primaryMemo.connectedPraise.primaryItemId, primary.id);
+  assert.equal(primaryMemo.connectedPraise.title, '곡A + 곡B', 'combined title is stored for the presenter output marker');
 
   // One segment fails to resolve: nothing is written for that line (matches the
   // existing all-or-nothing behavior for a single unresolved song).
