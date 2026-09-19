@@ -24027,9 +24027,6 @@ function renderServiceCurrentSidebar(service, slides = presenterSlidesForService
   const readyRow = renderServiceReadyOutlineRow(service, slides, items);
   return `
     <section class="service-sidebar-section service-sidebar-section--current">
-      <div class="service-sidebar-head">
-        <span>순서</span>
-      </div>
       <div class="service-outline-list">
         ${readyRow}
         ${items.length

@@ -134,11 +134,21 @@ function isPresenterSpecialSongItem(item = {}, section = {}) {
 }
 
 function presenterSlidesWithSundayMainSpecialSongOutput(slides = [], item = {}, section = {}, service = null) {
-  if (!shouldUseSundayMainSpecialSongCleanOutput(item, section, service)) return slides;
-  return (Array.isArray(slides) ? slides : []).map((slide) => ({
+  const captionTheme = presenterSpecialSongCaptionTheme(item, section);
+  const themed = captionTheme
+    ? (Array.isArray(slides) ? slides : []).map((slide) => ({ ...slide, captionTheme }))
+    : slides;
+  if (!shouldUseSundayMainSpecialSongCleanOutput(item, section, service)) return themed;
+  return (Array.isArray(themed) ? themed : []).map((slide) => ({
     ...slide,
     outputContext: "clean",
   }));
+}
+
+// Special songs by a team with its own caption look (white/gold bar, Eulyoo type).
+function presenterSpecialSongCaptionTheme(item = {}, section = {}) {
+  if (!isPresenterSpecialSongItem(item, section)) return "";
+  return compactSearchValue(cleanServiceAssignee(item?.assignee || "")).includes("카다로스") ? "cadaros" : "";
 }
 
 function shouldUseSundayMainSpecialSongCleanOutput(item = {}, section = {}, service = null) {
@@ -4766,6 +4776,7 @@ function renderPresenterSlideFrame(slide, options = {}) {
 function presenterSlideExtraClasses(slide) {
   const classes = [];
   if (slide?.fullscreenSongTitle) classes.push("presenter-slide--fullscreen-song-title");
+  if (slide?.captionTheme === "cadaros") classes.push("presenter-slide--caption-cadaros");
   const layout = presenterSlideLayout(slide);
   if (presenterSlideIsScoreLike(slide)) classes.push("presenter-slide--score");
   if (layout !== PRESENTER_SLIDE_LAYOUTS.BLANK && presenterScriptureContextUsesReadingForm(slide?.scriptureContext)) classes.push("presenter-slide--scripture-reading");

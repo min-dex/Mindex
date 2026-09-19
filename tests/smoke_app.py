@@ -5417,7 +5417,7 @@ def main() -> int:
                         """
                     )
                     if (
-                        "순서" in presenter_terms["sidebarHeadings"]
+                        "순서" not in presenter_terms["sidebarHeadings"]
                         and presenter_terms["outlineHeaderTail"] == ""
                         and "편집" not in presenter_terms["sidebarHeadings"]
                         and "최근 예배" not in presenter_terms["sidebarHeadings"]

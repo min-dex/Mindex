@@ -1325,3 +1325,40 @@
   font-size: var(--presenter-size-section);
   font-weight: var(--presenter-weight-display);
 }
+
+/* ── 카다로스 중창단 특송: 순백 자막 바 + 금빛 장식, 을유 계열 본문체 ── */
+.presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros {
+  --cadaros-ink: #1f2b57;
+  --cadaros-gold: #b08a35;
+  --presenter-output-bar-edge: #f3efe2;
+  --presenter-output-bar:
+    linear-gradient(90deg, transparent 0%, #c9a24a 16%, #f7e6ad 50%, #c9a24a 84%, transparent 100%) top / 100% calc(3 * var(--presenter-stage-unit)) no-repeat,
+    linear-gradient(90deg, transparent 0%, rgba(201, 162, 74, .5) 50%, transparent 100%) bottom calc(12 * var(--presenter-stage-unit)) center / 62% calc(1.5 * var(--presenter-stage-unit)) no-repeat,
+    radial-gradient(ellipse 58% 150% at 50% 0%, rgba(255, 246, 214, .95) 0%, rgba(255, 246, 214, 0) 72%),
+    linear-gradient(180deg, #ffffff 0%, #f3efe2 100%);
+  --presenter-bar-split-label-weight: 700;
+  --presenter-bar-split-value-weight: 700;
+}
+.presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros::after {
+  position: absolute;
+  bottom: calc(var(--presenter-output-bar-height) - 1.3cqw);
+  left: 50%;
+  width: 22cqw;
+  height: 2.2cqw;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%2030%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22l%22%20x1%3D%220%22%20x2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c9a24a%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c9a24a%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22r%22%20x1%3D%220%22%20x2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c9a24a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c9a24a%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%2240%22%20y%3D%2214%22%20width%3D%2282%22%20height%3D%222%22%20fill%3D%22url%28%23l%29%22%2F%3E%3Crect%20x%3D%22178%22%20y%3D%2214%22%20width%3D%2282%22%20height%3D%222%22%20fill%3D%22url%28%23r%29%22%2F%3E%3Cpath%20d%3D%22M150%201%20165%2015%20150%2029%20135%2015Z%22%20fill%3D%22%23c9a24a%22%2F%3E%3Cpath%20d%3D%22M150%207%20159%2015%20150%2023%20141%2015Z%22%20fill%3D%22%23fff7dc%22%2F%3E%3Cpath%20d%3D%22M126%2015%20131%2010%20136%2015%20131%2020Z%20M164%2015%20169%2010%20174%2015%20169%2020Z%22%20fill%3D%22%23c9a24a%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  content: "";
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros > .presenter-slide-text {
+  color: var(--cadaros-ink);
+  font-family: var(--presenter-reading-font-family);
+  font-synthesis: weight;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  -webkit-text-stroke: .01em currentColor;
+}
+.presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros .presenter-title-assignee-title,
+.presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros .presenter-song-note {
+  color: var(--cadaros-gold);
+}
