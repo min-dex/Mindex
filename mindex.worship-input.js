@@ -577,22 +577,24 @@ function presenterPreparationSongExactIndex() {
 function parsePresenterPreparationHymnHint(value = "") {
   const raw = String(value || "").replace(/\s+/g, " ").trim();
   if (!raw) return { title: "", hymnNo: "" };
-  const paren = raw.match(/^(.+?)\s*[(（]\s*(?:새\s*)?(?:찬송가|찬)?\s*(\d+)\s*장?\s*[)）]\s*$/);
+  const paren = raw.match(/^(.+?)\s*[(（]\s*(?:새\s*)?(?:찬송가|찬송|찬)?\s*(\d+)\s*장?\s*[)）]\s*$/);
   if (paren) return { title: String(paren[1] || "").trim(), hymnNo: String(paren[2] || "").trim() };
-  const leading = raw.match(/^(?:새\s*)?(?:찬송가|찬)\s*(\d+)\s*장?\s+(.+)$/);
+  // Keyword-only forms ("찬송 535장") must be checked before the bare title+number
+  // patterns below, which would otherwise swallow the keyword itself as a fake title.
+  const prefixedOnly = raw.match(/^(?:새\s*)?(?:찬송가|찬송|찬)\s*(\d+)\s*장?\s*$/);
+  if (prefixedOnly) return { title: "", hymnNo: String(prefixedOnly[1] || "").trim() };
+  const only = raw.match(/^(?:새\s*)?(?:찬송가|찬송|찬)?\s*(\d+)\s*장\s*$/);
+  if (only && /(?:찬|장)/.test(raw)) return { title: "", hymnNo: String(only[1] || "").trim() };
+  const leading = raw.match(/^(?:새\s*)?(?:찬송가|찬송|찬)\s*(\d+)\s*장?\s+(.+)$/);
   if (leading) return { title: String(leading[2] || "").trim(), hymnNo: String(leading[1] || "").trim() };
   const bareLeading = raw.match(/^(\d{1,4})\s*장\s+(.+)$/);
   if (bareLeading) return { title: String(bareLeading[2] || "").trim(), hymnNo: String(bareLeading[1] || "").trim() };
   const bareNumberLeading = raw.match(/^(\d{1,4})\s+(.+)$/);
   if (bareNumberLeading) return { title: String(bareNumberLeading[2] || "").trim(), hymnNo: String(bareNumberLeading[1] || "").trim() };
-  const trailing = raw.match(/^(.+?)\s+(?:새\s*)?(?:찬송가|찬)\s*(\d+)\s*장?\s*$/);
+  const trailing = raw.match(/^(.+?)\s+(?:새\s*)?(?:찬송가|찬송|찬)\s*(\d+)\s*장?\s*$/);
   if (trailing) return { title: String(trailing[1] || "").trim(), hymnNo: String(trailing[2] || "").trim() };
   const bareTrailing = raw.match(/^(.+?)\s+(\d{1,4})\s*장\s*$/);
   if (bareTrailing) return { title: String(bareTrailing[1] || "").trim(), hymnNo: String(bareTrailing[2] || "").trim() };
-  const prefixedOnly = raw.match(/^(?:새\s*)?(?:찬송가|찬)\s*(\d+)\s*장?\s*$/);
-  if (prefixedOnly) return { title: "", hymnNo: String(prefixedOnly[1] || "").trim() };
-  const only = raw.match(/^(?:새\s*)?(?:찬송가|찬)?\s*(\d+)\s*장\s*$/);
-  if (only && /(?:찬|장)/.test(raw)) return { title: "", hymnNo: String(only[1] || "").trim() };
   return { title: raw, hymnNo: "" };
 }
 
