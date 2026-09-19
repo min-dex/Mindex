@@ -90,7 +90,7 @@ export function prepareWorshipRowsCreate({service, rows, document}) {
 }
 
 export function createWorshipAtomicClient({rpc, journal, namespace = '', makeId = () => crypto.randomUUID()}) {
-  const store = createWorshipStore({rpc, journal, makeId, methods:{
+  const store = createWorshipStore({rpc, journal, namespace, makeId, methods:{
     save:'save_worship_service_v1', create:'create_worship_service_v1', delete:'delete_worship_service_v1',
   }});
   const reloadRequired = new Set();
@@ -116,6 +116,42 @@ export function createWorshipAtomicClient({rpc, journal, namespace = '', makeId 
     },
     baseline:id => store.baseline(id)?.aggregate || null,
     pending:id => store.pending(id),
+    async reopenReviewed(review, {beforeAdopt} = {}) {
+      const id = review.serviceId;
+      if (store.pending(id)) throw new Error('PENDING_REQUEST_REQUIRES_RESOLUTION');
+      const result = await rpc('get_worship_service_v1', {sid:id});
+      if (result.error) throw result.error;
+      if (store.pending(id)) throw new Error('PENDING_REQUEST_REQUIRES_RESOLUTION');
+      const latest = result.data;
+      if (!latest || latest.service?.id !== id) throw new Error('SERVICE_NOT_FOUND');
+      if (typeof latest.revision !== 'string' || !/^(0|[1-9][0-9]*)$/.test(latest.revision)
+        || !Array.isArray(latest.sections) || !Array.isArray(latest.elements)) throw new Error('INVALID_CONFLICT_SNAPSHOT');
+      if (!review.latest || !equal(latest, review.latest)) throw new Error('REVIEW_OUTDATED');
+      const current = store.baseline(id);
+      if (current && BigInt(current.revision) > BigInt(latest.revision)) throw new Error('REVIEW_OUTDATED');
+      // The synchronous guard archives the draft before changing the baseline.
+      // Do not allow an async callback to leave a race between the guard and adoption.
+      if (typeof beforeAdopt !== 'function' || beforeAdopt(clone(latest)) !== true) {
+        throw new Error('DRAFT_NOT_PRESERVED');
+      }
+      store.acceptRead(id, latest);
+      reloadRequired.delete(id);
+      return clone(latest);
+    },
+    async inspectConflict(id, draft) {
+      // Freeze before the network wait. Inspection must not adopt a new baseline
+      // or resolve an uncertain write on the user's behalf.
+      const snapshot = clone({serviceId:id, draft, baseline:store.baseline(id)?.aggregate || null,
+        pending:store.pending(id)});
+      const result = await rpc('get_worship_service_v1', {sid:id});
+      if (result.error) throw result.error;
+      const latest = result.data;
+      if (latest !== null && (!latest || latest.service?.id !== id
+        || typeof latest.revision !== 'string' || !/^(0|[1-9][0-9]*)$/.test(latest.revision))) {
+        throw new Error('INVALID_CONFLICT_SNAPSHOT');
+      }
+      return {...snapshot, latest:clone(latest)};
+    },
     async read(id, {adopt = true} = {}) {
       const result = await rpc('get_worship_service_v1', {sid:id});
       if (result.error) throw result.error;

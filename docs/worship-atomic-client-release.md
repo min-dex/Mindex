@@ -41,3 +41,14 @@ Production SECURITY DEFINER ownership/grants and public RPCs, revision handling
 for external canonical mutations, recovery/retention policy, pending/conflict UI,
 coordinated old-client denial and live operational verification remain required.
 Do not enable the switch or revoke DML merely because this client is deployed.
+
+Local follow-up: named RPC argument compatibility and private checkpoint recovery
+are now exercised in PostgreSQL; see [security checks](worship-atomic-security-check.md)
+and [recovery checks](worship-atomic-recovery-check.md). These tests do not satisfy
+the production catalog, operational backup restore, UI or cutover gates above.
+
+The refreshed [live audit and staged conflict review](worship-atomic-live-audit-20260919.md)
+records actual production schema/permission findings. Conflict review preserves
+drafts, supports comparison/export and explicit archive-before-reopen. Source text
+can be deliberately reapplied using the recovery picker; no automatic merge is
+performed. The atomic client is still not enabled in production.

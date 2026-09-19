@@ -5,6 +5,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import net from 'node:net';
 import { randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 // No connection URL or production credentials are accepted by this harness.
 export async function openWorshipTestDb() {
@@ -31,8 +33,8 @@ export async function openWorshipTestDb() {
     await server.stop();
     await fs.rm(dir,{recursive:true,force:true});
   };
-  const connect = async () => {
-    const client = new pg.Client({host:'127.0.0.1',port,user:'postgres',password,database:'postgres',
+  const connect = async (database = 'postgres') => {
+    const client = new pg.Client({host:'127.0.0.1',port,user:'postgres',password,database,
       connectionTimeoutMillis:5000,statement_timeout:10000});
     await client.connect(); clients.add(client);
     return client;
@@ -41,6 +43,21 @@ export async function openWorshipTestDb() {
     await server.initialise(); await server.start();
     const client = await connect();
     console.log('PostgreSQL:',(await client.query('show server_version')).rows[0].server_version);
-    return {exec:sql=>client.query(sql),query:(...args)=>client.query(...args),connect,close};
+    const restoreBackup = async () => {
+      if (!process.env.WORSHIP_TEST_PG_BIN) throw new Error('WORSHIP_TEST_PG_BIN_REQUIRED');
+      const run = promisify(execFile);
+      const file = path.join(dir,'backup.dump');
+      // Credentials always refer to this freshly created loopback-only cluster.
+      const connection = ['--host=127.0.0.1',`--port=${port}`,'--username=postgres','--no-password'];
+      const options = {env:{...process.env,PGPASSWORD:password},timeout:60000,maxBuffer:1024*1024};
+      await run(path.join(process.env.WORSHIP_TEST_PG_BIN,'pg_dump'),
+        [...connection,'--format=custom','--dbname=postgres',`--file=${file}`],options);
+      await client.query('create database restored_backup template template0');
+      await run(path.join(process.env.WORSHIP_TEST_PG_BIN,'pg_restore'),
+        [...connection,'--exit-on-error','--single-transaction','--dbname=restored_backup',file],options);
+      const restored = await connect('restored_backup');
+      return {exec:sql=>restored.query(sql),query:(...args)=>restored.query(...args)};
+    };
+    return {exec:sql=>client.query(sql),query:(...args)=>client.query(...args),connect,restoreBackup,close};
   } catch(error) { await close(); throw error; }
 }

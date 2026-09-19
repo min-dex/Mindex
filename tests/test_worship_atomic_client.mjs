@@ -48,6 +48,61 @@ db={...db,revision:'10'};await client.read('service',{adopt:false});
 assert.equal(client.baseline('service').revision,'2');
 console.log('PASS conflict after uncertain retry and non-adopting background reads');
 
+const localDraft = {items:[{id:'element',title:'Unsaved'}],sourceText:'local'};
+const priorBaseline = client.baseline('service');
+const review = await client.inspectConflict('service', localDraft);
+assert.equal(review.latest.revision, '10');
+assert.deepEqual(client.baseline('service'), priorBaseline);
+localDraft.items[0].title = 'New typing';
+assert.equal(review.draft.items[0].title, 'Unsaved');
+await assert.rejects(client.commit(input),/RELOAD_REQUIRED/);
+db = null;
+assert.equal((await client.inspectConflict('service', localDraft)).latest, null);
+db = {...baseline, service:{id:'another-service'}};
+await assert.rejects(client.inspectConflict('service', localDraft), /INVALID_CONFLICT_SNAPSHOT/);
+db = {...baseline, revision:'not-a-revision'};
+await assert.rejects(client.inspectConflict('service', localDraft), /INVALID_CONFLICT_SNAPSHOT/);
+db = {...baseline, revision:'10'};
+await client.read('service');mode='network';
+await assert.rejects(client.commit(input), /Network lost/);
+const uncertain = client.pending('service');
+await client.inspectConflict('service', localDraft);
+assert.deepEqual(client.pending('service'), uncertain);
+assert.equal(client.baseline('service').revision, '10');
+console.log('PASS conflict inspection freezes draft, handles deletion, validates identity, never adopts or clears pending writes');
+
+const recoveryMemory = new Map();
+let recoveryDb = structuredClone(baseline), releaseRead = null, recoveryWrites = [];
+const recovery = createWorshipAtomicClient({
+  journal:{getItem:k=>recoveryMemory.get(k)||null,setItem:(k,v)=>recoveryMemory.set(k,v),removeItem:k=>recoveryMemory.delete(k)},
+  makeId:()=> 'recovery-save', rpc:async (name,args)=> {
+    if (name === 'get_worship_service_v1') {
+      if (releaseRead) await releaseRead();
+      return {data:structuredClone(recoveryDb)};
+    }
+    recoveryWrites.push(args.req);
+    return {data:{aggregate:{...recoveryDb,revision:'12'},committedRevision:'12',replayed:false}};
+  },
+});
+await recovery.read('service');
+recoveryDb = {...recoveryDb,revision:'11'};
+const recoveryReview = await recovery.inspectConflict('service', localDraft);
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>false}),/DRAFT_NOT_PRESERVED/);
+assert.equal(recovery.baseline('service').revision,baseline.revision);
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{throw Error('LOCAL_DRAFT_CHANGED')}}),/LOCAL_DRAFT_CHANGED/);
+recoveryDb = {...recoveryDb,revision:'12'};
+let guardCalls = 0;
+await assert.rejects(recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{guardCalls++;return true}}),/REVIEW_OUTDATED/);
+assert.equal(guardCalls,0);
+recoveryDb = {...recoveryDb,revision:'11'};
+await recovery.reopenReviewed(recoveryReview,{beforeAdopt:()=>{guardCalls++;return true}});
+assert.equal(recovery.baseline('service').revision,'11');
+assert.equal(recoveryWrites.length,0);
+await recovery.commit(input);
+assert.equal(recoveryWrites[0].expectedRevision,'11');
+await assert.rejects(client.reopenReviewed(await client.inspectConflict('service',localDraft),{beforeAdopt:()=>true}),/PENDING_REQUEST/);
+console.log('PASS explicit recovery refuses changed review, unarchived/changed draft and pending write; next save uses reviewed revision');
+
 const creation = {service:{...baseline.service,created_at:'client time',source_ref:{custom:true}},
   rows:{sections:baseline.sections,elements:baseline.elements},document:{sourceText:'New',updatedAt:'one'}};
 const createPayload=prepareWorshipRowsCreate(creation);
@@ -77,3 +132,37 @@ assert.equal(replayCalls.length,4);
 lifecycle.finishCreation(identity,'stable-id');
 assert.equal([...memory.keys()].length,0);
 console.log('PASS creation identity, ignored client timestamps, exact create/delete retry and tombstone receipt');
+
+const sharedMemory = new Map();
+const sharedJournal = {getItem:k=>sharedMemory.get(k)||null,setItem:(k,v)=>sharedMemory.set(k,v),removeItem:k=>sharedMemory.delete(k)};
+const projectCalls = [];
+let disconnected = true;
+const projectClient = namespace => createWorshipAtomicClient({namespace,journal:sharedJournal,makeId:()=>`${namespace}-request`,
+  rpc:async(name,args)=> {
+    if (name === 'get_worship_service_v1') return {data:structuredClone(baseline)};
+    projectCalls.push({namespace,request:structuredClone(args.req)});
+    if (disconnected) throw Error('offline');
+    return {data:{replayed:true,committedRevision:'2',aggregate:{...baseline,revision:'2'}}};
+  }});
+const projectA = projectClient('project-A'), projectB = projectClient('project-B');
+await projectA.read('service'); await projectB.read('service');
+await assert.rejects(projectA.commit(input),/offline/);
+const projectARequest = projectA.pending('service');
+assert.equal(projectB.pending('service'),null);
+await assert.rejects(projectB.commit({...input,document:{sourceText:'B draft'}}),/offline/);
+assert.notDeepEqual(projectB.pending('service'),projectARequest);
+disconnected = false;
+const reloadedA = projectClient('project-A');
+assert.deepEqual(reloadedA.pending('service'),projectARequest);
+await assert.rejects(reloadedA.commit(input),/RETRY_COMMITTED/);
+assert.equal(projectB.pending('service').request.document.sourceText,'B draft');
+assert.deepEqual(projectCalls[2].request,projectARequest.request);
+assert.equal(projectCalls[2].namespace,'project-A');
+sharedJournal.setItem('mindex.atomic.pending.v1:service',JSON.stringify(projectARequest));
+const unknownProject = projectClient('project-C');
+await unknownProject.read('service');
+const priorCalls = projectCalls.length;
+await assert.rejects(unknownProject.commit(input),/PENDING_PROJECT_UNKNOWN/);
+assert.equal(projectCalls.length,priorCalls);
+assert.ok(sharedJournal.getItem('mindex.atomic.pending.v1:service'));
+console.log('PASS project-scoped durable retries survive reload, preserve sibling project requests and block unscoped legacy replay');

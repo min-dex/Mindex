@@ -6,13 +6,18 @@ const revision = value => {
 };
 
 // journal must be tab-scoped (e.g. sessionStorage), not shared localStorage.
-export function createWorshipStore({ rpc, journal, methods, makeId = () => crypto.randomUUID() }) {
+export function createWorshipStore({ rpc, journal, methods, namespace = '', makeId = () => crypto.randomUUID() }) {
   const baselines = new Map();
   const running = new Set();
-  const key = id => `mindex.atomic.pending.v1:${id}`;
+  const legacyKey = id => `mindex.atomic.pending.v1:${id}`;
+  const key = id => namespace ? `mindex.atomic.pending.v2:${JSON.stringify([namespace,id])}` : legacyKey(id);
   const getPending = id => {
     const raw = journal.getItem(key(id));
-    if (!raw) return null;
+    if (!raw) {
+      // An unscoped request cannot safely be assigned to the current project.
+      if (namespace && journal.getItem(legacyKey(id))) throw new Error('PENDING_PROJECT_UNKNOWN');
+      return null;
+    }
     const entry = JSON.parse(raw);
     if (entry.request?.serviceId !== id || !Object.hasOwn(methods, entry.operation) || !entry.request.requestId) {
       throw new Error('INVALID_PENDING_REQUEST');
