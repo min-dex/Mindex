@@ -27476,8 +27476,8 @@ function sundaySharedContentTypesForItem(item = {}, service = null) {
   if (key.startsWith("main-praise:") && ["sunday-first", "sunday-second"].includes(typeId)) {
     return ["sunday-first", "sunday-second"];
   }
-  if ((["scripture-reading", "sermon-title", "sermon-scripture"].includes(key) || key.startsWith("sermon-citation:")) && ["sunday-second", "sunday-main"].includes(typeId)) {
-    return ["sunday-second", "sunday-main"];
+  if ((["scripture-reading", "sermon-title", "sermon-scripture"].includes(key) || key.startsWith("sermon-citation:")) && ["sunday-first", "sunday-second", "sunday-main"].includes(typeId)) {
+    return ["sunday-first", "sunday-second", "sunday-main"];
   }
   if (key === "offering-hymn" && ["sunday-first", "sunday-second", "sunday-main"].includes(typeId)) {
     return ["sunday-first", "sunday-second", "sunday-main"];
