@@ -15061,7 +15061,7 @@ function serviceUsesAllGenerationsChromakeyOutput(service = null) {
   if (!service || typeof service !== "object") return false;
   const typeId = worshipAppServiceTypeId(service?.type_id || service?.service_type_id || service?.typeId || "");
   if (typeId !== "sunday-main") return false;
-  const sourceRef = serviceSourceRef(service);
+  const sourceRef = serviceRawSourceRef(service);
   const variant = String(sourceRef.sunday_main_variant || "").trim().toLowerCase();
   if (variant === "all_generations") return true;
   const serviceLabel = [service.alias, service.service_alias, service.title, service.service_title]
@@ -15115,7 +15115,7 @@ function presenterBackgroundSourcesForService(service, options = {}) {
     const seasonSources = worshipBackgroundSourcesForFileName(seasonFileName);
     if (seasonSources.length) return seasonSources;
   }
-  const sourceRef = serviceSourceRef(service);
+  const sourceRef = serviceRawSourceRef(service);
   const value = firstNonBlankString(
     service?.presenter_background,
     service?.presenter_background_file,
@@ -22372,11 +22372,31 @@ function serviceAlias(service) {
   return String(service?.alias || "").replace(/\s+/g, " ").trim();
 }
 
-function serviceSourceRef(service = null) {
+// Raw source ref for reading scalar fields (friday_variant, backgrounds, ...). These
+// lookups run inside render loops, so they must not normalize the whole document.
+function serviceRawSourceRef(service = null) {
   if (!service || typeof service !== "object") return {};
-  if (service._worshipSourceRef && typeof service._worshipSourceRef === "object") return normalizeServiceSourceRef(service._worshipSourceRef);
-  if (service.source_ref && typeof service.source_ref === "object") return normalizeServiceSourceRef(service.source_ref);
+  if (service._worshipSourceRef && typeof service._worshipSourceRef === "object") return service._worshipSourceRef;
+  if (service.source_ref && typeof service.source_ref === "object") return service.source_ref;
   return {};
+}
+
+// Normalizing the stored document and its history is expensive (it re-signs every
+// slide). Cache it per raw object; the shallow key/value check invalidates the entry
+// when a key is reassigned in place. Callers treat the result as read-only.
+const serviceSourceRefCache = new WeakMap();
+function serviceSourceRef(service = null) {
+  const raw = serviceRawSourceRef(service);
+  const keys = Object.keys(raw);
+  if (!keys.length) return {};
+  const cached = serviceSourceRefCache.get(raw);
+  if (cached && cached.keys.length === keys.length
+    && keys.every((key, index) => cached.keys[index] === key && cached.values[index] === raw[key])) {
+    return cached.result;
+  }
+  const result = normalizeServiceSourceRef(raw);
+  serviceSourceRefCache.set(raw, { keys, values: keys.map((key) => raw[key]), result });
+  return result;
 }
 
 function serviceDocumentSnapshotFromRef(service = null) {
@@ -22804,7 +22824,7 @@ function normalizeServiceDisplayName(value) {
 
 function serviceFridayVariantKey(service = null) {
   const typeId = worshipAppServiceTypeId(service?.type_id || service?.service_type_id || "");
-  const sourceRef = serviceSourceRef(service);
+  const sourceRef = serviceRawSourceRef(service);
   const key = String(sourceRef.friday_variant || "").trim();
   if (key) return key;
   if (typeId === "monthly") return "monthly";
@@ -22826,7 +22846,7 @@ function serviceIsFridayVariant(service = null, variantKey = "") {
 
 function serviceVariantDisplayName(service = null) {
   if (!serviceIsFridayFamily(service)) return "";
-  const sourceRef = serviceSourceRef(service);
+  const sourceRef = serviceRawSourceRef(service);
   const fromSource = String(sourceRef.friday_variant_name || "").trim();
   if (fromSource) return fromSource;
   const key = serviceFridayVariantKey(service);
