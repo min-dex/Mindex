@@ -27,7 +27,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "gdwrchurch",
+        "owner": "ministryindex",
         "repo": "Mindex",
         "releaseType": "release"
       }
