@@ -37,8 +37,9 @@ try:
                 check(badges.every(b=>b.getBoundingClientRect().height===18),'badge height changed');
                 check(badges.every(b=>getComputedStyle(b).boxShadow==='none'),'form color rendered as border');
                 check(!neutral.hasAttribute('data-form-type'),'scripture received song color');
+                check(badges.every(b=>getComputedStyle(b).color===getComputedStyle(neutral).color),'form badge text should stay neutral like scripture reference');
               }
-              return 'PASS simplified icon, type colors, verse consistency, dimensions and jump targets';
+              return 'PASS simplified icon, type colors, neutral text, verse consistency, dimensions and jump targets';
             }'''), flush=True)
             for theme in ('light', 'dark'):
                 page.evaluate('(theme)=>document.body.dataset.theme=theme', theme)

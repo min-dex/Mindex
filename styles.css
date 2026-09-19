@@ -8244,6 +8244,9 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   font-size: var(--ui-label-size);
   font-weight: 800;
 }
+.svc-board-subgroup-audio:not(.has-audio) {
+  grid-template-columns: auto;
+}
 .svc-board-subgroup-audio.has-audio {
   grid-column: 1 / -1;
   width: min(100%, 520px);
@@ -8627,7 +8630,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-board-subgroup-flow {
   --svc-control-height: 30px;
 }
-.svc-board-subgroup-flow { gap: 6px; }
+.svc-board-subgroup-flow { gap: 8px; }
 .svc-board-subgroup-flow :is(.svc-board-subgroup-commit, .svc-reference-media-upload, .svc-board-subgroup-audio-upload) {
   display: inline-flex;
   align-items: center;
@@ -8730,7 +8733,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-slide-form-badge[data-form-type] {
   background: color-mix(in srgb, var(--form-color, #6b7280) 48%, var(--panel));
   box-shadow: none;
-  color: color-mix(in srgb, var(--form-color, #6b7280) 68%, var(--ink));
+  color: var(--ink-2);
   padding: 0 7px;
 }
 .svc-slide-form-badge[data-form-type]:is(:hover, :focus-visible) {
