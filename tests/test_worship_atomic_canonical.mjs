@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { openWorshipTestDb } from './helpers/worship-test-db.mjs';
 
-const db = await openWorshipTestDb();
+const db = await openWorshipTestDb({ requirePostgres: true });
 const scalar = async (sql, args = [], client = db) => Object.values((await client.query(sql, args)).rows[0])[0];
 const load = file => fs.readFile(new URL(file, import.meta.url), 'utf8');
 const sid = randomUUID(), other = randomUUID(), song = randomUUID(), canonical = randomUUID();

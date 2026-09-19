@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { openWorshipTestDb } from './helpers/worship-test-db.mjs';
 import { createWorshipAtomicClient } from '../mindex.worship-atomic-client.mjs';
 
-const db = await openWorshipTestDb();
+const db = await openWorshipTestDb({ requirePostgres: true });
 const scalar = async (sql, args = []) => Object.values((await db.query(sql, args)).rows[0])[0];
 const fixture = name => fs.readFile(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 try {

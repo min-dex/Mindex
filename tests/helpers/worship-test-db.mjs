@@ -9,8 +9,14 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 // No connection URL or production credentials are accepted by this harness.
-export async function openWorshipTestDb() {
+export async function openWorshipTestDb({ requirePostgres = false } = {}) {
   const require = createRequire(path.resolve(process.env.PGLITE_ROOT || '.', 'package.json'));
+  if (requirePostgres && process.env.WORSHIP_TEST_ENGINE !== 'postgres') {
+    // Role/permission/lock semantics are not reproduced by PGlite; the documented
+    // verification runs on a real PostgreSQL 17.6 (see docs/worship-atomic-*-check.md).
+    console.log('SKIP requires WORSHIP_TEST_ENGINE=postgres (PostgreSQL 17.6) with embedded-postgres17/pg installed under PGLITE_ROOT; PGlite cannot model this test.');
+    process.exit(0);
+  }
   if (process.env.WORSHIP_TEST_ENGINE !== 'postgres') {
     let pglite;
     try { pglite = require.resolve('@electric-sql/pglite'); } catch {
@@ -22,6 +28,10 @@ export async function openWorshipTestDb() {
     return new PGlite();
   }
   const packageName = process.env.WORSHIP_TEST_PG_VERSION === '17.6' ? 'embedded-postgres17' : 'embedded-postgres';
+  try { require.resolve(packageName); require.resolve('pg'); } catch {
+    console.log(`SKIP ${packageName} and pg are not installed under PGLITE_ROOT; install them in a temporary directory to run this test.`);
+    process.exit(0);
+  }
   const { default: EmbeddedPostgres } = await import(pathToFileURL(require.resolve(packageName)));
   const { default: pg } = await import(pathToFileURL(require.resolve('pg')));
   const listener = net.createServer();
