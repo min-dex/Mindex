@@ -28,7 +28,7 @@
       {
         "provider": "github",
         "owner": "min-dex",
-        "repo": "Mindex",
+        "repo": "min-dex.github.io",
         "releaseType": "release"
       }
     ],
