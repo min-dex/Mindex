@@ -28250,19 +28250,64 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
 
       if (["praise_db", "score_db", "lyrics_db"].includes(mode) || serviceItemRequiresSongSelection(item, service)) {
         if (presenterPreparationSongContentHasConnection(content)) {
-          item.song_id = null;
-          item.version_id = null;
-          item.song_version_id = null;
-          item.raw_title = content;
-          if (assignee) item.assignee = assignee;
-          item._worshipElementTemplateModified = true;
-          markServiceItemSharedContentDirty(item, service);
-          item._worshipTemplatePlaceholder = false;
-          item.memo = serializeServiceItemMemo({
-            ...memo,
-            elementType: "praise",
-            inputMode: "manual_praise",
-            outputMode: "lyrics",
+          const segments = content.split(/\s+[+＋]\s+/u).map((part) => part.trim()).filter(Boolean);
+          const resolvedSongs = [];
+          let unresolvedSegment = "";
+          for (const segment of segments) {
+            let segmentSong = resolvePresenterPreparationSong(segment, item, service);
+            if (!segmentSong && !serviceItemRequiresNewHymnalScoreSong(item)) {
+              try {
+                segmentSong = await createBlankPraiseSongForServiceInput(segment, service, item);
+                if (segmentSong) createdSongTitles.push(segmentSong.title || segment);
+              } catch (error) {
+                errors.push(error.message || `${entry.label} 빈 곡을 만들지 못했습니다.`);
+                segmentSong = null;
+              }
+            }
+            if (!segmentSong) { unresolvedSegment = segment; break; }
+            if (serviceItemRequiresNewHymnalScoreSong(item) && !isNewHymnalScoreSong(segmentSong)) {
+              errors.push(`${entry.label}은 새찬송가 곡만 선택할 수 있습니다.`);
+              unresolvedSegment = segment;
+              break;
+            }
+            resolvedSongs.push(segmentSong);
+          }
+          // Every song in a "+"-joined medley line must resolve to a distinct DB
+          // record before any row is written; a partial link would silently
+          // orphan the unresolved segment's lyrics with no way to fix it later.
+          if (unresolvedSegment || resolvedSongs.length !== segments.length) {
+            if (unresolvedSegment) errors.push(`${entry.label} "${unresolvedSegment}" 곡을 찬양 DB에서 하나로 찾지 못했습니다.`);
+            continue;
+          }
+          const groupId = createLocalId();
+          const groupIndexes = [targetIndex];
+          for (let ordinal = 1; ordinal < resolvedSongs.length; ordinal += 1) {
+            groupIndexes.push(materializeSecondaryConnectedPraiseItem(service, items, item, ordinal));
+          }
+          const groupItemIds = groupIndexes.map((index) => items[index].id);
+          groupIndexes.forEach((index, ordinal) => {
+            const groupItem = items[index];
+            const song = resolvedSongs[ordinal];
+            const groupMemo = ordinal === 0 ? memo : parseServiceItemMemo(groupItem.memo);
+            groupItem.song_id = song.id;
+            groupItem.raw_title = "";
+            if (ordinal === 0 && assignee) groupItem.assignee = assignee;
+            groupItem._worshipElementTemplateModified = true;
+            markServiceItemSharedContentDirty(groupItem, service);
+            groupItem._worshipTemplatePlaceholder = false;
+            const defaultVersion = defaultServiceSongVersion(song, groupItem, service);
+            groupItem.version_id = defaultVersion?.id || null;
+            if (serviceSongHasMultipleSelectableVersions(song, groupItem, service)) versionWarnings.push(entry.label);
+            groupItem.song_version_id = groupItem.version_id;
+            groupItem.memo = serializeServiceItemMemo({
+              ...groupMemo,
+              connectedPraise: {
+                groupId,
+                role: ordinal === 0 ? "primary" : "secondary",
+                primaryItemId: groupItemIds[0],
+                itemIds: groupItemIds,
+              },
+            });
           });
           continue;
         }

@@ -468,6 +468,35 @@ function materializePresenterPreparationItem(service, items, projectedItem) {
   return items.length - 1;
 }
 
+// Pushes a new real row for one additional song in a "+"-joined bulk-paste
+// medley line, sharing the primary item's section placement so it sorts
+// immediately after it. Grouping for display/editing is carried entirely by
+// memo.connectedPraise (set by the caller on every row in the group), not by
+// this row's label or numbering.
+function materializeSecondaryConnectedPraiseItem(service, items, primaryItem, ordinal) {
+  const { _serviceItemIndex, _origIndex, id, raw_title, song_id, version_id, song_version_id,
+    assignee, memo, sort_order, ...shared } = primaryItem;
+  items.push(normalizeServiceItem({
+    ...shared,
+    id: createLocalId(),
+    service_id: service.id,
+    label: primaryItem.label,
+    raw_title: "",
+    song_id: null,
+    version_id: null,
+    song_version_id: null,
+    assignee: "",
+    memo: "",
+    sort_order: items.length + 1,
+    _worshipElementOrder: (Number(primaryItem._worshipElementOrder) || 0) + ordinal * 0.01,
+    _worshipTemplateProjected: false,
+    _worshipTemplatePlaceholder: false,
+    _worshipElementTemplateModified: true,
+    _worshipSharedContentDirty: true,
+  }, items.length));
+  return items.length - 1;
+}
+
 function applyPresenterPreparationTextUpdateToWorshipElementCache(service = null, update = {}) {
   const serviceId = String(service?.id || "").trim();
   if (!serviceId || !Array.isArray(state.worshipElements) || !Array.isArray(state.worshipSections)) return;
