@@ -24204,6 +24204,10 @@ function serviceSidebarChildItemDisplayText(item = {}) {
   if (rawTitle) {
     const contentTitle = serviceItemContentTitleWithoutElementName(item, rawTitle);
     const displayText = contentTitle ?? rawTitle;
+    // A stored main-praise intro title may still hold another service's default
+    // team placeholder; resolve it the same way the presenter output does so the
+    // sidebar never shows a stale team name for this service.
+    if (isMainPraiseTitleContentItem(item, {}, "")) return resolveMainPraiseIntroBodyText(service, displayText);
     return serviceSidebarIsLiturgicalBodyText(displayText, item) ? "" : normalizeServiceItemReferenceSpacing(displayText);
   }
   return serviceItemDisplayText(item);
