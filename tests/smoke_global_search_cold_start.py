@@ -13,12 +13,12 @@ try:
               const check=(v,m)=>{if(!v)throw Error(m)};
               canUseClientData=()=>true;finishListRender=()=>{};
               state.services=[];state.songs=[];state.search='갈 길을 밝히';state.module='calendar';
-              songCatalogLoaded=false;globalPraiseSearchError='';globalPraiseSearchLoad=null;
+              songCatalogLoaded=false;songCatalogSummaryLoaded=false;globalPraiseSearchError='';globalPraiseSearchLoad=null;
               clearSearchCaches();
               let calls=0,resolveLoad;
               loadSongs=()=>{calls++;return new Promise(resolve=>{resolveLoad=()=>{
                 state.songs=[{id:'hymn',title:'갈 길을 밝히 보이시니',hymn_no:524,versions:[]}];
-                songCatalogLoaded=true;resolve();
+                songCatalogLoaded=true;songCatalogSummaryLoaded=true;resolve();
               }})};
               renderGlobalSearchList();renderGlobalSearchList();await Promise.resolve();
               check(calls===1,'duplicate fetch');
@@ -27,20 +27,25 @@ try:
               check(refs.songList.querySelector('[data-global-song-id="hymn"]'),'late load not displayed');
               check(state.search==='524장' && state.module==='calendar','search/module overwritten');
               renderGlobalSearchList();check(calls===1,'loaded catalog refetched');
+              songCatalogLoaded=false;songCatalogSummaryLoaded=true;globalPraiseSearchLoad=null;
+              renderGlobalSearchList();
+              check(calls===1,'summary-ready search refetched');
+              check(!refs.songList.textContent.includes('찬양 검색 준비 중'),'summary result blocked by lyric hydration');
+              songCatalogLoaded=true;
               for(const module of ['service','presenter','calendar','scripture','praise','home']) {
                 state.module=module;state.search='갈 길을 밝히';clearSearchCaches();renderGlobalSearchList();
                 check(refs.songList.querySelector('[data-global-song-id="hymn"]'),'title missing '+module);
               }
-              songCatalogLoaded=false;state.songs=[];clearSearchCaches();loadSongs=async()=>{calls++;throw Error('offline')};
+              songCatalogLoaded=false;songCatalogSummaryLoaded=false;state.songs=[];clearSearchCaches();loadSongs=async()=>{calls++;throw Error('offline')};
               renderGlobalSearchList();await globalPraiseSearchLoad;
               const failedCalls=calls;renderGlobalSearchList();
               check(calls===failedCalls && refs.songList.querySelector('[data-global-praise-retry]'),'failure hidden or looping');
-              loadSongs=async()=>{calls++;songCatalogLoaded=true;state.songs=[{id:'hymn',title:'갈 길을 밝히 보이시니',versions:[]}]};
+              loadSongs=async()=>{calls++;songCatalogLoaded=true;songCatalogSummaryLoaded=true;state.songs=[{id:'hymn',title:'갈 길을 밝히 보이시니',versions:[]}]};
               refs.songList.querySelector('[data-global-praise-retry]').click();await globalPraiseSearchLoad;
               check(refs.songList.querySelector('[data-global-song-id="hymn"]'),'retry failed');
-              songCatalogLoaded=false;globalPraiseSearchError='';loadSongs=()=>new Promise(resolve=>{resolveLoad=resolve});
+              songCatalogLoaded=false;songCatalogSummaryLoaded=false;globalPraiseSearchError='';loadSongs=()=>new Promise(resolve=>{resolveLoad=resolve});
               renderGlobalSearchList();await Promise.resolve();const last=globalPraiseSearchLoad;
-              state.search='';refs.songList.innerHTML='<p>normal sidebar</p>';songCatalogLoaded=true;resolveLoad();await last;
+              state.search='';refs.songList.innerHTML='<p>normal sidebar</p>';songCatalogLoaded=true;songCatalogSummaryLoaded=true;resolveLoad();await last;
               check(refs.songList.textContent==='normal sidebar','closed search overwritten');
               return 'PASS cold calendar search, single fetch, latest query, all modules, failure/retry and cleared search';
             }'''), flush=True)

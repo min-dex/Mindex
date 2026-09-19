@@ -29,6 +29,7 @@ const presenterSlideBuildCache = new Map();
 const explicitlyRequestedWorshipServiceIds = new Set();
 let hymnScoreManifestLoadPromise = null;
 let songCatalogLoaded = false;
+let songCatalogSummaryLoaded = false;
 let backgroundSongLoadScheduled = false;
 const serviceScriptureChapterLoadPromises = new Map();
 const DEFAULT_CONFIG_PRESET = "gwc";
@@ -1125,14 +1126,7 @@ function schedulePresenterPreviewScaleUpdate(host = refs.detailPane) {
       return;
     }
     updateScales();
-    presenterPreviewScaleRaf = window.requestAnimationFrame(() => {
-      if (!host.isConnected && host !== document) {
-        presenterPreviewScaleRaf = 0;
-        return;
-      }
-      updateScales();
-      presenterPreviewScaleRaf = 0;
-    });
+    presenterPreviewScaleRaf = 0;
   });
 }
 
@@ -1155,7 +1149,6 @@ function observePresenterPreviewScaleFrames(host = refs.detailPane) {
   presenterPreviewScaleObserver?.disconnect?.();
   presenterPreviewScaleObserver = null;
   if (!host?.querySelectorAll || typeof ResizeObserver === "undefined") return;
-  const frameTargets = [...host.querySelectorAll(".svc-slide-thumb-frame")];
   const livePreviewTargets = [
     ...host.querySelectorAll(".svc-presenter-live-preview"),
     ...(refs.rightSidebar?.querySelectorAll(".svc-presenter-live-preview") || []),
@@ -1164,7 +1157,6 @@ function observePresenterPreviewScaleFrames(host = refs.detailPane) {
     host instanceof Element ? host : null,
     host.querySelector("#servicePresenterControls"),
     host.querySelector(".svc-presenter-board-column"),
-    ...frameTargets,
     ...livePreviewTargets,
   ].filter((target, index, list) => target?.isConnected && list.indexOf(target) === index);
   if (!targets.length) return;
@@ -2995,6 +2987,9 @@ async function loadSongsOnce(context = {}) {
 
   if (!context.searchOnly) state.connectionError = "";
   state.songs = (data || []).map(normalizeServerSong).sort(sortSongs);
+  // Title, hymn number, and promoted metadata can answer the first search
+  // immediately. Version units continue loading below for lyric-only matches.
+  songCatalogSummaryLoaded = true;
   clearSearchCaches();
   if (context.searchOnly && isGlobalSearchActive()) renderGlobalSearchList();
   await yieldToBrowser();
@@ -6802,8 +6797,10 @@ async function saveServiceItemPatch(serviceId = state.selectedServiceId, index =
     if (saved.unchanged) clearServiceElementDirty(serviceId, item);
     finishServiceSaveDirtyState(saved.unchanged);
     if (!options.silent) showToast("항목을 저장했습니다.");
-    if (!state.dirty.service && options.renderAfterSave !== false) render();
-    else renderServiceList();
+    // The active editor already owns the saved value and the presenter has
+    // refreshed incrementally. Avoid rebuilding the full detail pane after a
+    // blur-save, which otherwise displaces focus and scroll in long boards.
+    renderServiceList();
     return saved;
   });
   if (needsFullSave) return saveService(serviceId, options);
@@ -15546,7 +15543,7 @@ let globalPraiseSearchLoad = null;
 let globalPraiseSearchError = "";
 
 function ensureGlobalPraiseSearchCatalog() {
-  if (songCatalogLoaded || globalPraiseSearchLoad || globalPraiseSearchError || !canUseClientData()) return;
+  if (songCatalogLoaded || songCatalogSummaryLoaded || globalPraiseSearchLoad || globalPraiseSearchError || !canUseClientData()) return;
   globalPraiseSearchLoad = Promise.resolve().then(() => loadSongs({ searchOnly: true })).then(() => {
     if (!songCatalogLoaded) globalPraiseSearchError = "찬양 목록을 불러오지 못했습니다.";
   }).catch(() => {
@@ -15579,7 +15576,7 @@ function renderGlobalSearchList() {
 
 function renderGlobalSearchSections(results) {
   const sections = getGlobalSearchSectionOrder().map((section) =>
-    renderGlobalSearchSection(section.label, section.items(results).join("") + (section.id === "praise" && !songCatalogLoaded
+    renderGlobalSearchSection(section.label, section.items(results).join("") + (section.id === "praise" && !songCatalogLoaded && !songCatalogSummaryLoaded
       ? (globalPraiseSearchError
         ? `<button class="song-item" type="button" data-global-praise-retry>${escapeHtml(globalPraiseSearchError)} 다시 시도</button>`
         : globalPraiseSearchLoad ? '<p class="service-no-results" role="status">찬양 검색 준비 중…</p>' : "")
