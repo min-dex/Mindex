@@ -133,6 +133,64 @@ try {
   await db.exec('reset session authorization');
   assert.equal(await scalar('select count(*)::int from mindex_atomic_lab.checkpoints where service_id=$1', [serviceId]), 1);
   console.log('PASS fixed definer ownership/search_path, PUBLIC denial, delete and private recovery retained');
+  if (process.env.WORSHIP_TEST_PG_BIN) {
+    const liveId = randomUUID();
+    const liveSection = randomUUID(), liveElement = randomUUID();
+    const liveRequest = {...request,serviceId:liveId,requestId:randomUUID(),serviceDate:'2026-09-21',
+      sections:[{id:liveSection,patch:{title:'backup section'}}],
+      elements:[{id:liveElement,sectionId:liveSection,patch:{element_type:'praise',song_id:songId,
+        song_version_id:versionId,body:'saved lyric',config:{exception:true},asset:{url:'https://example.invalid/asset.png'}}}],
+      document:{sourceText:'backup fixture',custom:{preserve:true}}};
+    const live = await scalar('select public.create_worship_service_v1($1)',[liveRequest]);
+    await db.query('insert into public.mindex_worship_slides(id,element_id,slide_type,body) values($1,$2,$3,$4)',
+      [randomUUID(),liveElement,'plain_text','backup slide']);
+    live.aggregate = await scalar('select public.get_worship_service_v1($1)',[liveId]);
+    const relations = (await db.query(`select n.nspname, c.relname from pg_class c
+      join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname in ('public','mindex_atomic_lab') and c.relkind='r'
+      order by n.nspname,c.relname`)).rows;
+    const snapshot = async connection => {
+      const contents = {};
+      for (const {nspname,relname} of relations) {
+        assert.match(nspname,/^[a-z_]+$/); assert.match(relname,/^[a-z_]+$/);
+        contents[`${nspname}.${relname}`] = (await connection.query(
+          `select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]') as rows from ${nspname}.${relname} t`)).rows[0].rows;
+      }
+      return contents;
+    };
+    const original = await snapshot(db);
+    const restored = await db.restoreBackup();
+    assert.deepEqual(await snapshot(restored),original);
+    const catalog = `select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) as args,
+      pg_get_userbyid(p.proowner) as owner,p.prosecdef,p.proconfig,p.proacl::text
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname in ('public','mindex_atomic_lab') order by 1,2,3`;
+    assert.deepEqual((await restored.query(catalog)).rows,(await db.query(catalog)).rows);
+    const policyCatalog = `select schemaname,tablename,policyname,roles,cmd,qual,with_check
+      from pg_policies where schemaname in ('public','mindex_atomic_lab') order by 1,2,3`;
+    assert.deepEqual((await restored.query(policyCatalog)).rows,(await db.query(policyCatalog)).rows);
+    for (const role of ['anon','authenticated']) {
+      await restored.exec(`set session authorization ${role}`);
+      assert.deepEqual((await restored.query('select public.get_worship_service_v1($1) as result',[liveId])).rows[0].result,live.aggregate);
+      await assert.rejects(restored.exec('update public.mindex_worship_services set title=title'),/permission denied/);
+      await assert.rejects(restored.exec('select * from mindex_atomic_lab.receipts'),/permission denied/);
+      const replay = (await restored.query('select public.create_worship_service_v1($1) as result',[liveRequest])).rows[0].result;
+      assert.equal(replay.replayed,true);
+      assert.deepEqual(replay.aggregate,live.aggregate);
+      await restored.exec('reset session authorization');
+    }
+    assert.deepEqual(await snapshot(restored),original,'replay after restore must not add rows or receipts');
+    await restored.exec('set session authorization anon');
+    const afterRestore = {protocolVersion:1,serviceId:liveId,requestId:randomUUID(),expectedRevision:'0',
+      metadataPatch:{title:'after restore'},document:{sourceText:'after restore'}};
+    await assert.rejects(restored.query('select public.save_worship_service_v1($1)',[afterRestore]),/REVISION_CONFLICT/);
+    afterRestore.expectedRevision = '1';
+    const result = (await restored.query('select public.save_worship_service_v1($1) as result',[afterRestore])).rows[0].result;
+    assert.equal(result.committedRevision,'2');
+    await restored.exec('reset session authorization');
+    assert.deepEqual(await snapshot(db),original,'restore rehearsal must not alter source database');
+    console.log('PASS actual pg_dump/custom archive -> fresh database: all table rows, RPC owners/ACLs, RLS policies, browser restrictions and exact replay preserved');
+  }
   console.log('NOT PRODUCTION: canonical invalidation, retention/recovery UI, operational cutover remain separate gates');
 } finally {
   await db.close();

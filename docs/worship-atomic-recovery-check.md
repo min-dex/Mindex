@@ -41,3 +41,38 @@ checkpoints. Production schema/trigger audit, restore authorization/preview UI,
 missing-source policy, checkpoint/receipt capacity and retention, live backup
 restoration, conflict UI and coordinated old-client denial remain rollout gates.
 The atomic protocol flag stays disabled; legacy partial-save risks remain live.
+
+## Database Backup Rehearsal
+
+2026-09-19: `tests/test_worship_atomic_security.mjs` now optionally runs real
+`pg_dump --format=custom` and `pg_restore --exit-on-error --single-transaction`.
+This is a logical database archive, not a PostgreSQL physical/base backup.
+The helper creates a second empty database inside its disposable loopback-only
+PostgreSQL 17.6 cluster. It cannot accept a production URL or a caller-supplied
+backup. The archive and both databases are removed when the test ends.
+
+Verified using PostgreSQL 17.6 dump/restore binaries:
+
+- Every fixture table matches after restore, including linked song/version IDs,
+  source documents, JSON exceptions, media URLs, persisted slides, checkpoints,
+  tombstones and request receipts.
+- RPC owners, SECURITY DEFINER/search_path settings, function ACLs and RLS
+  policies match. Anonymous/authenticated reads work; direct writes/private
+  receipt reads still fail.
+- Replaying the pre-backup create request adds no rows or receipts.
+- Stale revisions still fail; a normal save after restore advances revision.
+- The source database remains unchanged by the restored database's saves.
+
+Run the security test with `WORSHIP_TEST_ENGINE=postgres`,
+`WORSHIP_TEST_PG_VERSION=17.6`, `PGLITE_ROOT` pointing to test dependencies and
+`WORSHIP_TEST_PG_BIN` pointing to a directory containing `pg_dump`/`pg_restore`.
+An uninstalled macOS source build also requires `DYLD_LIBRARY_PATH` pointing to
+its `src/interfaces/libpq` directory. Only the temporary tools were built; no
+system PostgreSQL installation was changed.
+
+This does not verify production data or a separate cluster's global roles.
+The two test databases share roles. Supabase auth/storage schemas, extensions,
+role provisioning and external media bytes are not covered. A real operational
+backup plus isolated full restore remains required before activation. As of this
+check the local project contains only Supabase URL/anon credentials, not a direct
+PostgreSQL connection or an operational DB backup.

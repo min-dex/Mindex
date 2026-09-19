@@ -49,5 +49,6 @@ the production catalog, operational backup restore, UI or cutover gates above.
 
 The refreshed [live audit and staged conflict review](worship-atomic-live-audit-20260919.md)
 records actual production schema/permission findings. Conflict review preserves
-drafts and supports comparison/export, but explicit reconciliation/reapply remains
-unfinished. The atomic client is still not enabled in production.
+drafts, supports comparison/export and explicit archive-before-reopen. Source text
+can be deliberately reapplied using the recovery picker; no automatic merge is
+performed. The atomic client is still not enabled in production.
