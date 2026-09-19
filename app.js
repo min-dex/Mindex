@@ -794,6 +794,8 @@ const state = {
   forms: [],
   search: "",
   loading: false,
+  loadingModules: new Set(),
+  praiseListWindow: { key: "", limit: 180 },
   saving: false,
   theme: "light",
   connectionError: "",
@@ -1292,6 +1294,12 @@ function bindStaticEvents() {
   refs.songList.addEventListener("click", async (event) => {
     if (handleSidebarPresenterActionClick(event)) return;
     if (handleServiceOutlineSlideEvent(event)) return;
+
+    if (event.target.closest("[data-praise-list-more]")) {
+      state.praiseListWindow.limit += 180;
+      renderSongList();
+      return;
+    }
 
     const preparationApply = event.target.closest("[data-presenter-preparation-apply]");
     if (preparationApply) {
@@ -2708,20 +2716,26 @@ function appendRouteParams(params, snapshot) {
   if (!snapshot) return;
   if (snapshot.module && snapshot.module !== "home") params.set("module", snapshot.module);
   if (snapshot.search) params.set("search", snapshot.search);
-  if (snapshot.module === "praise" && snapshot.praiseFilter && snapshot.praiseFilter !== "all") params.set("praiseFilter", snapshot.praiseFilter);
-  if (snapshot.module === "scripture" && snapshot.scriptureFilter && snapshot.scriptureFilter !== "all") params.set("scriptureFilter", snapshot.scriptureFilter);
-  if (snapshot.module === "service" && snapshot.serviceFilter && snapshot.serviceFilter !== "all") params.set("serviceFilter", snapshot.serviceFilter);
-  if (snapshot.selectedSongId) params.set("songId", snapshot.selectedSongId);
-  if (snapshot.selectedVersionId) params.set("versionId", snapshot.selectedVersionId);
-  if (snapshot.selectedScriptureId) params.set("scriptureId", snapshot.selectedScriptureId);
-  if (snapshot.selectedBookCode) params.set("book", snapshot.selectedBookCode);
-  if (snapshot.selectedBibleTranslationId) params.set("translation", snapshot.selectedBibleTranslationId);
-  if (snapshot.selectedBibleChapter > 1) params.set("chapter", String(snapshot.selectedBibleChapter));
-  if (snapshot.selectedBibleVerse) params.set("verse", String(snapshot.selectedBibleVerse));
-  if (snapshot.selectedServiceTypeId) params.set("serviceType", snapshot.selectedServiceTypeId);
-  if (snapshot.selectedServiceId) params.set("service", snapshot.selectedServiceId);
-  if (snapshot.bibleTextSearchQuery) params.set("bibleSearch", snapshot.bibleTextSearchQuery);
-  if (snapshot.bibleTextSearchPage > 0) params.set("biblePage", String(snapshot.bibleTextSearchPage));
+  if (snapshot.module === "praise") {
+    if (snapshot.praiseFilter && snapshot.praiseFilter !== "all") params.set("praiseFilter", snapshot.praiseFilter);
+    if (snapshot.selectedSongId) params.set("songId", snapshot.selectedSongId);
+    if (snapshot.selectedVersionId) params.set("versionId", snapshot.selectedVersionId);
+  }
+  if (snapshot.module === "scripture") {
+    if (snapshot.scriptureFilter && snapshot.scriptureFilter !== "all") params.set("scriptureFilter", snapshot.scriptureFilter);
+    if (snapshot.selectedScriptureId) params.set("scriptureId", snapshot.selectedScriptureId);
+    if (snapshot.selectedBookCode) params.set("book", snapshot.selectedBookCode);
+    if (snapshot.selectedBibleTranslationId) params.set("translation", snapshot.selectedBibleTranslationId);
+    if (snapshot.selectedBibleChapter > 1) params.set("chapter", String(snapshot.selectedBibleChapter));
+    if (snapshot.selectedBibleVerse) params.set("verse", String(snapshot.selectedBibleVerse));
+    if (snapshot.bibleTextSearchQuery) params.set("bibleSearch", snapshot.bibleTextSearchQuery);
+    if (snapshot.bibleTextSearchPage > 0) params.set("biblePage", String(snapshot.bibleTextSearchPage));
+  }
+  if (isServiceDataModule(snapshot.module)) {
+    if (snapshot.serviceFilter && snapshot.serviceFilter !== "all") params.set("serviceFilter", snapshot.serviceFilter);
+    if (snapshot.selectedServiceTypeId) params.set("serviceType", snapshot.selectedServiceTypeId);
+    if (snapshot.selectedServiceId) params.set("service", snapshot.selectedServiceId);
+  }
 }
 
 function rememberConfig(config) {
@@ -2958,7 +2972,7 @@ async function loadSongsOnce(context = {}) {
   if (!requireClient()) return;
 
   if (!context.searchOnly) {
-    state.loading = true;
+    beginDataLoading("praise");
     renderConnectionStatus();
   }
 
@@ -2980,7 +2994,7 @@ async function loadSongsOnce(context = {}) {
 
   if (error) {
     if (context.searchOnly) throw error;
-    state.loading = false;
+    finishDataLoading("praise");
     state.connectionError = error.message || "Could not load songs.";
     showToast(state.connectionError, "error");
     render();
@@ -3021,12 +3035,12 @@ async function loadSongsOnce(context = {}) {
     state.selectedVersionId = validVersionId;
     persistUiState();
     await loadForms(validVersionId);
-    state.loading = false;
+    finishDataLoading("praise");
     updateSaveState();
     return;
   }
 
-  state.loading = false;
+  finishDataLoading("praise");
   persistUiState();
   render();
 }
@@ -3297,7 +3311,7 @@ function chunkArray(items = [], size = 80) {
 async function loadScriptures({ silent = false } = {}) {
   if (!requireClient({ silent })) return;
 
-  state.loading = true;
+  beginDataLoading("scripture");
   renderConnectionStatus();
 
   let data = [];
@@ -3316,7 +3330,7 @@ async function loadScriptures({ silent = false } = {}) {
   } catch (caughtError) {
     error = caughtError;
   } finally {
-    state.loading = false;
+    finishDataLoading("scripture");
   }
 
   if (error) {
@@ -15536,18 +15550,30 @@ function renderConnectionStatus() {
   setStatusIcon("database", "connected", "연결됨");
 }
 
+function beginDataLoading(moduleName) {
+  state.loadingModules.add(moduleName);
+  state.loading = state.loadingModules.size > 0;
+}
+
+function finishDataLoading(moduleName) {
+  state.loadingModules.delete(moduleName);
+  state.loading = state.loadingModules.size > 0;
+}
+
 function currentLoadingStatusItems() {
   const items = [];
+  const moduleName = state.module;
   if (state.auth.loading) items.push("로그인 확인");
-  if (serviceDataLoadPromise) items.push("예배 목록");
-  if (serviceItemLoadPromises.size) items.push(`예배 내용 ${serviceItemLoadPromises.size}건`);
-  if (presenterServiceHydrationPromises.size) items.push("송출 준비");
-  if (songLoadPromise || state.loading) items.push("찬양 데이터");
-  if (backgroundSongLoadScheduled && !songCatalogLoaded) items.push("찬양 백그라운드");
-  if (hymnScoreManifestLoadPromise) items.push("악보 목록");
-  if (state.calendarLoading) items.push("교회력");
-  if (state.bibleReaderLoading) items.push("성경 본문");
-  if (state.bibleTextSearchLoading) items.push("말씀 검색");
+  if (isServiceDataModule(moduleName) && serviceDataLoadPromise) items.push("예배 목록");
+  if (isServiceDataModule(moduleName) && serviceItemLoadPromises.size) items.push(`예배 내용 ${serviceItemLoadPromises.size}건`);
+  if (moduleName === "presenter" && presenterServiceHydrationPromises.size) items.push("송출 준비");
+  if (moduleName === "praise" && state.loadingModules.has("praise")) items.push("찬양 데이터");
+  if (moduleName === "praise" && backgroundSongLoadScheduled && !songCatalogLoaded) items.push("찬양 백그라운드");
+  if (moduleName === "praise" && hymnScoreManifestLoadPromise) items.push("악보 목록");
+  if (moduleName === "calendar" && state.calendarLoading) items.push("교회력");
+  if (moduleName === "scripture" && state.loadingModules.has("scripture")) items.push("성경 목록");
+  if (moduleName === "scripture" && state.bibleReaderLoading) items.push("성경 본문");
+  if (moduleName === "scripture" && state.bibleTextSearchLoading) items.push("말씀 검색");
   if (state.saving) items.push("저장");
   if (state.presenter.outputPendingAt && !isPresenterOutputHeartbeatOpen()) {
     items.push(state.presenter.outputBlockedAt ? "출력 창 열기 실패" : "출력 창 연결");
@@ -15656,7 +15682,16 @@ function renderSongList() {
     return;
   }
 
-  refs.songList.innerHTML = filtered
+  const listWindowKey = `${state.search}\u0000${state.praiseFilter}`;
+  if (state.praiseListWindow.key !== listWindowKey) {
+    state.praiseListWindow = { key: listWindowKey, limit: 180 };
+  }
+  const activeSongIndex = filtered.findIndex((song) => song.id === state.selectedSongId);
+  if (activeSongIndex >= state.praiseListWindow.limit) {
+    state.praiseListWindow.limit = Math.ceil((activeSongIndex + 1) / 180) * 180;
+  }
+  const visibleSongs = filtered.slice(0, state.praiseListWindow.limit);
+  refs.songList.innerHTML = visibleSongs
     .map((song) => {
       const active = song.id === state.selectedSongId ? " active" : "";
       const muted = song._outOfFilter ? " muted" : "";
@@ -15674,7 +15709,10 @@ function renderSongList() {
         </button>
       `;
     })
-    .join("");
+    .join("")
+    + (visibleSongs.length < filtered.length
+      ? `<button class="list-load-more" type="button" data-praise-list-more>더 불러오기 (${formatCount(filtered.length - visibleSongs.length)}곡 남음)</button>`
+      : "");
   finishListRender();
 }
 

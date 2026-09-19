@@ -1102,6 +1102,9 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 .song-item.active { background: var(--sidebar-active-bg); color: var(--sidebar-ink); }
 .song-item.muted { opacity: .45; }
 .song-item.active::before { position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 999px; background: var(--accent); content: ""; }
+.list-load-more { width: calc(100% - 16px); min-height: 34px; margin: 8px; border: 1px solid var(--line); border-radius: var(--r); background: transparent; color: var(--sidebar-sub); cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; transition: background .14s ease, border-color .14s ease, color .14s ease, transform .08s ease; }
+.list-load-more:hover { border-color: var(--accent); background: var(--sidebar-hover-bg); color: var(--sidebar-ink); }
+.list-load-more:active { transform: translateY(1px); }
 .song-title, .song-meta-line { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .song-title { display: flex; min-width: 0; align-items: center; gap: 4px; font-size: var(--ui-row-size); font-weight: var(--ui-row-weight); line-height: 20px; }
 .song-hymn-no {
