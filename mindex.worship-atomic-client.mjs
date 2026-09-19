@@ -1,4 +1,4 @@
-import { createWorshipStore } from './mindex.worship-store.mjs';
+import { createWorshipStore } from './mindex.worship-store.mjs?v=atomic-recovery-prep-20260919-001';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const ignored = new Set(['id', 'service_id', 'section_id', 'created_at', 'updated_at']);
