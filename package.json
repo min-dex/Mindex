@@ -27,7 +27,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "studexx",
+        "owner": "ministryindex",
         "repo": "Mindex",
         "releaseType": "release"
       }
