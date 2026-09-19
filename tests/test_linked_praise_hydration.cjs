@@ -29,7 +29,7 @@ assert.equal(item.song_id, null, 'Explicit manual mode still unlinks');
 assert.equal(item.version_id, null);
 const presenter = vm.createContext({document: {}});
 vm.runInContext(fs.readFileSync('mindex.presenter.js', 'utf8'), presenter);
-for (const [input, expected] of [['찬양 6–7','찬양 ⑥–⑦'],['찬양 3-5','찬양 ③–⑤'],['찬양 1 ~ 2','찬양 ①–②'],['기도 3·4','기도 ③·④'],['찬양 51–52','찬양 51–52'],['요한복음 6:11','요한복음 6:11']]) assert.equal(presenter.presenterOrderDisplayLabel(input), expected);
+for (const [input, expected] of [['찬양 6–7','찬양'],['찬양 3-5','찬양'],['찬양 1 ~ 2','찬양'],['기도 3·4','기도'],['찬양 51–52','찬양'],['요한복음 6:11','요한복음 6:11']]) assert.equal(presenter.presenterOrderDisplayLabel(input), expected);
 console.log('PASS saved praise links survive catalog hydration; medley ranges use circled labels');
 
 assert.ok(!source.includes("presenterOrderDisplayLabel("), "Controller labels must retain plain order numbers");

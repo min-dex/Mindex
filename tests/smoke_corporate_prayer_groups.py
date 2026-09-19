@@ -37,6 +37,8 @@ def main():
               check(slides[1].title===topics[3] && slides[1].assignee==='담당 4','output missing second person');
               const html=renderPresenterMonthlyCorporatePrayerInputs(merged[2],2,parseServiceItemMemo(merged[2].memo),service.id);
               check((html.match(/data-service-item-field="corporate_prayer_assignee"/g)||[]).length===2,'missing assignee inputs');
+              // Linked songs must resolve in the catalog before save rows are built.
+              state.songs=[{id:song.song_id,title:song.raw_title,versions:[]}];
               const rows=buildWorshipPersistenceRows(service,merged);
               validateWorshipPersistenceRows(rows,{serviceId:service.id});
               check(rows.elements.length===3,'wrong persisted row count');

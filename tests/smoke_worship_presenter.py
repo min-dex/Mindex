@@ -4587,6 +4587,9 @@ def main() -> int:
                         host.remove();
                         return metrics;
                       })();
+                      // A linked song must resolve in the catalog before save rows are built
+                      // (unresolved links now block the save instead of persisting blindly).
+                      state.songs = state.songs.concat([{ id: '__smoke_missing_song_object__', title: '카탈로그 곡', versions: [] }]);
                       const persistenceStateRows = buildWorshipPersistenceRows({ ...service, id: '__smoke_content_state_service__' }, [
                         {
                           id: '__smoke_persist_empty_special_item__',
