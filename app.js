@@ -6400,7 +6400,14 @@ function worshipConflictDraft(serviceId) {
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service) return null;
   const items = structuredClone(getServiceItems(serviceId));
-  return {service: structuredClone(service), items,
+  const pendingInputs = [...(refs.detailPane?.querySelectorAll('[data-service-item-field]') || [])]
+    .filter(field => (field.dataset.serviceId || state.selectedServiceId) === serviceId)
+    .filter(field => isDeferredServiceTextInput(field)
+      && field.dataset.initialValue !== undefined && field.value !== field.dataset.initialValue)
+    .map(field => ({itemId:items[Number(field.dataset.serviceItemIndex)]?.id || null,
+      index:field.dataset.serviceItemIndex, field:field.dataset.serviceItemField,
+      initialValue:field.dataset.initialValue, value:field.value}));
+  return {service: structuredClone(service), items, pendingInputs,
     sourceText: serviceSourceTextareaForService(serviceId)?.value
       ?? service._worshipSourceTextDraft ?? buildServiceSourceText(service, {items})};
 }
@@ -6457,10 +6464,16 @@ async function openWorshipConflictReview(serviceId) {
       <label>내 입력<textarea readonly aria-label="내 입력"></textarea></label>
       <label>최신 서버 원문<textarea readonly aria-label="최신 서버 원문"></textarea></label>
     </div>
+    <label data-conflict-pending hidden>미반영 입력<textarea readonly aria-label="미반영 입력"></textarea></label>
     <footer><button class="btn subtle" type="button" data-conflict-export>초안 내려받기</button><button class="btn subtle" type="button" data-conflict-close>계속 편집</button><button class="btn primary" type="button" data-conflict-reopen disabled>초안 보관 후 최신본 열기</button></footer>`;
   dialog.setAttribute("aria-label", "저장 충돌 원문 비교");
   dialog.addEventListener("keydown", event => event.stopPropagation());
   dialog.querySelector('[aria-label="내 입력"]').value = draft.sourceText;
+  if (draft.pendingInputs.length) {
+    dialog.querySelector('[data-conflict-pending]').hidden = false;
+    dialog.querySelector('[aria-label="미반영 입력"]').value = draft.pendingInputs
+      .map(input => `${input.itemId || input.index} · ${input.field}\n${input.value}`).join('\n\n');
+  }
   let review = {serviceId, draft};
   const reopen = dialog.querySelector('[data-conflict-reopen]');
   reopen.addEventListener('click', async () => {
@@ -25276,17 +25289,22 @@ function serviceDocumentFromRecoverySnapshot(snapshot = null) {
 function renderServiceSourceRecovery(service) {
   const snapshot = latestWorshipRecoverySnapshotForService(service?.id);
   const document = serviceDocumentFromRecoverySnapshot(snapshot);
-  if (!String(document?.sourceText || "").trim()) return "";
+  const hasSource = Boolean(String(document?.sourceText || "").trim());
+  const pending = Array.isArray(snapshot?.draft?.pendingInputs) ? snapshot.draft.pendingInputs : [];
+  if (!hasSource && !pending.length) return "";
   return `
     <div class="svc-source-history" aria-label="로컬 복구본">
       <div class="svc-source-history-head">
         <span>로컬 복구본</span>
         <small>${escapeHtml(formatServiceSourceHistoryTime(snapshot.capturedAt) || "최근")}</small>
       </div>
-      <button class="svc-source-history-item svc-source-recovery-item" type="button" data-service-source-recovery="${escapeAttr(service.id)}">
+      ${hasSource ? `<button class="svc-source-history-item svc-source-recovery-item" type="button" data-service-source-recovery="${escapeAttr(service.id)}">
         <span>${escapeHtml(serviceSourceRecoveryLabel(snapshot))}</span>
         <small>${escapeHtml(serviceSourceHistoryMeta(document))}</small>
-      </button>
+      </button>` : ""}
+      ${pending.length ? `<details class="svc-source-recovery-pending"><summary>미반영 입력 ${pending.length}개</summary>
+        ${pending.map(input => `<label>${escapeHtml(`${input.itemId || input.index} · ${input.field}`)}<textarea readonly aria-label="보관된 미반영 입력">${escapeHtml(input.value)}</textarea></label>`).join("")}
+      </details>` : ""}
     </div>`;
 }
 

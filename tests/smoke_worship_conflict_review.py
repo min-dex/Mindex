@@ -103,6 +103,16 @@ def main():
                       state.services = [original,other];
                       state.serviceItems = {[id]:[{id:'old-item',raw_title:'미저장'}],other:[{id:'other-item'}]};
                       getServiceItems = id => state.serviceItems[id];
+                      state.selectedServiceId = id;
+                      const field = document.createElement('textarea');
+                      Object.assign(field.dataset,{serviceId:id,serviceItemIndex:'0',serviceItemField:'raw_title',initialValue:'이전 입력'});
+                      field.value = '아직 반영하지 않은 입력';
+                      refs.detailPane.append(field);
+                      const foreign = field.cloneNode();
+                      foreign.dataset.serviceId = 'other'; foreign.value = '다른 예배 입력';
+                      refs.detailPane.append(foreign);
+                      const captured = worshipConflictDraft(id);
+                      check(captured.pendingInputs.length === 1 && captured.pendingInputs[0].value === field.value,'pending input capture/scope failed');
                       state.worshipSections = [{id:'old-section',service_id:id},{id:'other-section',service_id:'other'}];
                       state.worshipElements = [{id:'old-item',section_id:'old-section'},{id:'other-item',section_id:'other-section'}];
                       state.dirtyServiceElementIds = new Map([[id,new Set(['old-item'])],['other',new Set(['other-item'])]]);
@@ -133,15 +143,18 @@ def main():
                       waitRead = () => new Promise(resolve => {release = resolve});
                       const loading = reopenWorshipConflict(review);
                       await new Promise(resolve=>setTimeout(resolve,0));
-                      state.serviceItems[id][0].raw_title = '새 입력';
+                      field.value = '읽는 동안 추가 입력';
                       release();
                       try {await loading;throw Error('new input overwritten')}
                       catch(e){check(e.message === 'LOCAL_DRAFT_CHANGED',e.message)}
                       waitRead = null;
                       check(atomic.baseline(id).revision === '1','changed draft adopted revision');
+                      state.serviceItems[id][0].raw_title = '새 입력';
                       await openWorshipConflictReview(id);
                       const dialog = document.querySelector('.worship-conflict-dialog');
                       const button = dialog.querySelector('[data-conflict-reopen]');
+                      check(dialog.querySelector('[aria-label="미반영 입력"]').value.includes('읽는 동안 추가 입력'),'pending input not shown in comparison');
+                      check(dialog.scrollWidth <= dialog.clientWidth + 1,'pending input causes horizontal overflow');
                       check(!button.disabled,'latest action unavailable');
                       const closed = new Promise(resolve=>dialog.addEventListener('close',resolve,{once:true}));
                       button.click(); await closed;
@@ -152,6 +165,8 @@ def main():
                       check(state.worshipElements.length === 1 && state.worshipElements[0].id === 'other-item','other rows lost');
                       const archived = latestWorshipRecoverySnapshotForService(id);
                       check(archived.draft.items[0].raw_title === '새 입력' && archived.serviceDocument.sourceText === '보관할 입력','complete draft not archived');
+                      check(archived.draft.pendingInputs[0].value === '읽는 동안 추가 입력','pending input not archived');
+                      check(renderServiceSourceRecovery({id}).includes('읽는 동안 추가 입력'),'archived pending input not available in recovery UI');
                       check(writes === 0 && publishes === 0,'reopen wrote DB or published output');
                       safeStorageSet = realSet;
                       return 'PASS recovery action archives full draft; quota and in-flight edits block; unrelated drafts and live output untouched';
