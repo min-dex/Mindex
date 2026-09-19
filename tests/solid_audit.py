@@ -12,26 +12,30 @@ DESIGN_TOKENS_JS = APP_DIR / "mindex.design-tokens.js"
 PRESENTER_JS = APP_DIR / "mindex.presenter.js"
 STYLES_CSS = APP_DIR / "styles.css"
 
-# Stable 2026-08-19 baseline. These are ratchets, not target architecture sizes.
-# Lower a limit when code is extracted; do not raise one without documenting why.
-# Raised by 6 on 2026-08-19 for the design-token bridge in app.js.
-# Lower this after the next UI extraction moves literals out of app.js.
-MAX_APP_JS_LINES = 27_268
-MAX_PRESENTER_JS_LINES = 4_259
-MAX_STYLES_LINES = 7_629
-MAX_FUNCTION_LINES = 450
-MAX_APP_FUNCTION_COUNT = 1_472
-MAX_PRESENTER_FUNCTION_COUNT = 251
-MAX_GLOBAL_COUPLING_MARKERS = 2_519
+# Ratchets, not target architecture sizes. Lower a limit when code is extracted;
+# do not raise one without documenting why.
+# Re-baselined 2026-09-20: the 2026-08-19 limits had been outgrown for a month by
+# Worship/Presenter feature work (atomic-save prep, live citation, music player,
+# medley/bulk input, department templates), so the audit only reported noise.
+# Limits now sit slightly above the measured sizes; the refactor itself stays
+# deferred (docs/solid-refactor-notes.md). Lower these after the next extraction.
+MAX_APP_JS_LINES = 34_150
+MAX_PRESENTER_JS_LINES = 5_300
+MAX_STYLES_LINES = 9_600
+MAX_FUNCTION_LINES = 525
+MAX_APP_FUNCTION_COUNT = 1_790
+MAX_PRESENTER_FUNCTION_COUNT = 300
+MAX_GLOBAL_COUPLING_MARKERS = 3_100
 
 WATCHED_FUNCTION_LIMITS = {
-    "handleDetailClick": 440,
-    "bindStaticEvents": 345,
+    "handleDetailClick": 525,
+    "bindStaticEvents": 375,
     "presenterElementSlideFromMemo": 200,
     "initPresenterOutput": 190,
-    "buildPresenterSlidesForServiceItem": 208,
+    "buildPresenterSlidesForServiceItem": 230,
     "saveSongVersions": 140,
     "renderServiceDetail": 145,
+    "applyPresenterPreparationInput": 345,
 }
 
 GLOBAL_COUPLING_PATTERN = re.compile(

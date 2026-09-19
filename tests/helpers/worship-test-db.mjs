@@ -12,7 +12,13 @@ import { promisify } from 'node:util';
 export async function openWorshipTestDb() {
   const require = createRequire(path.resolve(process.env.PGLITE_ROOT || '.', 'package.json'));
   if (process.env.WORSHIP_TEST_ENGINE !== 'postgres') {
-    const { PGlite } = await import(pathToFileURL(require.resolve('@electric-sql/pglite')));
+    let pglite;
+    try { pglite = require.resolve('@electric-sql/pglite'); } catch {
+      // Opt-in engine: it is not a project dependency, so skip instead of failing.
+      console.log('SKIP @electric-sql/pglite not found. Install it in a temporary directory and set PGLITE_ROOT to run this test.');
+      process.exit(0);
+    }
+    const { PGlite } = await import(pathToFileURL(pglite));
     return new PGlite();
   }
   const packageName = process.env.WORSHIP_TEST_PG_VERSION === '17.6' ? 'embedded-postgres17' : 'embedded-postgres';

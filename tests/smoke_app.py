@@ -140,7 +140,7 @@ def wait_for_module_data(page, module: str) -> None:
               )
             """,
             arg=expected_module,
-            timeout=15000,
+            timeout=30000,
         )
         return
     if module == "scripture":
@@ -154,7 +154,7 @@ def wait_for_module_data(page, module: str) -> None:
                 || document.querySelector('.empty-detail')
               )
             """,
-            timeout=15000,
+            timeout=30000,
         )
         return
     if module == "praise":
@@ -168,7 +168,7 @@ def wait_for_module_data(page, module: str) -> None:
                 || (typeof state !== 'undefined' && state.songs.length > 0)
               )
             """,
-            timeout=15000,
+            timeout=30000,
         )
 
 

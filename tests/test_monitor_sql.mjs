@@ -5,7 +5,12 @@ import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(path.resolve(process.env.PGLITE_ROOT || '.', 'package.json'));
-const { PGlite } = await import(pathToFileURL(require.resolve('@electric-sql/pglite')));
+let pgliteEntry;
+try { pgliteEntry = require.resolve('@electric-sql/pglite'); } catch {
+  console.log('SKIP @electric-sql/pglite not found. Install it in a temporary directory and set PGLITE_ROOT to run this test.');
+  process.exit(0);
+}
+const { PGlite } = await import(pathToFileURL(pgliteEntry));
 const { pgcrypto } = await import(pathToFileURL(require.resolve('@electric-sql/pglite/contrib/pgcrypto')));
 const db = new PGlite({ extensions: { pgcrypto } });
 const scalar = async (sql, args = []) => Object.values((await db.query(sql, args)).rows[0])[0];

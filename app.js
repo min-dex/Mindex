@@ -31466,6 +31466,8 @@ function commitPresenterJumpDraft(serviceId = state.presenter.serviceId) {
   runPresenterAction("jump", serviceId, { index, scroll: false });
   if (isValidPresenterIndex(index, state.presenter.slides.length)) {
     scrollPresenterBoardToIndex(serviceId, index, { force: true });
+  } else {
+    clearPresenterJumpDraft(serviceId);
   }
 }
 
@@ -31888,6 +31890,9 @@ function jumpPresenterToSlideInput(input) {
     : buildServicePresenterSlides(serviceId).length;
   if (isValidPresenterIndex(index, count)) {
     scrollPresenterBoardToIndex(serviceId, index, { force: true });
+  } else {
+    // An out-of-range number leaves the output untouched; show the current slide again.
+    clearPresenterJumpDraft(serviceId);
   }
 }
 

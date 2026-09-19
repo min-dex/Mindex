@@ -8630,9 +8630,8 @@ def main() -> int:
                 if (
                     invalid_jump_state["index"] == 1
                     and not invalid_jump_state["safetyBlank"]
-                    # The output must not move. The focused field either reverts to the current
-                    # slide number or keeps the rejected number (input values are preserved).
-                    and invalid_jump_state["inputValue"] in ("2", str(invalid_slide_number))
+                    # The output must not move and the field returns to the current slide number.
+                    and invalid_jump_state["inputValue"] == "2"
                 ):
                     pass_("presenter-invalid-jump-noop", json.dumps(invalid_jump_state, ensure_ascii=False))
                 else:

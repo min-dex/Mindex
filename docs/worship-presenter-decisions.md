@@ -165,6 +165,9 @@ Small visual polish that does not alter behavior does not need an entry.
 
 ## Current Decisions
 
+- 슬라이드 번호 점프 입력에 범위 밖 번호를 넣고 Enter(또는 blur 커밋)하면 송출은 움직이지 않고,
+  입력창은 현재 슬라이드 번호(빈 화면이면 `0`)로 되돌아간다 (2026-09-20).
+
 - 부서 예배의 광고는 엘리멘트 label과 새 예배 템플릿 제목 자체를 `광고`로 통일한다.
   기존 청소년부 광고·청년부 광고 label은 로드 시 변환하고 이후 저장도 `광고`로 한다.
   순서 목록, 편집기, 송출도 동일하게 표시한다. 광고 본문과 예배 소속은 변경하지 않는다.

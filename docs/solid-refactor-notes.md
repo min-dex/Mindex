@@ -70,3 +70,9 @@ python3 tests/solid_audit.py
 The audit is intentionally conservative. It does not demand a perfect SOLID
 score today. It prevents the known large functions and global coupling markers
 from growing silently while Mindex is still being stabilized.
+
+Re-baselined 2026-09-20: `app.js` had grown from ~27k to ~34k lines since the
+2026-08-19 limits, so the audit had been failing without signalling anything
+new. The limits were reset just above the measured sizes so growth is caught
+again; `applyPresenterPreparationInput` is now watched too. The refactor itself
+remains deferred until explicitly resumed.
