@@ -30,7 +30,8 @@ def main():
                       if(detail?.textContent!=='Original title') throw Error('Missing song detail');
                       const detailSize=parseFloat(getComputedStyle(detail).fontSize),headingSize=parseFloat(getComputedStyle(heading).fontSize);
                       if(Math.abs(detailSize-75*width/1920)>.1 || getComputedStyle(detail).fontWeight!=='700' || getComputedStyle(title).fontWeight!=='800') throw Error('Incorrect type hierarchy');
-                      if(heading?.textContent!==label || !title?.textContent.includes('하늘 보좌')) throw Error('Missing title');
+                      // Output headings omit order numbers (b088437a): '찬양 1' renders as '찬양'.
+                      if(heading?.textContent!==label.replace(/\s*\d+$/,'') || !title?.textContent.includes('하늘 보좌')) throw Error('Missing title');
                       const h=heading.getBoundingClientRect(),t=title.getBoundingClientRect(),r=root.getBoundingClientRect();
                       if(h.height<=0 || h.bottom>t.top+1 || h.left<r.left-1 || h.right>r.right+1 || t.bottom>r.bottom+1) throw Error('Clipped or overlapping: '+label+' '+width);
                       const d=detail.getBoundingClientRect();

@@ -29,11 +29,12 @@ def run(browser, url):
       let fail = false, writes = [];
       state.client = {from:table => ({
         upsert:async rows => { writes.push({table, rows:clone(rows)}); return {error:fail ? Error('injected failure') : null}; },
-        update:() => ({eq:async () => ({error:null})}),
+        update:() => ({eq:async () => ({error:null, count:1})}),  // save receipts require count === 1 (e4158878)
         delete:() => ({in:async () => ({error:null})}),
       })};
       const fixture = type => {
-        const service = {id:sid, type_id:type, date:'2026-09-09'};
+        // 2026-09-13 is a 김석범 Sunday, so the 1부 template has a 축도 (not 주기도문).
+        const service = {id:sid, type_id:type, date:'2026-09-13'};
         state.services = [service];
         state.selectedServiceId = sid;
         state.saving = false; activeServiceSavePromise = null;
@@ -42,11 +43,17 @@ def run(browser, url):
         state.dirtyServiceTypeIds = new Set();
         state.templateElementSuppressions = new Map();
         state.dirty.service = false;
-        const item = normalizeServiceItem({service_id:sid, label:'축도', raw_title:'축도',
-          assignee:'원래 담당 목사', memo:serializeServiceItemMemo({elementType:'title_person', note:'원래 메모'}),
-          _worshipSectionKey:'sending', _worshipSectionTitle:'파송', _worshipSlotKey:'sending.benediction',
-          _worshipElementTemplateModified:true});
-        const rows = buildWorshipPersistenceRows(service, [item], {}, {}, {elementTypedStateColumns:columns});
+        // Derive the fixture from the real scaffold: a lone 축도 without its sibling
+        // template elements is not a shape the app produces and made template
+        // projection merge it with the fixed 송영.
+        const scaffold = buildWorshipServiceScaffold(sid, type, {service});
+        const items = groupWorshipElements(scaffold.sections, scaffold.elements)[sid];
+        const item = items.find(x => x.label === '축도');
+        if (!item) throw Error(type+' scaffold has no 축도');
+        item.assignee = '원래 담당 목사';
+        item.memo = serializeServiceItemMemo({...parseServiceItemMemo(item.memo), note:'원래 메모'});
+        item._worshipElementTemplateModified = true;
+        const rows = buildWorshipPersistenceRows(service, items, {}, {}, {elementTypedStateColumns:columns});
         state.worshipSections = rows.sections; state.worshipElements = rows.elements;
         state.serviceItems = {[sid]:groupWorshipElements(rows.sections, rows.elements)[sid]};
         refs.detailPane.innerHTML = '';

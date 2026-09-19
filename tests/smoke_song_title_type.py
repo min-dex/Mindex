@@ -55,7 +55,9 @@ def main():
                                 && !root.textContent.includes('찬양 1') && box.textContent.includes('♬')
                                 && box.scrollWidth <= box.clientWidth + 1
                                 && Math.abs((textBounds.left + textBounds.right - stageBounds.left - stageBounds.right) / 2) < 2
-                                && Math.abs((bounds.top + bounds.bottom - stageBounds.top - stageBounds.bottom) / 2) < 1),
+                                // Order headings are restored above the title (dc5cf02b), so the title box
+                                // sits below the heading rather than at the stage's vertical center.
+                                && bounds.top >= stageBounds.top && bounds.bottom <= stageBounds.bottom),
                               inside:[...range.getClientRects()].every(r => r.left >= clip.left - 1
                                 && r.right <= clip.right + 1 && r.top >= clip.top - 1
                                 && r.bottom <= clip.bottom + 1)};

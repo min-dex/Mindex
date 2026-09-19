@@ -41,7 +41,9 @@ def main():
                       const assignee = root.querySelector('[data-service-item-field="assignee"]').getBoundingClientRect();
                       const controls = root.querySelector('.svc-board-subgroup-controls').getBoundingClientRect();
                       const next = root.querySelector('#followingSlide').getBoundingClientRect();
-                      return {reserved:assignee.top >= lyrics.bottom, contained:controls.bottom >= lyrics.bottom,
+                      // Wide viewports lay the assignee beside the lyrics (d3c607b9): only overlap is a failure.
+                      const noOverlap = assignee.top >= lyrics.bottom || assignee.left >= lyrics.right - 1 || assignee.right <= lyrics.left + 1;
+                      return {reserved:noOverlap, contained:controls.bottom >= lyrics.bottom,
                         nextBelow:next.top >= controls.bottom, fitsWidth:lyrics.right <= innerWidth};
                     }""", height)
                     assert all(result.values()), (width, height, result)
