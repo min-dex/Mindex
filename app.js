@@ -27091,7 +27091,7 @@ function renderServiceDashboard(options = {}) {
 }
 
 function formatServiceWeekRange(start, end) {
-  return `${start.getMonth() + 1}월 ${start.getDate()}일 - ${end.getMonth() + 1}월 ${end.getDate()}일`;
+  return `${start.getMonth() + 1}월 ${start.getDate()}일–${end.getMonth() + 1}월 ${end.getDate()}일`;
 }
 
 function renderServiceWeekDay(date, services) {
