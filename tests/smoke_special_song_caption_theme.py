@@ -44,7 +44,7 @@ try:
           check(/gradient/.test(barImage) && /rgb\\(255, 255, 255\\)/.test(barImage), 'themed bar should be white-based');
           check(luminance(getComputedStyle(themedText).color) < 120, 'themed text should be dark on the white bar');
           check(/Eulyoo1945/.test(getComputedStyle(themedText).fontFamily), 'themed text should use the Eulyoo reading face');
-          check(getComputedStyle(themedSlide, '::after').backgroundImage.startsWith('url('), 'ornament missing');
+          check(/data:image\/svg/.test(getComputedStyle(themedSlide, '::before').backgroundImage), 'ornament missing from the bar');
           const plainBar = getComputedStyle(plain.querySelector('.presenter-slide'), '::before').backgroundImage;
           check(/rgb\\(0, 10, 100\\)/.test(plainBar), 'other special songs must keep the navy bar');
           check(luminance(getComputedStyle(plain.querySelector('.presenter-slide-text')).color) > 200, 'other special songs must keep white text');
@@ -57,10 +57,16 @@ try:
           check(blank.type === 'blank', 'trailing blank builder changed');
           check(!renderPresenterSlideFrame(blank).includes('caption-cadaros'), 'blank slide must not carry the Cadaros ornament');
           const blankRoot = mount([blank], '');
-          check(getComputedStyle(blankRoot.querySelector('.presenter-slide'), '::after').backgroundImage === 'none', 'blank slide ornament visible');
-          // Lyrics sit centered below the crest: it must not dip into the text area.
-          const crest = getComputedStyle(themedSlide, '::after');
-          check(parseFloat(crest.bottom) > 0, 'crest position');
+          check(!/data:image\/svg/.test(getComputedStyle(blankRoot.querySelector('.presenter-slide'), '::before').backgroundImage), 'blank slide ornament visible');
+          // Nothing may be drawn over the chromakey area: no ::after ornament, and the crest lives in the bar.
+          check(getComputedStyle(themedSlide, '::after').content === 'none', 'no element may extend above the bar');
+          check(getComputedStyle(themedSlide).getPropertyValue('--presenter-output-bar-height').trim() === '21%', 'themed bar height');
+          // The crest layer (first background layer of the bar) fits entirely inside the bar.
+          const barStyle = getComputedStyle(themedSlide, '::before');
+          const posY = parseFloat(barStyle.backgroundPositionY.split(',')[0]);
+          const crestHeight = parseFloat(barStyle.backgroundSize.split(',')[0].trim().split(' ')[1]);
+          const barHeight = parseFloat(barStyle.height);
+          check(posY >= 0 && crestHeight > 0 && posY + crestHeight <= barHeight, `crest must sit inside the bar: ${posY}+${crestHeight} vs ${barHeight}`);
           return 'PASS cadaros special-song caption theme (bar, text, font, ornament, blank, scope)';
         }'''), flush=True)
         browser.close()
