@@ -63,3 +63,79 @@ The full row stays available through the existing `select("*").eq("id", ...)` re
 - `chromakey-ready-loop-fast.mp4` 3.9 MB is `rel=prefetch` (idle priority) on every page.
 - Three Freesentation weights ~1.4 MB are preloaded; lowering their priority with
   `fetchpriority="low"` was tried and showed no effect on the deployed site.
+
+## Data thread response (2026-09-20)
+
+Status: migration written and verified on a local PGlite engine. **Not applied to production yet.**
+It needs the Supabase SQL Editor (or a service-role/database connection); the browser anon key cannot
+create views or triggers.
+
+### 1) List read: `public.mindex_worship_services_list` (view)
+
+`migrations/2026-09-20-worship-service-list-view.sql`
+
+- Columns: `id, service_type_id, service_date, service_date_end, title, service_alias, worship_leader,
+  praise_leader, notes, status, created_at, updated_at, source_ref, has_service_document,
+  has_service_document_history`. Every column of the current list select keeps its name; the client
+  swaps only the table name. `updated_at` is extra, for cache checks.
+- `source_ref` = `source_ref - 'mindexServiceDocument' - 'mindexServiceDocumentHistory'`. Other keys
+  (`no_gathering`, `sunday_main_variant`, `created_from`, ...) are intact, so
+  `source_ref->no_gathering` style selects also work against the view.
+- `security_invoker = true`: the caller's role and RLS apply as on `mindex_worship_services`
+  (anon keeps the shared-access policy). `select` only is granted; insert/update/delete are denied.
+- Ordering is the caller's `.order("service_date").order("service_type_id")`; it uses the existing
+  `mindex_worship_services_date_type_idx`. Paged reads (`range`) work like on the table.
+- Expected payload: `source_ref` leftovers total ~13 KB across the 93 rows measured today, so the
+  response is tens of KB decoded (was 7.7 MB) and a few KB on the wire (was 1.0 MB).
+- Full reads are unchanged: `mindex_worship_services?select=*&id=eq.<id>` still returns both keys.
+- Never write a `source_ref` read from the view back to the table (see guard below).
+
+### 2) Server-side guard for a list-only save
+
+Same migration: `BEFORE UPDATE OF source_ref` trigger
+`mindex_worship_services_preserve_source_documents` on `mindex_worship_services`.
+
+| new `source_ref` | result |
+| --- | --- |
+| key absent (list-only or stale copy) while the row has it | stored value is kept |
+| key present | stored as sent (normal save, history rotation) |
+| key present with JSON `null` | key is removed (explicit delete) |
+
+Consequences for the client:
+
+- A list-only `source_ref` can no longer erase the document or history, but the UX rule
+  "save only after the full `source_ref` was fetched" should stay: the guard is a safety net, and a list-only
+  save also cannot record a new document/history entry.
+- The compare-and-set update (`.eq("source_ref", JSON.stringify(previous))`) is unaffected.
+- To delete the document or history on purpose, send the key as `null`. The current client never
+  deletes them intentionally; `normalizeServiceSourceRef` drops a key only when the stored value
+  fails normalization, and the guard now keeps the old value in that case.
+- The undeployed atomic save protocol already strips both keys from `metadataPatch.source_ref`
+  (`mindex.worship-atomic-client.mjs`), so it is consistent with the guard.
+
+Verification: `PGLITE_ROOT=<dir> node tests/test_worship_service_list_view.mjs` (real `services`
+DDL and RLS policy; view columns, stripped keys, flags, read-only, no-privilege role, guard cases,
+idempotent re-run). PGlite is PostgreSQL 18; the view needs `security_invoker` (PostgreSQL 15+), and
+the migration is transactional, so an older engine fails without changing anything.
+
+### 3) Size of the stored history (measured 2026-09-20, read-only)
+
+- 93 services: `mindexServiceDocument` on 24 (2.5 MB), `mindexServiceDocumentHistory` on 22 (6.2 MB).
+  71 services have no history; all 22 with history are from 2026-08-01 or later.
+- Each history entry is a full document snapshot, ~102 KB on average. The client keeps at most 3
+  entries and ~450 KB (`MINDEX_SERVICE_DOCUMENT_HISTORY_LIMIT/MAX_BYTES`); the largest row holds
+  558 KB of history (the byte cap always keeps one entry).
+- After the list read is switched, history is fetched only when a service is opened: ~100-560 KB for
+  services that have it, nothing for the rest. That is acceptable, so no data was trimmed.
+- Options if it still matters (none applied; each rewrites curated production records and needs an
+  explicit decision): keep 1 entry instead of 3 for services older than N days (only 1 service is
+  older than two weeks today, ~139 KB, so the gain is small now); store diffs instead of full
+  snapshots (client change); move history to its own table and load it on demand (schema change).
+  Growth is bounded by the 3-entry cap, so revisit when the service count grows.
+
+### Apply / rollback
+
+1. Run `migrations/2026-09-20-worship-service-list-view.sql` in the Supabase SQL Editor (idempotent).
+2. Check with the anon key: `GET /rest/v1/mindex_worship_services_list?select=id,source_ref,has_service_document&limit=1`
+   returns a `source_ref` without the two keys, and the full list request is tens of KB.
+3. Rollback statements are at the bottom of the migration file.

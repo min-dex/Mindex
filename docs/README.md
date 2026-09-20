@@ -34,6 +34,9 @@ stale document in the same change.
 
 ## Data Review Evidence
 
+- `handoff-worship-service-list-payload.md`: UX->Data handoff for the light service
+  list read and the Data thread response (view, source_ref guard, history size).
+
 - `ux-audit-2026-09-18.md`: bounded UX/code/documentation audit, regression
   coverage, preserved recovery data, and unverified production boundaries.
 
