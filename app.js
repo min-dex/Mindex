@@ -25362,7 +25362,21 @@ function renderServiceAuthoringPanel(kicker, title, body) {
     </details>`;
 }
 
+// The waiting-loop video (~4 MB) is only shown by presenter output, so it is fetched
+// the first time a presenter view is drawn instead of on every page load.
+let presenterReadyVideoPrefetched = false;
+function prefetchPresenterReadyVideo() {
+  if (presenterReadyVideoPrefetched || typeof document === "undefined" || !document.head) return;
+  presenterReadyVideoPrefetched = true;
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.type = "video/mp4";
+  link.href = PRESENTER_CHROMAKEY_READY_LOOP_VIDEO;
+  document.head.append(link);
+}
+
 function renderPresenterDetail() {
+  prefetchPresenterReadyVideo();
   return withServiceItemsScope(() => renderPresenterDetailUnscoped());
 }
 
