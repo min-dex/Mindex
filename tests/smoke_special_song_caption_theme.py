@@ -16,9 +16,12 @@ try:
             { id: 'sp', label: '특송', assignee, _worshipSectionKey: 'special_song' }, section, [{ ...lyric }], 0, null);
           const cadaros = build('카다로스 중창단');
           const other = build('시온 찬양대');
-          check(cadaros.length >= 2 && cadaros.every((s) => s.captionTheme === 'cadaros'), 'cadaros slides not themed (title, lyrics)');
+          check(cadaros.length >= 2, 'expected a title slide and a lyrics slide');
+          const titleSlide = cadaros.find((s) => s.type === 'title-assignee');
+          check(titleSlide && !titleSlide.captionTheme, 'the 특송 - 팀 title slide must keep the standard look');
+          check(cadaros.filter((s) => s.type !== 'title-assignee').every((s) => s.captionTheme === 'cadaros'), 'cadaros song/lyrics slides not themed');
           check(other.every((s) => !s.captionTheme), 'other special song themed');
-          check(build('  카다로스  중창단 ').every((s) => s.captionTheme === 'cadaros'), 'assignee spacing broke theme');
+          check(build('  카다로스  중창단 ').filter((s) => s.type !== 'title-assignee').every((s) => s.captionTheme === 'cadaros'), 'assignee spacing broke theme');
 
           const mount = (slides, cls) => {
             const root = document.createElement('main');

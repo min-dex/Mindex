@@ -136,7 +136,8 @@ function isPresenterSpecialSongItem(item = {}, section = {}) {
 function presenterSlidesWithSundayMainSpecialSongOutput(slides = [], item = {}, section = {}, service = null) {
   const captionTheme = presenterSpecialSongCaptionTheme(item, section);
   const themed = captionTheme
-    ? (Array.isArray(slides) ? slides : []).map((slide) => ({ ...slide, captionTheme }))
+    // The "특송 - 팀" title slide keeps the standard look; only song title and lyrics slides are themed.
+    ? (Array.isArray(slides) ? slides : []).map((slide) => slide?.type === "title-assignee" ? slide : ({ ...slide, captionTheme }))
     : slides;
   if (!shouldUseSundayMainSpecialSongCleanOutput(item, section, service)) return themed;
   return (Array.isArray(themed) ? themed : []).map((slide) => ({
