@@ -1521,7 +1521,9 @@ function presenterLiturgicalChromakeyChunks(title = "", text = "") {
 function presenterPreparationSlide(service, item, index) {
   const memo = parseServiceItemMemo(item?.memo);
   const chromakey = presenterServiceUsesChromakey(service);
-  const rawPresenterRole = presenterPreparationRole(item, memo);
+  // An intro without a video yet behaves like the ordinary waiting screen instead of a blank one.
+  const introWithoutFile = presenterPreparationRole(item, memo) === "intro" && !normalizeServiceAsset(memo.asset).url;
+  const rawPresenterRole = introWithoutFile ? "waiting_loop" : presenterPreparationRole(item, memo);
   const presenterRole = rawPresenterRole === "waiting_loop" && !chromakey ? "ready" : rawPresenterRole;
   const elementLabel = presenterPreparationElementLabel(item, {}, presenterRole);
   if (!chromakey && presenterRole !== "intro") {
@@ -1530,7 +1532,7 @@ function presenterPreparationSlide(service, item, index) {
   const configuredAsset = normalizeServiceAsset(memo.asset);
   const asset = configuredAsset.url
     ? configuredAsset
-    : presenterDefaultPreparationAsset(service, item, memo);
+    : presenterDefaultPreparationAsset(service, item, introWithoutFile ? { ...memo, presenterRole: "waiting_loop" } : memo);
   const elementType = presenterRole === "intro" || (presenterRole === "waiting_loop" && chromakey)
     ? PRESENTER_ELEMENT_TYPES.VIDEO
     : PRESENTER_ELEMENT_TYPES.IMAGE;
