@@ -8413,6 +8413,18 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   flex: 1 1 96px;
   min-width: 96px;
 }
+/* Native selects size themselves from their longest option. Give every linked
+   version picker the same slot so medley title fields stay aligned. */
+.svc-board-subgroup-controls.svc-board-subgroup-controls--stacked .svc-presenter-input-field--song .svc-song-picker--linked:has(.svc-song-version-select) {
+  flex: 0 0 184px;
+  width: 184px;
+  max-width: 184px;
+}
+.svc-board-subgroup-controls.svc-board-subgroup-controls--stacked .svc-presenter-input-field--song .svc-song-picker--linked:has(.svc-song-version-select) .svc-song-version-select {
+  flex: 1 1 0;
+  width: 0;
+  max-width: none;
+}
 .svc-board-subgroup-controls--stacked .svc-board-subgroup-audio {
   grid-column: 2;
 }
