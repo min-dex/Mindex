@@ -20,10 +20,17 @@ const context = {
   normalizeWorshipSlotKey: x => x || '',
   normalizeServiceItemReferenceSpacing: x => x,
   compactSearchValue: x => x,
-  compactTextSignature: x => x,
+  // Same as app.js: length plus a 32-bit hash, so signatures stay short like in production.
+  compactTextSignature: (value = '') => {
+    const text = String(value || '');
+    let hash = 0;
+    for (let index = 0; index < text.length; index += 1) hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+    return `${text.length}:${hash >>> 0}`;
+  },
 };
 vm.createContext(context);
 for (const name of ['serviceDocumentHistoryWithPrevious', 'compactServiceDocumentHistoryEntry',
+  'serviceDocumentHistoryContentSignature', 'serviceSourceHistoryMeta',
   'serviceDocumentHistoryEntryKey', 'trimServiceDocumentHistory',
   'normalizeServiceDocumentSnapshot', 'normalizeServiceDocumentSourceRecords',
   'normalizeServiceDocumentSlides', 'normalizeServiceDocumentExceptions',
@@ -51,6 +58,48 @@ assert.equal(context.serviceDocumentHistoryWithPrevious(original, [], {...origin
 assert.equal(context.serviceDocumentHistoryWithPrevious(original, [original], {...original, sourceText: 'Next'}).length, 1);
 assert.equal(context.trimServiceDocumentHistory([original, original, original, original]).length, 3);
 console.log('PASS history preserves recoverable changes, deduplicates timestamps and stays bounded');
+
+// Slim history entries: only text, counts and a content signature are stored.
+const big = {...original, slides: Array.from({length: 40}, (_, i) => ({id: 's' + i, layout: 'lyrics', text: 'x'.repeat(200)})),
+  sourceRecords: Array.from({length: 5}, (_, i) => ({elementId: 'r' + i}))};
+const slim = context.compactServiceDocumentHistoryEntry(big);
+assert.ok(!('slides' in slim) && !('sourceRecords' in slim) && !('exceptions' in slim), 'arrays are not stored');
+assert.equal(slim.slideCount, 40);
+assert.equal(slim.sourceRecordCount, 5);
+assert.equal(slim.sourceText, 'Original');
+assert.ok(slim.contentSignature, 'content signature kept');
+assert.ok(JSON.stringify(slim).length * 20 < JSON.stringify(big).length, 'entry is much smaller than the document');
+// The current document snapshot is unchanged: no slim-only fields leak into it.
+const snapshot = context.normalizeServiceDocumentSnapshot(big);
+assert.ok(snapshot.slides.length === 40 && !('slideCount' in snapshot) && !('contentSignature' in snapshot), 'document keeps its arrays only');
+// Normalizing a stored slim entry keeps counts and the signature.
+const roundTrip = context.normalizeServiceDocumentSnapshot(JSON.parse(JSON.stringify(slim)));
+assert.equal(roundTrip.slideCount, 40);
+assert.equal(roundTrip.contentSignature, slim.contentSignature);
+assert.equal(JSON.stringify(context.compactServiceDocumentHistoryEntry(roundTrip)), JSON.stringify(slim), 'slimming is idempotent');
+// De-duplication still works between a slim history entry and the full current document.
+const changed = {...big, sourceText: 'Changed'};
+assert.equal(context.serviceDocumentHistoryWithPrevious(changed, [slim], big).length, 1, 'entry equal to the current document is dropped');
+assert.equal(context.serviceDocumentHistoryWithPrevious(changed, [slim], {...big, sourceText: 'Third'}).length, 2, 'distinct entries are both kept');
+assert.equal(context.serviceDocumentHistoryWithPrevious(big, [slim], {...big, sourceText: 'Third'}).length, 1, 'identical previous and history entry collapse');
+// Real content changes with identical signatures are still recorded against a slim entry.
+const sameSignatureOtherSlides = {...big, slides: [{id: 'other'}]};
+assert.equal(context.serviceDocumentHistoryWithPrevious(big, [], sameSignatureOtherSlides).length, 1);
+assert.notEqual(context.compactServiceDocumentHistoryEntry(big).contentSignature, context.compactServiceDocumentHistoryEntry(sameSignatureOtherSlides).contentSignature);
+// A legacy entry (arrays) is rewritten slim the next time the history is rebuilt.
+const rebuilt = context.serviceDocumentHistoryWithPrevious(changed, [big], {...big, sourceText: 'Fourth'});
+assert.ok(rebuilt.every((entry) => !('slides' in entry) && !('sourceRecords' in entry)), 'rebuilt history is slim');
+// An entry slimmed by the data rewrite (counts, no content signature) is still keyed and shown.
+const rewritten = {kind: 'worship-service', version: 1, updatedAt: 'old', sourceSignature: 'a', slideSignature: 'b', sourceText: 'Old text', slideCount: 7, sourceRecordCount: 2};
+const kept = context.serviceDocumentHistoryWithPrevious(original, [rewritten], {...original, sourceText: 'Next'});
+assert.equal(kept.length, 2);
+assert.equal(kept[1].slideCount, 7);
+assert.equal(context.serviceDocumentHistoryWithPrevious(original, [rewritten, rewritten], {...original, sourceText: 'Next'}).length, 2, 'duplicate rewritten entries collapse');
+// The list meta shows counts for slim, rewritten and legacy entries.
+assert.equal(context.serviceSourceHistoryMeta(slim), '항목 5 · 슬라이드 40');
+assert.equal(context.serviceSourceHistoryMeta(rewritten), '항목 2 · 슬라이드 7');
+assert.equal(context.serviceSourceHistoryMeta(big), '항목 5 · 슬라이드 40');
+console.log('PASS history entries are stored slim, keep restorable text and counts, and still deduplicate');
 (async () => {
   for (const count of [0, 1, null]) {
     const client = createClient('https://example.invalid', 'offline-test-key', {

@@ -6817,7 +6817,7 @@ def main() -> int:
                               exceptionReason: document.exceptions[0]?.reason || '',
                               historyCount: history.length,
                               historySourceText: history[0]?.sourceText || '',
-                              historySlideCount: history[0]?.slides?.length || 0,
+                              historySlideCount: history[0]?.slideCount ?? history[0]?.slides?.length ?? 0, // history entries are stored slim: a count, not the slides
                               historyButton: Boolean(historyButton),
                               restored,
                               restoredText: textarea?.value || '',

@@ -22669,6 +22669,13 @@ function normalizeServiceDocumentSnapshot(document = null) {
     slides,
     exceptions,
   };
+  // Slim history entries (see compactServiceDocumentHistoryEntry) keep counts and a content signature
+  // instead of the arrays. The current document never carries these fields.
+  const sourceRecordCount = Number(document.sourceRecordCount);
+  const slideCount = Number(document.slideCount);
+  if (Number.isFinite(sourceRecordCount) && sourceRecordCount > 0) payload.sourceRecordCount = sourceRecordCount;
+  if (Number.isFinite(slideCount) && slideCount > 0) payload.slideCount = slideCount;
+  if (typeof document.contentSignature === "string" && document.contentSignature) payload.contentSignature = document.contentSignature;
   return Object.fromEntries(Object.entries(payload).filter(([, value]) => {
     if (Array.isArray(value)) return value.length;
     return value !== "" && value != null;
@@ -22793,9 +22800,40 @@ function serviceDocumentSlideKey(slide = {}) {
   ]).join("|");
 }
 
+// History entries only need to restore the source text and show counts, so they are stored slim:
+// the slides/sourceRecords/exceptions arrays (>98 % of the bytes) are replaced by their counts and by
+// contentSignature, a signature of the full content used to tell real changes from timestamp-only ones.
+function serviceDocumentHistoryContentSignature(document = null) {
+  const content = {
+    kind: document.kind || MINDEX_SERVICE_DOCUMENT_KIND,
+    version: document.version || MINDEX_SERVICE_DOCUMENT_VERSION,
+    serviceId: document.serviceId || "",
+    serviceTypeId: document.serviceTypeId || "",
+    serviceDate: document.serviceDate || "",
+    serviceTitle: document.serviceTitle || "",
+    serviceAlias: document.serviceAlias || "",
+    sourceSignature: document.sourceSignature || "",
+    slideSignature: document.slideSignature || "",
+    sourceText: limitServiceDocumentText(document.sourceText || ""),
+    sourceRecords: Array.isArray(document.sourceRecords) ? document.sourceRecords : [],
+    slides: Array.isArray(document.slides) ? document.slides : [],
+    exceptions: Array.isArray(document.exceptions) ? document.exceptions : [],
+  };
+  return compactTextSignature(JSON.stringify(Object.fromEntries(Object.entries(content).filter(([, value]) => {
+    if (Array.isArray(value)) return value.length;
+    return value !== "" && value != null;
+  }))));
+}
+
 function compactServiceDocumentHistoryEntry(document = null) {
   document = normalizeServiceDocumentSnapshot(document);
   if (!document) return null;
+  const records = Array.isArray(document.sourceRecords) ? document.sourceRecords : [];
+  const slides = Array.isArray(document.slides) ? document.slides : [];
+  const exceptions = Array.isArray(document.exceptions) ? document.exceptions : [];
+  // Full documents and legacy entries carry the arrays: derive the signature from them. An already slim
+  // entry keeps its own; one slimmed by the data rewrite has none and is keyed by its text signatures.
+  const hasArrays = Boolean(records.length || slides.length || exceptions.length);
   const payload = {
     kind: document.kind || MINDEX_SERVICE_DOCUMENT_KIND,
     version: document.version || MINDEX_SERVICE_DOCUMENT_VERSION,
@@ -22807,22 +22845,21 @@ function compactServiceDocumentHistoryEntry(document = null) {
     updatedAt: document.updatedAt || "",
     sourceSignature: document.sourceSignature || "",
     slideSignature: document.slideSignature || "",
+    contentSignature: hasArrays ? serviceDocumentHistoryContentSignature(document) : (document.contentSignature || ""),
     sourceText: limitServiceDocumentText(document.sourceText || ""),
-    sourceRecords: Array.isArray(document.sourceRecords) ? document.sourceRecords : [],
-    slides: Array.isArray(document.slides) ? document.slides : [],
-    exceptions: Array.isArray(document.exceptions) ? document.exceptions : [],
+    sourceRecordCount: records.length || Number(document.sourceRecordCount) || 0,
+    slideCount: slides.length || Number(document.slideCount) || 0,
   };
-  return Object.fromEntries(Object.entries(payload).filter(([, value]) => {
-    if (Array.isArray(value)) return value.length;
-    return value !== "" && value != null;
-  }));
+  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== "" && value != null && value !== 0));
 }
 
 function serviceDocumentHistoryEntryKey(document = null) {
   if (!document || typeof document !== "object") return "";
-  const content = compactServiceDocumentHistoryEntry(document);
-  delete content.updatedAt;
-  return JSON.stringify(content);
+  const entry = compactServiceDocumentHistoryEntry(document);
+  if (!entry) return "";
+  // Same restorable text and same content signature = same entry (timestamps ignored). Entries slimmed by
+  // the data rewrite have no content signature and fall back to the text signatures.
+  return [entry.contentSignature || `text:${entry.sourceSignature || ""}:${entry.slideSignature || ""}`, entry.sourceText || ""].join("|");
 }
 
 function trimServiceDocumentHistory(entries = []) {
@@ -25807,8 +25844,8 @@ function formatServiceSourceHistoryTime(value = "") {
 }
 
 function serviceSourceHistoryMeta(entry = {}) {
-  const records = Array.isArray(entry.sourceRecords) ? entry.sourceRecords.length : 0;
-  const slides = Array.isArray(entry.slides) ? entry.slides.length : 0;
+  const records = Array.isArray(entry.sourceRecords) ? entry.sourceRecords.length : Number(entry.sourceRecordCount) || 0;
+  const slides = Array.isArray(entry.slides) ? entry.slides.length : Number(entry.slideCount) || 0;
   return cleanList([
     records ? `항목 ${records}` : "",
     slides ? `슬라이드 ${slides}` : "",

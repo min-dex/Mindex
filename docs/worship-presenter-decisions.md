@@ -863,3 +863,10 @@ Small visual polish that does not alter behavior does not need an entry.
 - 컨트롤러를 크게 보려고 브라우저 확대를 쓰면 같은 사이트의 모든 창(설치한 앱의 송출 창 포함)에 같은 배율이 적용된다. 컨트롤러 전용 확대는 브라우저 확대 대신 앱 설정으로 제공한다.
 - 슬라이드 보드 위 ‘슬라이드 크기’(기본·크게·더 크게·가장 크게)가 썸네일 기준 너비(`--svc-thumb-width`)에 1·1.3·1.6·2배를 곱한다. 좁은 화면 구간(1180px, 760px 이하)의 기준 너비에도 같은 배수를 적용한다. 값은 이 기기의 localStorage(`mindex.ui.presenterThumbScale`)에 저장한다.
 - 송출 창(`?output=presenter`)은 이 값을 읽지 않는다. 컨트롤러 초기화 경로에서만 적용한다.
+
+
+### 2026-09-20 이전 저장본(이력)을 얇게 저장
+- 이력 항목은 원문(`sourceText`)과 항목·슬라이드 개수, 전체 내용 서명(`contentSignature`)만 저장한다. `slides`, `sourceRecords`, `exceptions` 배열은 저장하지 않는다(측정: 이력 용량의 98% 이상, 복구는 원문만 사용).
+- 이전 저장본 목록의 개수 표시와 원문 복구 동작은 그대로다. 옛 항목(배열 포함)도 읽고, 다음 저장 때 얇은 형태로 다시 쓴다.
+- 서명은 같지만 슬라이드·기록·예외 내용이 달라진 저장은 여전히 이력에 남는다(`contentSignature`로 판정).
+- 자세한 근거와 기존 데이터 재작성 절차는 `design-worship-service-history-storage.md`.

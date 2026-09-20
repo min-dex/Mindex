@@ -89,7 +89,7 @@ production records, migration, permission or deployment changes accompany this t
 | Behavioral slot | Optional `slot_key`, plus `source_ref.slotKey` / `config.slotKey`; runtime `_worshipSlotKey` | Current validator detects duplicate slots in its input only; no service-wide SQL uniqueness guarantee established by this audit. |
 | Service document | `source_ref.mindexServiceDocument`: sourceText, sourceRecords, slides, exceptions, signatures | Coexists with normalized rows; not yet a single authoritative transactional aggregate. |
 | Canonical content | `song_id`, `song_version_id`, `scripture_id`; resolved Scripture references and asset URLs | Canonical ownership stays outside Worship; persisted source/slides may also contain copied content. |
-| Recovery | Browser-local snapshots and bounded `mindexServiceDocumentHistory` in source_ref | Best effort / bounded, not an independent durable audit log or rollback transaction. |
+| Recovery | Browser-local snapshots and bounded, slim `mindexServiceDocumentHistory` in source_ref (source text + counts, not slides) | Best effort / bounded, not an independent durable audit log or rollback transaction. |
 
 `buildServiceDocumentSnapshot` derives source text from an explicit draft or
 current items, and slides from the presenter builder. Source records link text

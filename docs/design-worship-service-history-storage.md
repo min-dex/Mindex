@@ -1,6 +1,7 @@
 # Design: worship service document history storage
 
-Status: design only (2026-09-20). Nothing here is applied: no schema, data or client change was made.
+Status: option S (slim entries) is implemented in the client (2026-09-20, reads old and new entries). The data rewrite of
+existing rows and option T are not applied.
 Related: `handoff-worship-service-list-payload.md` (Data thread response, section 3),
 `worship-persistence-current.md` (Recovery row), `worship-data-contract.md`.
 
@@ -63,14 +64,22 @@ Entry shape after the change:
   "sourceText": "...", "sourceRecordCount": 12, "slideCount": 48 }
 ```
 
-Client (small, one file):
+Client (implemented, `app.js`):
 - `compactServiceDocumentHistoryEntry` stops copying `slides`, `sourceRecords`, `exceptions` and writes
-  `sourceRecordCount` / `slideCount` instead.
-- `serviceSourceHistoryMeta` reads the counts and falls back to `array.length` for old entries.
-- `serviceDocumentHistoryEntryKey` keys on `sourceSignature` + `sourceText` (+ `slideSignature`) so
-  de-duplication still works for old and new entries.
+  `sourceRecordCount` / `slideCount` plus `contentSignature` instead.
+- `contentSignature` is a signature of the full content (without `updatedAt`), computed while the arrays are
+  still available. The existing rule "a change in slides, records or exceptions is recorded even when the text
+  signatures are equal" is kept because the de-duplication key is `contentSignature` + `sourceText`.
+- `normalizeServiceDocumentSnapshot` carries the counts and `contentSignature` only when the input has them, so
+  the current document (`mindexServiceDocument`) is unchanged.
+- `serviceSourceHistoryMeta` reads the counts and falls back to `array.length` for legacy entries.
+- Legacy entries (with arrays) are rewritten slim the next time the history is rebuilt (any save); until then
+  they are read as before. Entries slimmed by the SQL below have counts but no `contentSignature`; they are keyed by
+  `sourceSignature`/`slideSignature` + `sourceText`, which is enough because restore only uses the text (worst case:
+  one duplicate of an older text is kept once).
 - `trimServiceDocumentHistory` keeps its 3-entry cap; the 450 KB byte cap becomes a safety net.
-- Tests: extend the existing history tests (restore text, labels, de-dup, cap) with a slim and a legacy entry.
+- Tests: `tests/test_worship_save_receipts.cjs` (shape, idempotence, de-dup against full and rewritten entries,
+  counts), `tests/smoke_history_slim.py` (real save path, list, restore, bound), `smoke_app.py` (`historySlideCount`).
 
 Existing rows (Data thread, needs an explicit go, not part of the client change):
 
@@ -102,7 +111,8 @@ PostgreSQL (PGlite) copy of the real `mindex_worship_services` DDL and the list-
 the document key and unrelated keys were unchanged, rows without history were untouched, the counts were added, and the
 rollback from the backup table restored the full entries (27 KB -> 0.6 KB on the fixture row). Not run on production. Entries keep their order and
 `sourceText`, so restore behaves the same. Rollback: copy `history` back from the backup table.
-Order of work: ship the client that reads both shapes first, then run the data rewrite.
+Order of work: ship the client that reads both shapes first (done in the client change above), then run the data rewrite.
+Without the rewrite the stored history also shrinks by itself: each service is rewritten slim on its next save.
 
 Expected result: history 4.9 MB -> ~57 KB; opening a service with history costs the document only
 (~25 KB) instead of up to ~590 KB.
