@@ -6062,6 +6062,7 @@ def main() -> int:
                             bulkExamples: Boolean(bulkExamples),
                             bulkPlaceholder: bulkInput?.getAttribute('placeholder') || '',
                             bulkButtonLabel: bulkButton?.textContent?.replace(/\s+/g, ' ').trim() || '',
+                            bulkButtonTitle: bulkButton?.getAttribute('title') || '',
                             bulkButtonWidth: Math.round(bulkButtonRect?.width || 0),
                             bulkActionsWidth: Math.round(bulkActionsRect?.width || 0),
                             bulkInputWidth: Math.round(bulkInputRect?.width || 0),
@@ -6104,7 +6105,8 @@ def main() -> int:
                         and presenter_header_input["bulkInput"] == presenter_header_input["bulkButton"]
                         and not presenter_header_input["bulkExamples"]
                         and presenter_header_input["bulkPlaceholder"].startswith("찬양1:")
-                        and presenter_header_input["bulkButtonLabel"] == "반영 (Enter 2번)"
+                        and presenter_header_input["bulkButtonLabel"] == "반영"
+                        and presenter_header_input["bulkButtonTitle"] == "입력창에서 Enter 두 번 또는 ⌘/Ctrl+Enter"
                         and presenter_header_input["bulkButtonWidth"] >= presenter_header_input["bulkActionsWidth"] - 2
                         and presenter_header_input["bulkButtonWidth"] >= presenter_header_input["bulkInputWidth"] - 2
                         and (
