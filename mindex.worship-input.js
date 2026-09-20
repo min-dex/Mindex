@@ -7,7 +7,12 @@ function renderPresenterPreparationGhost(examples = "", draft = "") {
   return Array.from({ length: Math.max(values.length, hints.length) }, (_, index) => {
     const value = values[index] || "";
     const occupied = value.length > 0;
-    return `<span class="svc-preparation-ghost-line${occupied ? " is-occupied" : ""}">${escapeHtml(occupied ? value : hints[index] || " ")}</span>`;
+    const hint = hints[index] || "";
+    // A label-only line from the form keeps the example value as a faint hint after the colon.
+    if (occupied && /[:：]\s*$/.test(value) && hint.length > value.length && hint.startsWith(value)) {
+      return `<span class="svc-preparation-ghost-line"><span class="svc-preparation-ghost-typed">${escapeHtml(value)}</span>${escapeHtml(hint.slice(value.length))}</span>`;
+    }
+    return `<span class="svc-preparation-ghost-line${occupied ? " is-occupied" : ""}">${escapeHtml(occupied ? value : hint || " ")}</span>`;
   }).join("");
 }
 
@@ -18,6 +23,49 @@ function syncPresenterPreparationGhost(input) {
   if (ghost.innerHTML !== markup) ghost.innerHTML = markup;
   ghost.style.width = `${input.clientWidth}px`;
   ghost.style.transform = `translateY(${-input.scrollTop}px)`;
+}
+
+// Label-only form for the bulk input, built from the same per-service example lines.
+function presenterPreparationFormFromExamples(examples = "") {
+  return String(examples).split(/\r\n?|\n/)
+    .map((line) => {
+      const colon = line.search(/[:：]/);
+      return colon > 0 ? `${line.slice(0, colon + 1).trim()} ` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+// Insert the form only into an empty box; the caret lands after the first label.
+function insertPresenterPreparationForm(input, form) {
+  if (!input || !form || input.value.trim()) return false;
+  input.value = form;
+  const firstEnd = form.indexOf("\n") < 0 ? form.length : form.indexOf("\n");
+  input.focus();
+  input.setSelectionRange(firstEnd, firstEnd);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  return true;
+}
+
+// Tab / Shift+Tab hop between the empty value slots of the label lines. Returns the caret
+// position to move to, or -1 to leave the key to the browser (focus moves on).
+function presenterPreparationTabTarget(value = "", caret = 0, backwards = false) {
+  const text = String(value);
+  const lines = text.split(/\r\n?|\n/);
+  const starts = [];
+  let offset = 0;
+  for (const line of lines) { starts.push(offset); offset += line.length + 1; }
+  const current = Math.max(0, starts.findIndex((start, index) => caret >= start && (index === lines.length - 1 || caret < starts[index + 1])));
+  // A slot is a label line whose value is still empty.
+  const slot = (index) => /^[^:：\n]+[:：][ \t]*$/.test(lines[index]) ? starts[index] + lines[index].length : -1;
+  const order = backwards
+    ? Array.from({ length: current }, (_, i) => current - 1 - i)
+    : Array.from({ length: lines.length - current - 1 }, (_, i) => current + 1 + i);
+  for (const index of order) {
+    const target = slot(index);
+    if (target >= 0) return target;
+  }
+  return -1;
 }
 
 function handlePresenterPreparationScroll(event) {
@@ -49,14 +97,19 @@ function presenterPreparationPlaceholderTextLabel(item) {
   return normalizePresenterPreparationInputLabel(item?.label || "");
 }
 
-function parsePresenterPreparationInput(value = "") {
+function parsePresenterPreparationInput(value = "", options = {}) {
   const entries = [];
   const errors = [];
+  const skipped = [];
   const seenKeys = new Set();
   let nextImplicitPraiseNumber = 1;
   let pending = null;
   let shorthandAllowed = true;
-  const missingContent = (entry) => errors.push(`${entry.line}번째 줄 ${entry.rawLabel}의 내용을 입력해 주세요.`);
+  // With skipEmptyLabels, a "label:" line the user left blank in the form is ignored instead of an error.
+  const missingContent = (entry) => {
+    if (options.skipEmptyLabels && /[:：]\s*$/.test(entry.text || "")) skipped.push(entry.rawLabel);
+    else errors.push(`${entry.line}번째 줄 ${entry.rawLabel}의 내용을 입력해 주세요.`);
+  };
   String(value || "").split(/\r\n?|\n/).forEach((line, index) => {
     const text = normalizePresenterPreparationLineText(line);
     if (!text) return;
@@ -64,14 +117,22 @@ function parsePresenterPreparationInput(value = "") {
     const known = parseKnownPresenterPreparationLine(text);
     let sourceLine = index + 1;
     let parsedLine;
-    if (pending && !known) {
+    // In form mode another blank "label:" line is never the previous label's content.
+    const blankLabelLine = options.skipEmptyLabels && /^[^:：]+[:：]\s*$/.test(text);
+    if (pending && !known && !blankLabelLine) {
       parsedLine = { ...pending, content: text };
       sourceLine = pending.line;
       pending = null;
     } else {
       if (pending) missingContent(pending);
       pending = null;
-      parsedLine = known || parsePresenterPreparationLine(text)
+      const recognized = known || parsePresenterPreparationLine(text);
+      // A blank "label:" the parser does not know must not fall through to the song shorthand.
+      if (!recognized && blankLabelLine) {
+        skipped.push(text.replace(/[:：]\s*$/, "").trim());
+        return;
+      }
+      parsedLine = recognized
         || (shorthandAllowed ? inferPresenterPreparationShorthandLine(text, nextImplicitPraiseNumber) : null);
     }
     if (!parsedLine) {
@@ -79,7 +140,7 @@ function parsePresenterPreparationInput(value = "") {
       return;
     }
     if (!parsedLine.content) {
-      pending = { ...parsedLine, line: sourceLine };
+      pending = { ...parsedLine, line: sourceLine, text };
       return;
     }
     const lineEntries = expandPresenterPreparationParsedLine(parsedLine, nextImplicitPraiseNumber);
@@ -107,7 +168,7 @@ function parsePresenterPreparationInput(value = "") {
     }
   });
   if (pending) missingContent(pending);
-  return { entries, errors };
+  return { entries, errors, skipped };
 }
 
 function isPresenterPreparationContextLine(text = "") {

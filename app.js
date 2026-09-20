@@ -1305,6 +1305,14 @@ function bindStaticEvents() {
       return;
     }
 
+    const preparationForm = event.target.closest("[data-presenter-preparation-form]");
+    if (preparationForm) {
+      event.preventDefault();
+      event.stopPropagation();
+      fillPresenterPreparationForm(preparationForm);
+      return;
+    }
+
     const preparationApply = event.target.closest("[data-presenter-preparation-apply]");
     if (preparationApply) {
       event.preventDefault();
@@ -9159,6 +9167,14 @@ function handlePresenterDetailClick(event) {
     return true;
   }
 
+  const preparationForm = event.target.closest("[data-presenter-preparation-form]");
+  if (preparationForm) {
+    event.preventDefault();
+    event.stopPropagation();
+    fillPresenterPreparationForm(preparationForm);
+    return true;
+  }
+
   const preparationApply = event.target.closest("[data-presenter-preparation-apply]");
   if (preparationApply) {
     event.preventDefault();
@@ -9324,6 +9340,14 @@ function handleDetailKeydown(event) {
         { draft: preparationInput.value },
       );
       return;
+    }
+    if (event.key === "Tab" && !event.isComposing && !event.altKey && !event.metaKey && !event.ctrlKey
+      && preparationInput.selectionStart === preparationInput.selectionEnd) {
+      const target = presenterPreparationTabTarget(preparationInput.value, preparationInput.selectionStart, event.shiftKey);
+      if (target >= 0) {
+        event.preventDefault();
+        preparationInput.setSelectionRange(target, target);
+      }
     }
     event.stopPropagation();
     return;
@@ -24038,6 +24062,10 @@ function renderPresenterSidebarPreparationInput(service) {
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
         <span>예배 일괄 입력</span>
+        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="입력창이 비어 있을 때 항목 양식을 넣습니다">
+            <i data-lucide="list-plus"></i>
+            <span>양식</span>
+          </button>
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
         <div class="svc-preparation-editor">
@@ -28218,6 +28246,25 @@ function presenterPreparationInputForService(serviceId) {
     || null;
 }
 
+function fillPresenterPreparationForm(button) {
+  const serviceId = button?.dataset?.serviceId || state.selectedServiceId;
+  const service = state.services.find((candidate) => candidate.id === serviceId);
+  const root = button.closest(".svc-presenter-input-rail, .service-sidebar-section--preparation-input, .svc-presenter-preparation-input");
+  const input = root?.querySelector?.("[data-presenter-preparation-input]") || presenterPreparationInputForService(serviceId);
+  if (!service || !input) return;
+  if (input.value.trim()) {
+    showToast("입력창이 비어 있을 때만 양식을 넣을 수 있습니다.", "info");
+    input.focus();
+    return;
+  }
+  const form = presenterPreparationFormFromExamples(presenterPreparationPlaceholderForService(service));
+  if (!form) {
+    showToast("입력할 항목이 없습니다.", "info");
+    return;
+  }
+  insertPresenterPreparationForm(input, form);
+}
+
 function presenterPreparationDraftNearApplyButton(button) {
   const serviceId = button?.dataset?.serviceId || state.selectedServiceId;
   const root = button?.closest?.(".svc-presenter-preparation-input")
@@ -28377,9 +28424,13 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
 
   try {
 
-    const { entries, errors } = parsePresenterPreparationInput(draft);
+    const { entries, errors, skipped } = parsePresenterPreparationInput(draft, { skipEmptyLabels: true });
     if (errors.length) {
       showToast(errors[0], "error");
+      return;
+    }
+    if (!entries.length && skipped.length) {
+      showToast("내용을 채운 항목이 없습니다. 항목 뒤에 내용을 입력해 주세요.", "info");
       return;
     }
 
@@ -28703,7 +28754,8 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
     const versionNote = versionWarnings.length
       ? ` ${versionWarnings.join(", ")}에 여러 버전이 있어 첫 번째 버전을 우선 선택했습니다. 필요하면 버전을 골라 주세요.`
       : "";
-    showToast(`예배 입력 ${entries.length}개 항목을 반영했습니다.${createdNote}${versionNote} 상단 저장을 눌러 확정해 주세요.`, "info");
+    const skippedNote = skipped.length ? ` 비어 있는 ${skipped.length}개 항목은 건너뛰었습니다.` : "";
+    showToast(`예배 입력 ${entries.length}개 항목을 반영했습니다.${skippedNote}${createdNote}${versionNote} 상단 저장을 눌러 확정해 주세요.`, "info");
   } finally {
     state.presenterPreparationApplyingServiceIds.delete(serviceId);
     renderServiceList();

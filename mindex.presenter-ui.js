@@ -134,6 +134,10 @@ function renderPresenterServiceInputRail(service) {
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
         <span>예배 일괄 입력</span>
+        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="입력창이 비어 있을 때 항목 양식을 넣습니다">
+            <i data-lucide="list-plus"></i>
+            <span>양식</span>
+          </button>
       </header>
       <section class="svc-presenter-preparation-input">
         <div class="svc-preparation-editor">

@@ -6601,6 +6601,35 @@ body[data-theme="dark"] .service-week-empty:hover {
   align-items: center;
   justify-content: stretch;
 }
+.svc-presenter-preparation-form {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--ui-label-size);
+  font-weight: 700;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.svc-presenter-preparation-form:hover,
+.svc-presenter-preparation-form:focus-visible {
+  background: color-mix(in srgb, var(--panel-2) 66%, transparent);
+  color: var(--ink);
+  outline: none;
+}
+.svc-presenter-preparation-form i { width: 14px; height: 14px; stroke-width: 1.75; }
+.service-sidebar-head .svc-presenter-preparation-form { color: var(--sidebar-label); }
+.service-sidebar-head .svc-presenter-preparation-form:hover,
+.service-sidebar-head .svc-presenter-preparation-form:focus-visible { background: var(--sidebar-hover-bg); color: var(--sidebar-ink); }
+.svc-preparation-ghost-typed { visibility: hidden; }
 .svc-presenter-preparation-apply {
   display: inline-flex;
   width: 100%;

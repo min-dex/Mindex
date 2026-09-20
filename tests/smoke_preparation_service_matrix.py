@@ -39,6 +39,14 @@ def main():
                     check(parsed.entries.length===expected.length,`${type}: missing examples ${parsed.entries.length}/${expected.length}`);
                     check(plan.planned.every(p=>!p.projected || items.some(i=>i.id===p.projected.id)),`${type}: synthetic target`);
                     check(!/^(대기 영상|사도신경|주기도문):/m.test(examples),`${type}: fixed content example`);
+                    const form=expected.length?presenterPreparationFormFromExamples(examples):'';
+                    const blank=parsePresenterPreparationInput(form,{skipEmptyLabels:true});
+                    check(form.split('\\n').filter(Boolean).length===(expected.length?examples.split('\\n').length:0),`${type}: form label count`);
+                    const half=expected.length?examples.split('\\n').map((line,i)=>i%2?line:line.slice(0,line.search(/[:：]/)+1)+' ').join('\\n'):'';
+                    const partial=parsePresenterPreparationInput(half,{skipEmptyLabels:true});
+                    check(!partial.errors.length,`${type}: half-filled form errors: ${partial.errors.join(', ')}`);
+                    check(expected.length<2||(partial.entries.length>0&&partial.entries.length<expected.length),`${type}: half-filled entries ${partial.entries.length}/${expected.length}`);
+                    check(!blank.errors.length && !blank.entries.length,`${type}: blank form must apply nothing: ${blank.errors.join(', ')} ${blank.entries.map(e=>e.label+'='+e.content).join(', ')}`);
                     const host=document.createElement('div');
                     host.style.width='300px';
                     host.innerHTML=renderPresenterSidebarPreparationInput(service);

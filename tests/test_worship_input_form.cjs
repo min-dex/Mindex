@@ -1,0 +1,71 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const escapeHtml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const context = { escapeHtml, compactSearchValue: value => String(value || '').replace(/\s+/g, '').toLowerCase() };
+vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../mindex.worship-input.js'), 'utf8'), context);
+const j = value => JSON.parse(JSON.stringify(value));
+
+// Form: labels only, taken from the per-service example lines.
+const examples = '찬양1: 주 은혜임을\n설교 제목: 은혜로 사는 삶 / 홍길동 목사\n설교 본문: 히브리서 10:38-39\n인용구절: 히브리서 10:38-39\n축도: 홍길동 목사';
+assert.equal(context.presenterPreparationFormFromExamples(examples), '찬양1: \n설교 제목: \n설교 본문: \n인용구절: \n축도: ');
+assert.equal(context.presenterPreparationFormFromExamples('입력할 항목이 없습니다'), '');
+assert.equal(context.presenterPreparationFormFromExamples(''), '');
+
+// Blank labels are skipped only when asked to; the default stays strict.
+const draft = '찬양1: 주 은혜임을\n설교 제목: \n설교 본문: 히브리서 10:38-39\n인용구절: \n축도: ';
+const strict = j(context.parsePresenterPreparationInput(draft));
+assert.ok(strict.errors.length, 'default parse still rejects a blank label');
+const lenient = j(context.parsePresenterPreparationInput(draft, { skipEmptyLabels: true }));
+assert.deepEqual(lenient.errors, []);
+assert.deepEqual(lenient.entries.map(entry => entry.key), ['찬양1', '설교본문']);
+assert.equal(lenient.skipped.length, 3);
+// "label:" followed by its content on the next line keeps working.
+const nextLine = j(context.parsePresenterPreparationInput('설교 제목:\n은혜로 사는 삶\n축도: ', { skipEmptyLabels: true }));
+assert.deepEqual(nextLine.errors, []);
+assert.deepEqual(nextLine.entries.map(entry => [entry.key, entry.content]), [['설교제목', '은혜로 사는 삶']]);
+assert.equal(nextLine.skipped.length, 1);
+// A bare label without a colon is still an error (existing rule).
+assert.ok(j(context.parsePresenterPreparationInput('특송', { skipEmptyLabels: true })).errors.length);
+// Nothing filled: no entries, only skipped.
+const empty = j(context.parsePresenterPreparationInput('설교 제목: \n축도: ', { skipEmptyLabels: true }));
+assert.deepEqual([empty.errors, empty.entries.length, empty.skipped.length], [[], 0, 2]);
+
+// A blank label the parser does not know (e.g. 광고) is skipped, never turned into a song title.
+const unknownBlank = j(context.parsePresenterPreparationInput('광고: \n특송: ', { skipEmptyLabels: true }));
+assert.deepEqual([unknownBlank.errors, unknownBlank.entries.length, unknownBlank.skipped.length], [[], 0, 2]);
+const mixed = j(context.parsePresenterPreparationInput('찬양1: 주 은혜임을\n광고: \n광고2: 안내\n특송: ', { skipEmptyLabels: true }));
+assert.ok(!mixed.entries.some(entry => /광고:/.test(entry.content)), 'blank label leaked into a song');
+assert.deepEqual(mixed.errors, []);
+assert.equal(mixed.skipped.length >= 2, true);
+// A blank known label followed by a blank unknown label: the second line is not its content.
+const chained = j(context.parsePresenterPreparationInput('봉헌기도: \n광고: \n축도: 홍길동 목사', { skipEmptyLabels: true }));
+assert.deepEqual(chained.errors, []);
+assert.deepEqual(chained.entries.map(entry => [entry.key, entry.content]), [['축도', '홍길동 목사']]);
+// Default mode is untouched by the new branch.
+assert.equal(j(context.parsePresenterPreparationInput('광고:')).entries[0]?.content, '광고:');
+
+// Tab targets: next empty value slot, previous empty slot, -1 when none is left.
+const form = '찬양1: 주 은혜임을\n설교 제목: \n설교 본문: 히브리서\n인용구절: \n축도: ';
+const at = (text, needle) => text.indexOf(needle) + needle.length;
+const lineEnd = (text, needle) => { const start = text.indexOf(needle); const end = text.indexOf('\n', start); return end < 0 ? text.length : end; };
+assert.equal(context.presenterPreparationTabTarget(form, at(form, '찬양1: 주 은혜임을')), lineEnd(form, '설교 제목:'));
+assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '설교 제목:')), lineEnd(form, '인용구절:'), 'filled line is skipped');
+assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '인용구절:')), lineEnd(form, '축도:'));
+assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '축도:')), -1, 'no slot after the last one');
+assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '축도:'), true), lineEnd(form, '인용구절:'));
+assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '설교 제목:'), true), -1, 'no slot before the first');
+assert.equal(context.presenterPreparationTabTarget('메모만 있는 줄', 3), -1);
+assert.equal(context.presenterPreparationTabTarget('', 0), -1);
+
+// Ghost: a label-only line keeps the example value as a faint hint; typed values hide it.
+const hints = '설교 제목: 은혜로 사는 삶 / 홍길동 목사\n축도: 홍길동 목사';
+const ghost = context.renderPresenterPreparationGhost(hints, '설교 제목: \n축도: 김 목사');
+assert.ok(ghost.includes('svc-preparation-ghost-typed">설교 제목: </span>은혜로 사는 삶 / 홍길동 목사'), 'blank label shows example hint');
+assert.ok(ghost.includes('is-occupied">축도: 김 목사'), 'typed line is hidden in the ghost');
+assert.ok(context.renderPresenterPreparationGhost(hints, '').includes('설교 제목: 은혜로 사는 삶'), 'empty box still shows examples');
+assert.ok(!context.renderPresenterPreparationGhost('축도: 홍길동 목사', '설교 제목: ').includes('svc-preparation-ghost-typed'), 'no hint when the line is not a prefix of the example');
+
+console.log('PASS worship input form: label form, blank-label skipping, tab slots, ghost hints');
