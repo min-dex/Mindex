@@ -13487,7 +13487,7 @@ async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input
         console.warn("Failed to clean up uploaded reference media after save failure.", cleanupError);
       }
     }
-    showToast(error?.message || "미디어 파일을 올리지 못했습니다.", "error");
+    showToast(presenterMediaUploadErrorMessage(error, file), "error");
     return false;
   } finally {
     if (input) {
@@ -13495,6 +13495,18 @@ async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input
       input.value = "";
     }
   }
+}
+
+// Supabase rejects a file above the project's storage limit (the free plan allows 50 MB per file)
+// with an English message; say what happened and what to do instead.
+function presenterMediaUploadErrorMessage(error, file = null) {
+  const message = String(error?.message || "");
+  const status = Number(error?.statusCode || error?.status || 0);
+  if (status === 413 || /exceeded the maximum allowed size|payload too large|too large/i.test(message)) {
+    const sizeMb = file?.size ? ` (${Math.round(file.size / 1024 / 1024)}MB)` : "";
+    return `파일${sizeMb}이 저장소의 파일 크기 한도를 넘었습니다. Supabase 무료 요금제는 파일 하나에 50MB까지입니다. 파일을 줄이거나, 다른 곳에 올린 뒤 공개 링크로 넣어 주세요.`;
+  }
+  return message || "미디어 파일을 올리지 못했습니다.";
 }
 
 const presenterReferenceMediaBatchServices = new Set();
