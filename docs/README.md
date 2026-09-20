@@ -36,6 +36,8 @@ stale document in the same change.
 
 - `handoff-worship-service-list-payload.md`: UX->Data handoff for the light service
   list read and the Data thread response (view, source_ref guard, history size).
+- `design-worship-service-history-storage.md`: design only (not applied) for the size of
+  `mindexServiceDocumentHistory`: slim entries first, separate table only if needed.
 
 - `ux-audit-2026-09-18.md`: bounded UX/code/documentation audit, regression
   coverage, preserved recovery data, and unverified production boundaries.
