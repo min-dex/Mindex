@@ -162,5 +162,8 @@ list response **51 KB decoded** (was 7.7 MB), 24 of 93 services marked partial, 
 its full `source_ref` (document + 3 history entries restored), an unopened partial service refused to
 build an outgoing `source_ref`.
 
-Until the migration is applied the smoke suites allow exactly as many bare 404 console lines as
-404 responses observed for the view. Remove that allowance once the view exists.
+Applied to production on 2026-09-20 (`Success. No rows returned`). Verified with the anon key: 93 rows,
+7 KB on the wire / 48 KB decoded (was 1.0 MB / 7.7 MB), 24 with a document, 22 with history, no stripped
+key in `source_ref`. On the deployed site (emulated slow 4G, cold) the list request dropped from ~17 s to
+0.44 s and data appeared at ~13 s instead of ~30-35 s (broadband 1.2 s). The temporary 404 allowance in the
+smoke suites was removed.

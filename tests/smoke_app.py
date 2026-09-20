@@ -550,21 +550,6 @@ def main() -> int:
     try:
         with sync_playwright() as playwright:
             browser = launch_chromium(playwright)
-            # Count 404s of the light list view (not deployed yet) so the console check can allow exactly those.
-            list_view_404_responses: list[int] = []
-            _new_page = browser.new_page
-
-            def new_page_counting_list_view_404(*args: Any, **kwargs: Any):
-                created = _new_page(*args, **kwargs)
-                created.on(
-                    "response",
-                    lambda response: list_view_404_responses.append(1)
-                    if "mindex_worship_services_list" in response.url and response.status == 404
-                    else None,
-                )
-                return created
-
-            browser.new_page = new_page_counting_list_view_404  # type: ignore[method-assign]
             page = browser.new_page(viewport={"width": 1440, "height": 980})
             page.add_init_script(
                 """
@@ -10826,25 +10811,11 @@ def main() -> int:
             else:
                 pass_("page-errors")
 
-            # Until migrations/2026-09-20-worship-service-list-view.sql is applied, the light list view answers 404
-            # once per load. Chrome logs that without a URL, so allow exactly as many bare 404 lines as
-            # 404 responses observed for the view.
-            bare_404_allowance = [len(list_view_404_responses)]
-
-            def is_expected_list_view_404(item: str) -> bool:
-                if "the server responded with a status of 404" in item.lower() and bare_404_allowance[0] > 0:
-                    bare_404_allowance[0] -= 1
-                    return True
-                return False
-
             relevant_console = [
                 item for item in console_messages
                 if "favicon" not in item.lower()
                 and "source map" not in item.lower()
                 and "the server responded with a status of 400" not in item.lower()
-                # Expected until migrations/2026-09-20-worship-service-list-view.sql is applied.
-                and "mindex_worship_services_list" not in item.lower()
-                and not is_expected_list_view_404(item)
                 and "could not load song versions" not in item.lower()
             ]
             if relevant_console:
