@@ -3492,6 +3492,10 @@ const WORSHIP_SERVICE_BASE_LIST_SELECT = [
   "source_ref",
 ].join(",");
 const WORSHIP_SERVICE_LIST_SELECT = `${WORSHIP_SERVICE_BASE_LIST_SELECT},service_alias`;
+// Light list view (migrations/2026-09-20-worship-service-list-view.sql): the same columns, but
+// source_ref omits mindexServiceDocument/mindexServiceDocumentHistory (99% of the payload).
+const WORSHIP_SERVICE_LIST_VIEW = "mindex_worship_services_list";
+const WORSHIP_SERVICE_LIST_VIEW_SELECT = `${WORSHIP_SERVICE_LIST_SELECT},has_service_document,has_service_document_history`;
 const WORSHIP_SECTION_LIST_SELECT = [
   "id",
   "service_id",
@@ -3708,6 +3712,48 @@ function worshipServiceListQuery(query) {
     .order("service_type_id", { ascending: true });
 }
 
+function isMissingWorshipListViewError(error) {
+  const code = String(error?.code || "");
+  const status = Number(error?.status || error?.statusCode || 0);
+  return ["PGRST205", "PGRST200", "42P01", "42703", "42501"].includes(code)
+    || status === 404
+    || /does not exist|could not find the (table|relation)|schema cache/i.test(String(error?.message || ""));
+}
+
+// Returns light rows, or null when the view is not deployed (the caller reads the table instead).
+const WORSHIP_LIST_VIEW_MISSING_KEY = "mindex.serviceListView.missingUntil";
+function worshipListViewKnownMissing() {
+  try {
+    return Number(localStorage.getItem(WORSHIP_LIST_VIEW_MISSING_KEY) || 0) > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+async function fetchWorshipServiceListViewRows(select) {
+  if (WORSHIP_EMERGENCY_TODAY_ONLY || state.serviceListViewSupported === false) return null;
+  if (select !== WORSHIP_SERVICE_LIST_SELECT) return null;
+  // A missing view answers 404 on every load; remember it for an hour so the console stays quiet.
+  if (worshipListViewKnownMissing()) {
+    state.serviceListViewSupported = false;
+    return null;
+  }
+  try {
+    const rows = await fetchSupabasePaged(WORSHIP_SERVICE_LIST_VIEW, WORSHIP_SERVICE_LIST_VIEW_SELECT, worshipServiceListQuery);
+    state.serviceListViewSupported = true;
+    return rows;
+  } catch (error) {
+    if (!isMissingWorshipListViewError(error)) throw error;
+    state.serviceListViewSupported = false;
+    try {
+      localStorage.setItem(WORSHIP_LIST_VIEW_MISSING_KEY, String(Date.now() + 60 * 60 * 1000));
+    } catch {
+      // Private mode: probe again next load.
+    }
+    return null;
+  }
+}
+
 async function fetchWorshipServiceListRows() {
   const select = state.serviceAliasSupported
     ? WORSHIP_SERVICE_LIST_SELECT
@@ -3716,11 +3762,17 @@ async function fetchWorshipServiceListRows() {
     ? `today:${localDateStringWithOffset(new Date(), 0)}`
     : select;
   try {
+    const light = await fetchWorshipServiceListViewRows(select);
+    if (light) {
+      writeStaticSupabaseCache("mindex_worship_services", `view:${cacheKey}`, light);
+      return light;
+    }
     const rows = await fetchSupabasePaged("mindex_worship_services", select, worshipServiceListQuery);
     writeStaticSupabaseCache("mindex_worship_services", cacheKey, rows);
     return rows;
   } catch (error) {
-    const cached = readStaticSupabaseCache("mindex_worship_services", cacheKey);
+    const cached = (state.serviceListViewSupported ? readStaticSupabaseCache("mindex_worship_services", `view:${cacheKey}`) : null)
+      || readStaticSupabaseCache("mindex_worship_services", cacheKey);
     if (cached) {
       console.warn("Using cached worship services after Supabase fetch failed.", error);
       return cached;
@@ -4544,6 +4596,9 @@ function normalizeWorshipService(service = {}) {
     _worshipServiceTypeId: service.service_type_id,
     _worshipStatus: service.status || "draft",
     _worshipSourceRef: sourceRef,
+    // Rows from the light list view carry flags instead of the document/history payload.
+    // Until the full source_ref is fetched, saving this service could drop them.
+    _worshipSourceRefPartial: Boolean(service.has_service_document || service.has_service_document_history),
   };
 }
 
@@ -5512,6 +5567,7 @@ function calendarCellClassForField(field) {
 
 async function loadServiceItems(serviceId) {
   if (!serviceId) return;
+  loadFullServiceSourceRefInBackground(serviceId);
   if (state.loadedWorshipServiceIds.has(serviceId)) {
     if (state.selectedServiceId === serviceId && !state.dirty.service) {
       captureCleanFingerprint("service");
@@ -6723,6 +6779,7 @@ async function worshipElementTypedStateColumns() {
 async function saveWorshipServiceInstance(service) {
   const serviceId = service.id;
   await ensureWorshipServiceRowsLoadedForPersistence(serviceId);
+  await requireFullServiceSourceRef(serviceId);
   const inputSignature = JSON.stringify(getServiceItems(serviceId));
   const metadataSignature = serviceSaveMetadataSignature(service);
   captureWorshipRecoverySnapshot(service, "before-full-save");
@@ -6983,6 +7040,7 @@ async function saveWorshipServiceElementPatch(service, itemId) {
   const targetItemId = String(itemId || "").trim();
   if (!serviceId || !targetItemId) return false;
   await ensureWorshipServiceRowsLoadedForPersistence(serviceId);
+  await requireFullServiceSourceRef(serviceId);
 
   const inputItem = getServiceItems(serviceId).find((item) => item.id === targetItemId);
   const inputSignature = JSON.stringify(inputItem);
@@ -12547,6 +12605,7 @@ async function hydratePresenterServiceData(serviceId = state.selectedServiceId) 
   const targetServiceId = String(serviceId || "").trim();
   if (!targetServiceId || !canUseClientData()) return false;
   if (shouldDeferPastWorshipServiceLoad(targetServiceId)) return false;
+  loadFullServiceSourceRefInBackground(targetServiceId);
   if (presenterServiceHydrationPromises.has(targetServiceId)) {
     return presenterServiceHydrationPromises.get(targetServiceId);
   }
@@ -22407,11 +22466,66 @@ function serviceSourceRef(service = null) {
   return result;
 }
 
+// Services read from the light list view have no stored document/history yet. These helpers
+// fetch the full source_ref when a service is opened and refuse to save before that happened,
+// because a save merges the previous history into the outgoing source_ref.
+const serviceSourceRefLoadPromises = new Map();
+async function ensureFullServiceSourceRef(serviceId) {
+  const service = state.services.find((svc) => svc.id === serviceId);
+  if (!service || !service._worshipSourceRefPartial || !state.client) return false;
+  if (serviceSourceRefLoadPromises.has(serviceId)) return serviceSourceRefLoadPromises.get(serviceId);
+  const promise = (async () => {
+    const { data, error } = await state.client
+      .from("mindex_worship_services")
+      .select("source_ref")
+      .eq("id", serviceId)
+      .maybeSingle();
+    if (error) throw error;
+    const live = state.services.find((svc) => svc.id === serviceId);
+    if (!live || !live._worshipSourceRefPartial) return false;
+    const full = normalizeServiceSourceRef(data?.source_ref);
+    const local = live._worshipSourceRef && typeof live._worshipSourceRef === "object" ? live._worshipSourceRef : {};
+    // Local edits of the light keys (e.g. dedication_service) win; the document/history come from the row.
+    live._worshipSourceRef = { ...full, ...local };
+    live._worshipSourceRefPartial = false;
+    return true;
+  })().finally(() => serviceSourceRefLoadPromises.delete(serviceId));
+  serviceSourceRefLoadPromises.set(serviceId, promise);
+  return promise;
+}
+
+function loadFullServiceSourceRefInBackground(serviceId) {
+  const service = state.services.find((svc) => svc.id === serviceId);
+  if (!service?._worshipSourceRefPartial || !state.client) return;
+  void ensureFullServiceSourceRef(serviceId).then((changed) => {
+    if (!changed || state.selectedServiceId !== serviceId || state.dirty.service) return;
+    if (state.module === "presenter") refreshPresenterForService(serviceId, { renderControls: false });
+    else if (state.module === "service") renderCurrentServiceModuleDetail();
+  }).catch((error) => {
+    console.warn("Could not load the stored document of this service.", error);
+  });
+}
+
+async function requireFullServiceSourceRef(serviceId) {
+  const service = state.services.find((svc) => svc.id === serviceId);
+  if (!service?._worshipSourceRefPartial) return;
+  try {
+    await ensureFullServiceSourceRef(serviceId);
+  } catch (error) {
+    console.warn("Could not load the stored document before saving.", error);
+  }
+  if (service._worshipSourceRefPartial) {
+    throw new Error("예배 문서 이력을 불러오지 못해 저장하지 않았습니다. 잠시 후 다시 시도해 주세요.");
+  }
+}
+
 function serviceDocumentSnapshotFromRef(service = null) {
   return normalizeServiceDocumentSnapshot(serviceSourceRef(service)[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY]);
 }
 
 function withServiceDocumentSnapshot(service = null, items = null) {
+  // Hard invariant: never build an outgoing source_ref from a list-only copy.
+  if (service?._worshipSourceRefPartial) throw new Error("예배 문서 이력을 아직 불러오지 못했습니다. 잠시 후 다시 저장해 주세요.");
   const base = normalizeServiceSourceRef(serviceSourceRef(service));
   const document = buildServiceDocumentSnapshot(service, items);
   const history = serviceDocumentHistoryWithPrevious(

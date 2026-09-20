@@ -139,3 +139,28 @@ the migration is transactional, so an older engine fails without changing anythi
 2. Check with the anon key: `GET /rest/v1/mindex_worship_services_list?select=id,source_ref,has_service_document&limit=1`
    returns a `source_ref` without the two keys, and the full list request is tens of KB.
 3. Rollback statements are at the bottom of the migration file.
+
+## UX thread status (2026-09-20)
+
+The client is switched and safe to deploy **before** the migration is applied:
+
+- `fetchWorshipServiceListRows()` reads `mindex_worship_services_list` first
+  (`WORSHIP_SERVICE_LIST_VIEW`). If the view is missing (404 / `PGRST205` / `42P01` / `42703` /
+  `42501`) it reads `mindex_worship_services` exactly as before and remembers the miss for one hour
+  (`mindex.serviceListView.missingUntil` in localStorage) so users do not see a 404 on every load.
+  Network failures are **not** treated as "missing"; they follow the existing cache fallback.
+- A row with `has_service_document` or `has_service_document_history` is marked
+  `_worshipSourceRefPartial`. Opening a service (`loadServiceItems`, `hydratePresenterServiceData`)
+  fetches `select=source_ref&id=eq.<id>` once and merges it, keeping local edits of the light keys.
+- Saving is refused until the full `source_ref` is present: `requireFullServiceSourceRef()` in
+  `saveWorshipServiceInstance` and `saveWorshipServiceElementPatch`, plus a hard invariant in
+  `withServiceDocumentSnapshot()` (throws for a partial service). The server guard stays a safety net.
+- Tests: `tests/smoke_service_list_view.py` (view read, fallback, outage, merge, save refusal).
+
+End-to-end check with live data, read-only, view simulated in the browser from the real table:
+list response **51 KB decoded** (was 7.7 MB), 24 of 93 services marked partial, opening one fetched
+its full `source_ref` (document + 3 history entries restored), an unopened partial service refused to
+build an outgoing `source_ref`.
+
+Until the migration is applied the smoke suites allow exactly as many bare 404 console lines as
+404 responses observed for the view. Remove that allowance once the view exists.

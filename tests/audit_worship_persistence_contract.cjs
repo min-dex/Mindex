@@ -43,6 +43,7 @@ function fixture(failDocument) {
     serviceDocumentSnapshotFromRef: () => null,
     worshipAtomicClient: async () => null,
     ensureWorshipServiceRowsLoadedForPersistence: async () => {},
+    requireFullServiceSourceRef: async () => {},
     normalizeServiceItemsInCurrentOrder: x => x,
     normalizeServiceItemsForTemplateHierarchy: (_s, x) => x,
     ensureUniqueServiceItemPersistenceIds: x => x,
