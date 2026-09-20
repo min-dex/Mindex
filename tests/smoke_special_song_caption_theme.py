@@ -50,7 +50,18 @@ try:
           check(luminance(getComputedStyle(plain.querySelector('.presenter-slide-text')).color) > 200, 'other special songs must keep white text');
           check(!/rgb\\(255, 255, 255\\)/.test(getComputedStyle(full.querySelector('.presenter-slide'), '::before').backgroundImage), 'fullscreen output must not get the white bar');
           check(luminance(getComputedStyle(full.querySelector('.presenter-slide-text')).color) > 200, 'fullscreen text must stay light');
-          return 'PASS cadaros special-song caption theme (bar, text, font, ornament, scope)';
+          // The auto trailing blank copies the previous slide, so it inherits captionTheme; it must not
+          // be drawn with the caption bar/ornament.
+          const lyricSlide = cadaros[cadaros.length - 1];
+          const blank = presenterElementTrailingBlankSlide(lyricSlide, 0, null);
+          check(blank.type === 'blank', 'trailing blank builder changed');
+          check(!renderPresenterSlideFrame(blank).includes('caption-cadaros'), 'blank slide must not carry the Cadaros ornament');
+          const blankRoot = mount([blank], '');
+          check(getComputedStyle(blankRoot.querySelector('.presenter-slide'), '::after').backgroundImage === 'none', 'blank slide ornament visible');
+          // Lyrics sit centered below the crest: it must not dip into the text area.
+          const crest = getComputedStyle(themedSlide, '::after');
+          check(parseFloat(crest.bottom) > 0, 'crest position');
+          return 'PASS cadaros special-song caption theme (bar, text, font, ornament, blank, scope)';
         }'''), flush=True)
         browser.close()
 finally:

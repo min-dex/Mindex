@@ -1341,7 +1341,8 @@
 }
 .presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros::after {
   position: absolute;
-  bottom: calc(var(--presenter-output-bar-height) - 1.3cqw);
+  /* Only ~0.8cqw of the crest dips into the bar so it never touches the lyric lines. */
+  bottom: calc(var(--presenter-output-bar-height) - 0.8cqw);
   left: 50%;
   width: 22cqw;
   height: 2.2cqw;
@@ -1357,6 +1358,8 @@
   font-weight: 700;
   letter-spacing: -.02em;
   -webkit-text-stroke: .01em currentColor;
+  /* Center the lyrics in the area below the crest, not in the whole bar. */
+  transform: translateY(0.3cqw);
 }
 .presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros .presenter-title-assignee-title,
 .presenter-output-root:not(.no-chromakey) .presenter-slide--caption-cadaros .presenter-song-note {

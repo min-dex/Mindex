@@ -4777,8 +4777,9 @@ function renderPresenterSlideFrame(slide, options = {}) {
 function presenterSlideExtraClasses(slide) {
   const classes = [];
   if (slide?.fullscreenSongTitle) classes.push("presenter-slide--fullscreen-song-title");
-  if (slide?.captionTheme === "cadaros") classes.push("presenter-slide--caption-cadaros");
   const layout = presenterSlideLayout(slide);
+  // A blank (including the auto trailing blank, which copies the previous slide) has no caption to theme.
+  if (slide?.captionTheme === "cadaros" && layout !== PRESENTER_SLIDE_LAYOUTS.BLANK) classes.push("presenter-slide--caption-cadaros");
   if (presenterSlideIsScoreLike(slide)) classes.push("presenter-slide--score");
   if (layout !== PRESENTER_SLIDE_LAYOUTS.BLANK && presenterScriptureContextUsesReadingForm(slide?.scriptureContext)) classes.push("presenter-slide--scripture-reading");
   if (layout !== PRESENTER_SLIDE_LAYOUTS.BLANK && slide?.scriptureContext === "sermon") classes.push("presenter-slide--scripture-sermon");
