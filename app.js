@@ -34306,6 +34306,13 @@ async function openServiceInPresenter(id) {
   const service = state.services.find((svc) => svc.id === id);
   if (service) state.selectedServiceTypeId = service.type_id;
   await loadServiceItems(id);
+  if (state.module === "presenter") {
+    // switchModule() returns early for the current module, which would leave the old screen and URL.
+    persistUiState();
+    render();
+    syncBrowserHistory();
+    return;
+  }
   await switchModule("presenter", { clearSearch: false });
 }
 

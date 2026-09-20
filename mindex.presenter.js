@@ -2896,9 +2896,12 @@ function restorePresenterControllerSession() {
   state.presenter.livePraise = emptyLivePraiseState();
   state.presenter.restorePayload = null;
 
-  if (state.module === "presenter") {
+  // Reattaching to the live output must not move the view: a reload while another service is open
+  // (e.g. preparing the next one) keeps that service; the return-to-live control covers the rest.
+  if (state.module === "presenter" && (!state.selectedServiceId || state.selectedServiceId === service.id)) {
     state.selectedServiceId = service.id;
     state.selectedServiceTypeId = service.type_id;
+    state.presenter.viewServiceId = service.id;
   }
 
   publishPresenterState({ force: true });
