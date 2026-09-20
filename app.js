@@ -848,6 +848,7 @@ async function init() {
   cacheRefs();
   applyRuntimePlatformClass();
   applyTheme(readTheme());
+  applyPresenterThumbScale(readPresenterThumbScale());
   const linkParams = readLinkParams();
   state.config = readConfig(linkParams);
   rememberConfig(state.config);
@@ -2221,6 +2222,46 @@ function toggleTheme() {
   const next = state.theme === "dark" ? "light" : "dark";
   safeStorageSet("local", STORAGE.theme, next);
   applyTheme(next);
+}
+
+// Slide thumbnail size of the controller board. It is an app-level setting on purpose: browser zoom is
+// shared by every window of the site, so it would resize the output window too.
+const PRESENTER_THUMB_SCALES = [
+  { key: "1", label: "기본" },
+  { key: "1.3", label: "크게" },
+  { key: "1.6", label: "더 크게" },
+  { key: "2", label: "가장 크게" },
+];
+
+function readPresenterThumbScale() {
+  const saved = safeStorageGet("local", STORAGE.presenterThumbScale);
+  return PRESENTER_THUMB_SCALES.some((scale) => scale.key === saved) ? saved : "1";
+}
+
+function applyPresenterThumbScale(key) {
+  const value = PRESENTER_THUMB_SCALES.some((scale) => scale.key === key) ? key : "1";
+  document.documentElement.style.setProperty("--svc-thumb-scale", value);
+  document.documentElement.dataset.thumbScale = value;
+  return value;
+}
+
+function setPresenterThumbScale(key) {
+  const value = applyPresenterThumbScale(key);
+  safeStorageSet("local", STORAGE.presenterThumbScale, value);
+  document.querySelectorAll("[data-presenter-thumb-scale]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.presenterThumbScale === value));
+  });
+  schedulePresenterPreviewLayoutUpdate(document);
+}
+
+function renderPresenterThumbScaleControl() {
+  const current = document.documentElement.dataset.thumbScale || readPresenterThumbScale();
+  return `
+    <div class="svc-board-scale" role="group" aria-label="슬라이드 크기">
+      <span>슬라이드 크기</span>
+      ${PRESENTER_THUMB_SCALES.map((scale) => `
+        <button type="button" data-presenter-thumb-scale="${scale.key}" aria-pressed="${scale.key === current ? "true" : "false"}">${scale.label}</button>`).join("")}
+    </div>`;
 }
 
 function readUiState() {
@@ -9164,6 +9205,14 @@ function handlePresenterDetailClick(event) {
       serviceAudioClear.dataset.serviceId || state.selectedServiceId,
       Number(serviceAudioClear.dataset.serviceItemIndex),
     );
+    return true;
+  }
+
+  const thumbScale = event.target.closest("[data-presenter-thumb-scale]");
+  if (thumbScale) {
+    event.preventDefault();
+    event.stopPropagation();
+    setPresenterThumbScale(thumbScale.dataset.presenterThumbScale);
     return true;
   }
 
@@ -25621,6 +25670,7 @@ function renderServicePresenterControls(service, slides = [], active = false, in
       aria-label="${escapeAttr(uiText("presenter.controls"))}"
     >
       ${renderServiceSourcePanel(service)}
+      ${renderPresenterThumbScaleControl()}
       <div class="svc-presenter-workspace">
         <div class="svc-presenter-board-column">
           ${renderPresenterSlideBoard(slides, presenterBoardActiveIndex(slides, active, index), service?.id)}

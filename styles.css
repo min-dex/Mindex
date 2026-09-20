@@ -6321,6 +6321,39 @@ body[data-theme="dark"] .service-week-empty:hover {
   gap: 0;
   align-items: start;
 }
+.svc-board-scale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: -6px 0 10px;
+  color: var(--ink-4);
+  font-size: var(--ui-label-size);
+  font-weight: 700;
+}
+.svc-board-scale > span { margin-right: 4px; }
+.svc-board-scale button {
+  height: 26px;
+  border: 0;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.svc-board-scale button:hover,
+.svc-board-scale button:focus-visible {
+  background: color-mix(in srgb, var(--panel-2) 66%, transparent);
+  color: var(--ink);
+  outline: none;
+}
+.svc-board-scale button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
+  color: var(--ink);
+}
 .svc-source-panel {
   margin: 0 0 14px;
   border: 1px solid color-mix(in srgb, var(--line) 62%, transparent);
@@ -8787,7 +8820,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-slide-form-badge:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .svc-board-grid {
   display: grid;
-  --svc-thumb-width: 184px;
+  --svc-thumb-width: calc(184px * var(--svc-thumb-scale, 1));
   --svc-thumb-ring-space: 4px;
   --svc-thumb-wrap-min-width: calc(var(--svc-thumb-width) + (var(--svc-thumb-ring-space) * 2));
   width: 100%;
@@ -9434,7 +9467,7 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 @media (max-width: 1180px) {
   .service-dashboard { grid-template-columns: minmax(0, 1fr); }
   .svc-board-grid {
-    --svc-thumb-width: 168px;
+    --svc-thumb-width: calc(168px * var(--svc-thumb-scale, 1));
   }
   body.right-sidebar-open { --right-sidebar-w: 324px; }
   .svc-presenter-main {
@@ -9504,7 +9537,7 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 
 @media (max-width: 760px) {
   .svc-board-grid {
-    --svc-thumb-width: 148px;
+    --svc-thumb-width: calc(148px * var(--svc-thumb-scale, 1));
   }
   .svc-presenter-main,
   .svc-presenter-action-group {
