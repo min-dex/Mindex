@@ -25,6 +25,8 @@ def main():
                   // Own host on <body> (the app re-renders its sidebars) wired with the app's real delegated handlers.
                   const host=document.createElement('div'); host.id='rail-host';
                   host.style.cssText='position:fixed;top:0;right:0;width:360px;z-index:9999;background:#111';
+                  // The box now starts filled with the form; a box the user emptied stays empty and the button restores it.
+                  state.presenterPreparationDrafts[service.id]='';
                   host.innerHTML=renderPresenterServiceInputRail(service);
                   document.body.append(host);
                   bindDetailInteractionRoot(host);
@@ -32,7 +34,7 @@ def main():
                 }''')
                 box = page.locator('#rail-host textarea')
                 ghost = page.locator('#rail-host [data-presenter-preparation-ghost]')
-                assert box.input_value() == '', 'box should start empty'
+                assert box.input_value() == '', 'an emptied box should stay empty'
 
                 page.click('#rail-host [data-presenter-preparation-form]')
                 form = box.input_value()

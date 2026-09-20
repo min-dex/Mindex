@@ -1613,7 +1613,10 @@ function bindDetailInteractionRoot(root, options = {}) {
   root.addEventListener("input", handleDetailInput);
   root.addEventListener("scroll", handlePresenterPreparationScroll, { capture: true, passive: true });
   root.addEventListener("focusin", (event) => {
-    if (event.target?.matches?.("[data-presenter-preparation-input]")) syncPresenterPreparationGhost(event.target);
+    if (event.target?.matches?.("[data-presenter-preparation-input]")) {
+      syncPresenterPreparationGhost(event.target);
+      placeCaretInUntouchedPreparationForm(event.target);
+    }
   });
   root.addEventListener("focusout", handleSetlistLeaderFocusOut);
   root.addEventListener("change", handleDetailChange);
@@ -24152,7 +24155,7 @@ function patchPresenterSidebarOutlineUnscoped(service, slides) {
 
 function renderPresenterSidebarPreparationInput(service) {
   if (!service?.id) return "";
-  const draft = state.presenterPreparationDrafts[service.id] || "";
+  const draft = presenterPreparationDisplayTextForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const examples = presenterPreparationPlaceholderForService(service);
   const placeholder = examples || "입력할 항목이 없습니다";
@@ -28343,6 +28346,28 @@ function presenterPreparationInputForService(serviceId) {
     || refs.detailPane?.querySelector(selector)
     || refs.songList?.querySelector(selector)
     || null;
+}
+
+// The bulk input starts filled with the label-only form of the service. A service whose draft was
+// never touched (or was cleared by a successful apply) shows the form again; a box the user emptied
+// on purpose stays empty.
+function presenterPreparationDisplayTextForService(service) {
+  const drafts = state.presenterPreparationDrafts;
+  if (Object.prototype.hasOwnProperty.call(drafts, service.id)) return drafts[service.id] || "";
+  return presenterPreparationFormFromExamples(presenterPreparationPlaceholderForService(service)) || "";
+}
+
+// Entering an untouched form by keyboard lands after the first label so Tab starts at the first
+// slot instead of skipping it. A mouse click places the caret itself after this focus event.
+function placeCaretInUntouchedPreparationForm(input) {
+  const serviceId = input?.dataset?.serviceId || "";
+  if (!serviceId || Object.prototype.hasOwnProperty.call(state.presenterPreparationDrafts, serviceId)) return;
+  const service = state.services.find((candidate) => candidate.id === serviceId);
+  if (!service || input.value !== presenterPreparationDisplayTextForService(service)) return;
+  if (input.selectionStart !== 0 || input.selectionEnd !== 0) return;
+  const firstLineEnd = input.value.indexOf("\n");
+  const firstLine = firstLineEnd >= 0 ? input.value.slice(0, firstLineEnd) : input.value;
+  if (/^[^:：\n]+[:：][ \t]*$/.test(firstLine)) input.setSelectionRange(firstLine.length, firstLine.length);
 }
 
 function fillPresenterPreparationForm(button) {

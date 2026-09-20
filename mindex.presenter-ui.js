@@ -126,7 +126,7 @@ function renderPresenterRightSidebarToggle(options = {}) {
 }
 
 function renderPresenterServiceInputRail(service) {
-  const draft = state.presenterPreparationDrafts[service.id] || "";
+  const draft = presenterPreparationDisplayTextForService(service);
   const examples = presenterPreparationPlaceholderForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
   const placeholder = examples || "입력할 항목이 없습니다";
