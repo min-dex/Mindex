@@ -1683,7 +1683,7 @@ def main() -> int:
                     })()
                     """
                 )
-                expected_topbar_order = ["예배", "말씀", "찬양", "교회력", "참고자료"]
+                expected_topbar_order = ["예배", "말씀", "찬양", "교회력", "참고자료", "운영 매뉴얼"]
                 if (
                     topbar_state["order"] == expected_topbar_order
                     and topbar_state["active"] == "scripture"
