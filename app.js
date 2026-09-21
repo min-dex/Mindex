@@ -17188,7 +17188,7 @@ function renderManualsDetail() {
         <div>
           <span>운영 문서</span>
           <h2>운영 매뉴얼</h2>
-          <p>오늘 예배의 내용은 예배 데이터에서, 운영 절차는 여기에서 확인합니다.</p>
+          <p>예배 준비와 방송 진행에 필요한 내용을 확인합니다.</p>
         </div>
         <a class="reference-new-btn secondary" href="./docs/manuals/README.md" target="_blank" rel="noopener noreferrer">
           <i data-lucide="folder-open"></i>
@@ -17224,7 +17224,7 @@ function renderManualsDetail() {
           `).join("")}
         </div>
       </article>
-      <p class="manuals-footnote">원문 보존본은 파일 아이콘으로 열 수 있습니다. 장비 위치와 전원 순서는 현장 라벨을 최종 기준으로 확인합니다.</p>
+      <p class="manuals-footnote">파일 아이콘을 누르면 이전 매뉴얼을 확인할 수 있습니다. 장비 위치와 전원 순서는 방송실 표기를 따릅니다.</p>
     </div>
   `;
   refreshIcons(refs.detailPane);
