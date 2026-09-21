@@ -24952,7 +24952,14 @@ function worshipSetlistArchiveWeek(value) {
   const end = new Date(start);
   end.setDate(end.getDate() + 6);
   const key = toLocalDateStr(start);
-  return { key, title: `${key} ~ ${toLocalDateStr(end)}` };
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const sameMonth = sameYear && start.getMonth() === end.getMonth();
+  const title = sameMonth
+    ? `${start.getMonth() + 1}월 ${start.getDate()}–${end.getDate()}일`
+    : sameYear
+      ? `${start.getMonth() + 1}월 ${start.getDate()}일–${end.getMonth() + 1}월 ${end.getDate()}일`
+      : `${start.getFullYear()}년 ${start.getMonth() + 1}월 ${start.getDate()}일–${end.getFullYear()}년 ${end.getMonth() + 1}월 ${end.getDate()}일`;
+  return { key, title };
 }
 
 function groupWorshipSetlistArchiveEntries(entries = [], view = state.worshipSetlistArchiveView) {
