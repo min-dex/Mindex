@@ -8622,6 +8622,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   min-width: 156px;
 }
 .svc-board-subgroup-controls .svc-presenter-input-field--assignee {
+  flex: 0 1 180px;
   grid-column: 2;
 }
 .svc-board-subgroup-controls .svc-presenter-input-field > span {
@@ -8779,9 +8780,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-board-subgroup-control-item > .svc-presenter-input-field--song,
 .svc-board-subgroup-control-item > .svc-presenter-input-field--song > .svc-edit-title-wrap {
   display: contents;
-}
-.svc-board-subgroup-controls .svc-presenter-input-field--assignee {
-  flex: 0 1 180px;
 }
 @media (max-width: 760px) {
   .svc-board-subgroup-controls {
