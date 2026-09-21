@@ -677,7 +677,6 @@ const state = {
   hymnScoreManifestLoaded: false,
   selectedWorshipBackgroundFile: "",
   referenceLinks: [],
-  manualGuide: "worship",
   referenceLinksLoaded: false,
   referenceError: "",
   worshipBackgroundRegistry: {},
@@ -8676,15 +8675,6 @@ function handleSidebarPresenterActionClick(event) {
 
 function handleDetailClick(event) {
   if (event.target.closest("button:disabled")) return;
-  const manualGuideButton = event.target.closest("[data-manual-guide]");
-  if (manualGuideButton) {
-    const guideId = manualGuideButton.dataset.manualGuide;
-    if (getMindexManuals().some((manual) => manual.id === guideId) && state.manualGuide !== guideId) {
-      state.manualGuide = guideId;
-      renderManualsDetail();
-    }
-    return;
-  }
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
   if (citationAdd) {
     const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
@@ -16241,37 +16231,10 @@ function renderHomeList() {
   renderServiceList();
 }
 
-function renderHomeNextServiceSidebarCard(service) {
-  return `
-    <button class="home-sidebar-card service has-meta" type="button"
-      data-home-next-service-action="presenter"
-      data-home-service-id="${escapeAttr(service.id)}"
-      aria-label="${escapeAttr(`${serviceDisplayTypeName(service)} 송출 준비`)}">
-      <i data-lucide="screen-share"></i>
-      <span>${escapeHtml(serviceDisplayTypeName(service))}</span>
-      <small>${escapeHtml(homeServiceScheduleLabel(service, { compact: true }))}</small>
-    </button>
-  `;
-}
-
 function renderModuleSidebarContext() {
   refs.songCount.textContent = "";
   refs.songList.innerHTML = "";
   finishListRender();
-}
-
-function renderHomeSidebarCard(module, options = {}) {
-  const active = module.id === state.module ? " active" : "";
-  const disabled = options.disabled ? " disabled" : "";
-  const meta = options.disabled ? "Disabled" : module.sidebarMeta;
-  const hasMeta = meta ? " has-meta" : "";
-  return `
-    <button class="home-sidebar-card ${escapeAttr(module.id)}${active}${disabled}${hasMeta}" type="button"${options.disabled ? " disabled aria-disabled=\"true\"" : ` data-home-module="${escapeAttr(module.id)}"`}>
-      <i data-lucide="${escapeAttr(module.icon)}"></i>
-      <span>${escapeHtml(module.title)}</span>
-      ${meta ? `<small>${escapeHtml(meta)}</small>` : ""}
-    </button>
-  `;
 }
 
 function renderHomeDetail() {
@@ -16579,179 +16542,6 @@ function splitHomeVerseLines(text) {
     if (line) lines.push(line);
   }
   return lines.length ? lines : [normalized];
-}
-
-function homeModuleCards() {
-  const bibleBookCount = getBibleBooks().length;
-  const translationCount = state.bibleTranslations.length;
-  const nextService = getHomeNextService();
-  const calendarRows = getCalendarDisplayRows();
-  const referencesSummary = referenceSummaryText();
-  const serviceCountText = formatServiceCountLabel(state.services.length);
-  return [
-    {
-      id: "service",
-      title: "예배",
-      actionTitle: "전체 예배",
-      eyebrow: "다음 예배",
-      icon: "church",
-      sidebarMeta: nextService ? cleanList([
-        homeServiceScheduleLabel(nextService, { compact: true }),
-        serviceDisplayTypeName(nextService),
-      ]).join(" · ") : serviceCountText,
-      detail: nextService ? homeServiceScheduleLabel(nextService) : serviceCountText,
-      actionDetail: "예배 목록",
-      compactMeta: null,
-      meta: cleanList([
-        nextService ? serviceDisplayTypeName(nextService) : "",
-        nextService ? serviceItemPreview(nextService.id) : "",
-      ]),
-      actions: [
-        { id: "presenter", label: "송출" },
-      ],
-    },
-    {
-      id: "presenter",
-      title: "송출",
-      actionTitle: "송출",
-      eyebrow: "",
-      icon: "screen-share",
-      sidebarMeta: nextService ? serviceDisplayTypeName(nextService) : serviceCountText,
-      detail: "송출",
-      actionDetail: nextService ? serviceDisplayTypeName(nextService) : "송출 화면",
-      compactMeta: nextService
-        ? { value: serviceDisplayTypeName(nextService), label: "" }
-        : { value: formatCount(state.services.length), label: "예배" },
-      meta: cleanList([
-        nextService ? homeServiceScheduleLabel(nextService, { compact: true }) : serviceCountText,
-      ]),
-    },
-    {
-      id: "praise",
-      title: "찬양",
-      eyebrow: "",
-      icon: "music-2",
-      sidebarMeta: `${formatCount(state.songs.length)}곡`,
-      detail: "찬양 DB",
-      actionDetail: "찬양 DB",
-      compactMeta: { value: formatCount(state.songs.length), label: "곡" },
-      meta: cleanList([
-        `${formatCount(state.songs.length)}곡`,
-      ]),
-    },
-    {
-      id: "scripture",
-      title: "말씀",
-      eyebrow: "",
-      icon: "book-open",
-      sidebarMeta: `${formatCount(bibleBookCount)}권`,
-      detail: `${formatCount(bibleBookCount)}권`,
-      actionDetail: "성경/성구",
-      compactMeta: { value: formatCount(translationCount), label: "역본" },
-      meta: cleanList([
-        translationCount ? `${formatCount(translationCount)}역본` : "",
-      ]),
-    },
-    {
-      id: "calendar",
-      title: "교회력",
-      eyebrow: "",
-      icon: "calendar-days",
-      sidebarMeta: calendarRows.length ? calendarYearLabel(calendarRows) : "교회력",
-      detail: calendarRows.length ? calendarYearLabel(calendarRows) : "교회력",
-      compactMeta: { value: churchYearSeriesValue(calendarRows), label: "" },
-      meta: cleanList([
-        churchYearSeriesSummary(calendarRows),
-      ]),
-    },
-    {
-      id: "references",
-      title: "참고자료",
-      eyebrow: "",
-      icon: "link-2",
-      sidebarMeta: referencesSummary || "참고자료",
-      detail: "공유 참고자료",
-      compactMeta: state.referenceLinksLoaded
-        ? { value: formatCount(state.referenceLinks.length), label: "링크" }
-        : { value: "링크", label: "" },
-      meta: cleanList([
-        referencesSummary,
-      ]),
-    },
-  ];
-}
-
-function pluralizeCountLabel(count, singular, plural) {
-  return Number(count) === 1 ? singular : plural;
-}
-
-function formatServiceCountLabel(count) {
-  return `${formatCount(count)}개 예배`;
-}
-
-function referenceSummaryText() {
-  if (!state.referenceLinksLoaded) return "";
-  return `${formatCount(state.referenceLinks.length)}개 링크`;
-}
-
-function renderHomePrimaryCard(module) {
-  return `
-    <article class="home-primary-card ${escapeAttr(module.id)}">
-      <button class="home-primary-main" type="button" data-home-module="${escapeAttr(module.id)}">
-        ${module.eyebrow ? `<span class="home-module-eyebrow">${escapeHtml(module.eyebrow)}</span>` : ""}
-        <span class="home-module-title">
-          <i data-lucide="${escapeAttr(module.icon)}"></i>
-          ${escapeHtml(module.title)}
-        </span>
-        <span class="home-module-detail">${escapeHtml(module.detail)}</span>
-        ${module.meta.length ? `<span class="home-module-meta">${module.meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</span>` : ""}
-      </button>
-      ${module.actions?.length ? `<div class="home-primary-actions">
-        ${module.actions.map((action) => `<button type="button" data-home-module="${escapeAttr(action.id)}">${escapeHtml(action.label)}</button>`).join("")}
-      </div>` : ""}
-    </article>
-  `;
-}
-
-function renderHomeActionTile(module) {
-  const title = module.actionTitle || module.title;
-  const detail = module.actionDetail || module.detail;
-  return `
-    <button class="home-action-tile ${escapeAttr(module.id)}" type="button" data-home-module="${escapeAttr(module.id)}">
-      <i data-lucide="${escapeAttr(module.icon)}"></i>
-      <span>${escapeHtml(title)}</span>
-      <small>${escapeHtml(detail)}</small>
-    </button>
-  `;
-}
-
-function homeMetricText(metric = {}) {
-  const value = String(metric.value || "").trim();
-  const label = String(metric.label || "").trim();
-  if (!value) return label;
-  if (!label) return value;
-  if (label === "곡") return `${value}곡`;
-  if (label === "역본") return `${value}개 역본`;
-  if (label === "링크") return `${value}개 링크`;
-  if (label === "등록") return `${value}개 등록`;
-  if (label === "예배") return `${value}개 예배`;
-  return `${value} ${label}`;
-}
-
-function renderHomeCompactCard(module, options = {}) {
-  const compactMeta = module.compactMeta
-    ? `<span class="home-compact-meta"><strong>${escapeHtml(module.compactMeta.value)}</strong>${module.compactMeta.label ? ` <span>${escapeHtml(module.compactMeta.label)}</span>` : ""}</span>`
-    : "";
-  return `
-    <button class="home-compact-card ${escapeAttr(module.id)}${options.wide ? " wide" : ""}" type="button" data-home-module="${escapeAttr(module.id)}">
-      <span class="home-compact-icon"><i data-lucide="${escapeAttr(module.icon)}"></i></span>
-      <span class="home-compact-copy">
-        <strong>${escapeHtml(module.title)}</strong>
-        <small>${escapeHtml(module.detail)}</small>
-      </span>
-      ${compactMeta}
-    </button>
-  `;
 }
 
 function toPositiveNumber(value) {
@@ -17171,13 +16961,12 @@ function getMindexManuals() {
 
 function renderManualsDetail() {
   const manuals = getMindexManuals();
-  const active = manuals.find((manual) => manual.id === state.manualGuide) || manuals[0];
+  const active = manuals[0];
   if (!active) {
     refs.detailPane.innerHTML = renderModuleEmptyDetail("manuals", "운영 매뉴얼", "매뉴얼을 불러오지 못했습니다.");
     refreshIcons(refs.detailPane);
     return;
   }
-  state.manualGuide = active.id;
   refs.detailPane.innerHTML = `
     <div class="manuals-shell">
       <header class="manuals-head">
@@ -17186,30 +16975,13 @@ function renderManualsDetail() {
           <h2>운영 매뉴얼</h2>
           <p>예배 준비와 방송 진행에 필요한 내용을 확인합니다.</p>
         </div>
-        <a class="reference-new-btn secondary" href="./docs/manuals/README.md" target="_blank" rel="noopener noreferrer">
-          <i data-lucide="folder-open"></i>
-          <span>문서 목록</span>
-        </a>
       </header>
-      <div class="manual-tabs" role="tablist" aria-label="운영 매뉴얼 선택">
-        ${manuals.map((manual) => `
-          <button class="manual-tab${manual.id === active.id ? " active" : ""}" type="button" role="tab"
-            data-manual-guide="${escapeAttr(manual.id)}" aria-selected="${manual.id === active.id ? "true" : "false"}">
-            <span>${escapeHtml(manual.eyebrow)}</span>
-            <strong>${escapeHtml(manual.title)}</strong>
-            <small>${escapeHtml(manual.summary)}</small>
-          </button>
-        `).join("")}
-      </div>
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
         <header>
           <div>
             <span>${escapeHtml(active.eyebrow)}</span>
             <h3 id="manualGuideTitle">${escapeHtml(active.title)}</h3>
           </div>
-          <a class="icon-btn quiet" href="${escapeAttr(active.source)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeAttr(active.sourceLabel)} 열기" title="${escapeAttr(active.sourceLabel)} 열기">
-            <i data-lucide="file-text"></i>
-          </a>
         </header>
         <div class="manual-guide-grid">
           ${active.sections.map((section) => `
@@ -17220,7 +16992,6 @@ function renderManualsDetail() {
           `).join("")}
         </div>
       </article>
-      <p class="manuals-footnote">파일 아이콘을 누르면 이전 매뉴얼을 확인할 수 있습니다. 장비 위치와 전원 순서는 방송실 표기를 따릅니다.</p>
     </div>
   `;
   refreshIcons(refs.detailPane);
@@ -27761,22 +27532,6 @@ function renderServiceCardPreviewHtml(preview = {}, className = "service-date-ca
       </span>`;
   }
   return preview.text ? `<span class="${escapeAttr(className)}">${escapeHtml(preview.text)}</span>` : "";
-}
-
-function homeServicePrepSummary(serviceId) {
-  const service = state.services.find((candidate) => candidate.id === serviceId) || null;
-  const items = getServiceOutputItems(serviceId);
-  const missingCount = service
-    ? presenterServiceInputProgress(service).missing
-    : 0;
-  const preview = serviceItemPreview(serviceId) || "순서 구성 필요";
-  const slideCount = items.length;
-  const status = missingCount
-    ? `${missingCount}개 입력 필요`
-    : slideCount
-      ? "준비됨"
-      : "순서 없음";
-  return { preview, missingCount, slideCount, status };
 }
 
 function serviceItemDisplayText(item) {

@@ -1841,29 +1841,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   font-size: 13px;
   line-height: 20px;
 }
-.manual-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.manual-tab {
-  display: grid;
-  min-height: 88px;
-  align-content: center;
-  justify-items: start;
-  gap: 3px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--panel);
-  color: var(--ink-2);
-  padding: 14px 16px;
-  text-align: left;
-}
-.manual-tab:hover { background: var(--panel-2); }
-.manual-tab.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
-.manual-tab span { color: var(--accent); font-size: 11px; font-weight: 700; line-height: 14px; }
-.manual-tab strong { font-size: 16px; font-weight: 700; line-height: 21px; }
-.manual-tab small { color: var(--ink-3); font-size: 12px; font-weight: 500; line-height: 16px; }
 .manual-guide {
   display: grid;
   gap: 20px;
@@ -1899,7 +1876,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 }
 @media (max-width: 580px) {
   .manuals-head { display: grid; }
-  .manual-tabs { grid-template-columns: 1fr; }
 }
 .background-manager {
   display: grid;
