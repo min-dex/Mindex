@@ -86,7 +86,7 @@ production records, migration, permission or deployment changes accompany this t
 | Service identity | `mindex_worship_services.id`, section and element UUIDs | Display labels and sort order are not stable IDs. |
 | Instance data | Service row, section rows, element rows | Saved through separate API requests, not one transaction. |
 | Content | `input_mode`, `content_state`, `asset`, `config`, `source_ref` and typed links | Optional column detection retains compatibility; JSON references are not foreign keys. |
-| Behavioral slot | Optional `slot_key`, plus `source_ref.slotKey` / `config.slotKey`; runtime `_worshipSlotKey` | Current validator detects duplicate slots in its input only; no service-wide SQL uniqueness guarantee established by this audit. |
+| Behavioral slot | Persisted `source_ref.slotKey`; legacy `config.slotKey` / imported `slot_key` read adapter; runtime `_worshipSlotKey` | Current validator detects duplicate slots in its input only; no service-wide SQL uniqueness guarantee established by this audit. |
 | Service document | `source_ref.mindexServiceDocument`: sourceText, sourceRecords, slides, exceptions, signatures | Coexists with normalized rows; not yet a single authoritative transactional aggregate. |
 | Canonical content | `song_id`, `song_version_id`, `scripture_id`; resolved Scripture references and asset URLs | Canonical ownership stays outside Worship; persisted source/slides may also contain copied content. |
 | Recovery | Browser-local snapshots and bounded, slim `mindexServiceDocumentHistory` in source_ref (source text + counts, not slides) | Best effort / bounded, not an independent durable audit log or rollback transaction. |

@@ -7483,7 +7483,7 @@ def main() -> int:
                     )
                     if worship_slot_key_column_adapter == {
                         "omittedWithoutColumn": True,
-                        "columnSlotKey": "sermon.scripture",
+                        "columnSlotKey": "",
                         "sourceSlotKey": "sermon.scripture",
                         "hydratedSlotKey": "sermon.scripture",
                         "hydratedLabel": "설교 제목",

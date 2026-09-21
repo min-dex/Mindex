@@ -163,13 +163,13 @@ Adapter-first implementation note:
 
 - Template blueprints may use `mindex_worship_template_items.slot_key` where
   present, but live instance rows are normalized through an adapter first.
-- Until `mindex_worship_elements.slot_key` is reviewed and added, the client
-  derives `_worshipSlotKey` at hydration time and persists the resolved value
-  into `mindex_worship_elements.source_ref.slotKey`.
-- When `mindex_worship_elements.slot_key` is present, the client must read and
-  write that column in parallel with `source_ref.slotKey`; deployments without
-  the column must keep using `source_ref.slotKey` without selecting a missing
-  DB column.
+- Live instances derive `_worshipSlotKey` at hydration time and persist the
+  resolved value into `mindex_worship_elements.source_ref.slotKey`.
+- The current schema has no live-element `slot_key` column. Do not probe,
+  select, or write that proposed column. A future column migration must update
+  this contract and the client together after the data audit.
+- Imported/cached rows may still supply a top-level `slot_key`; normalize it
+  into `source_ref.slotKey` before persistence and omit the nonexistent column.
 - `source_ref.slotKey` is transitional metadata. It must not overwrite curated
   lyrics/manual slides, `song_id`, `song_version_id`, Scripture references, or
   uploaded media assets.

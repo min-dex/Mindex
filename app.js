@@ -3622,8 +3622,7 @@ const MINDEX_SERVICE_DOCUMENT_HISTORY_LIMIT = 3;
 const MINDEX_SERVICE_DOCUMENT_HISTORY_MAX_BYTES = 450000;
 
 async function worshipElementListSelect() {
-  const hasSlotKey = await detectTableColumnSupport("mindex_worship_elements", "slot_key");
-  return hasSlotKey ? `${WORSHIP_ELEMENT_BASE_LIST_SELECT},slot_key` : WORSHIP_ELEMENT_BASE_LIST_SELECT;
+  return WORSHIP_ELEMENT_BASE_LIST_SELECT;
 }
 
 function staticSupabaseCacheKey(table, select = "*") {
@@ -6831,7 +6830,6 @@ async function worshipElementTypedStateColumns() {
   return {
     inputMode: await detectTableColumnSupport("mindex_worship_elements", "input_mode"),
     contentState: await detectTableColumnSupport("mindex_worship_elements", "content_state"),
-    slotKey: await detectTableColumnSupport("mindex_worship_elements", "slot_key"),
   };
 }
 
@@ -7640,7 +7638,6 @@ function validateWorshipPersistenceRows(rows = {}, context = {}) {
 function sanitizeWorshipPersistenceRows(rows = {}, options = {}) {
   const persistedAt = new Date().toISOString();
   const hasInputModeColumn = Boolean(options.elementTypedStateColumns?.inputMode);
-  const hasSlotKeyColumn = Boolean(options.elementTypedStateColumns?.slotKey);
   (rows.sections || []).forEach((section) => {
     if (!section || typeof section !== "object") return;
     section.created_at = section.created_at || persistedAt;
@@ -7664,8 +7661,8 @@ function sanitizeWorshipPersistenceRows(rows = {}, options = {}) {
     if (configSlotKey) element.config.slotKey = configSlotKey;
     delete element.config.slot_key;
     const columnSlotKey = normalizeWorshipSlotKey(element.slot_key || sourceSlotKey || configSlotKey);
-    if (hasSlotKeyColumn) element.slot_key = columnSlotKey || null;
-    else delete element.slot_key;
+    if (columnSlotKey) element.source_ref.slotKey = columnSlotKey;
+    delete element.slot_key;
     if (Object.prototype.hasOwnProperty.call(element.config, "input_mode")) {
       const configMode = normalizeServiceInputMode(element.config.input_mode);
       if (configMode) element.config.inputMode = configMode;
@@ -7956,7 +7953,6 @@ function buildWorshipPersistenceRows(service, items, existingSectionById = {}, e
       review_status: existingElement?.review_status || (manualBody ? "needs_review" : "draft"),
       config,
     };
-    if (options.elementTypedStateColumns?.slotKey) elementRow.slot_key = slotKey || null;
     if (options.elementTypedStateColumns?.inputMode) elementRow.input_mode = worshipDbInputModeForSave(contentState.inputMode);
     if (options.elementTypedStateColumns?.contentState) elementRow.content_state = contentState;
     elementRows.push(elementRow);
