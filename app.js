@@ -408,7 +408,7 @@ const TITLE_COLLATOR = new Intl.Collator("ko-KR", {
 });
 
 const HANGUL_INITIALS = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-const CONTENT_MODULES = ["service", "presenter", "scripture", "praise", "calendar", "references"];
+const CONTENT_MODULES = ["service", "presenter", "scripture", "praise", "calendar", "references", "manuals"];
 const ROUTE_MODULES = ["home", ...CONTENT_MODULES];
 const SERVICE_FILTERS = ["all", "public", "ministry", "special"];
 const PRAISE_LIST_FILTERS = [
@@ -677,6 +677,7 @@ const state = {
   hymnScoreManifestLoaded: false,
   selectedWorshipBackgroundFile: "",
   referenceLinks: [],
+  manualGuide: "worship",
   referenceLinksLoaded: false,
   referenceError: "",
   worshipBackgroundRegistry: {},
@@ -1912,7 +1913,7 @@ async function handleSearchKeydown(event) {
 
   const scriptureShortcut = await getScriptureSearchShortcut(query);
   if (state.search !== query || state.module !== moduleName) return;
-  if (state.module !== "references" && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
+  if (!['references', 'manuals'].includes(state.module) && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
     event.preventDefault();
     await runScriptureSearchShortcut(scriptureShortcut);
     return;
@@ -8679,6 +8680,15 @@ function handleSidebarPresenterActionClick(event) {
 
 function handleDetailClick(event) {
   if (event.target.closest("button:disabled")) return;
+  const manualGuideButton = event.target.closest("[data-manual-guide]");
+  if (manualGuideButton) {
+    const guideId = manualGuideButton.dataset.manualGuide;
+    if (getMindexManuals().some((manual) => manual.id === guideId) && state.manualGuide !== guideId) {
+      state.manualGuide = guideId;
+      renderManualsDetail();
+    }
+    return;
+  }
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
   if (citationAdd) {
     const input = citationAdd.closest(".svc-citation-composer")?.querySelector("[data-presenter-citation-reference-input]");
@@ -14674,8 +14684,10 @@ function renderModuleSwitcher() {
   renderPageTabTitle();
   renderNavigationSidebarState();
   syncSidebarCollapsedState();
-  refs.searchInput.placeholder = "검색...";
-  refs.searchInput.setAttribute("aria-label", "검색");
+  const manualsOpen = state.module === "manuals";
+  refs.searchInput.placeholder = manualsOpen ? "매뉴얼" : "검색...";
+  refs.searchInput.setAttribute("aria-label", manualsOpen ? "운영 매뉴얼" : "검색");
+  refs.searchInput.disabled = manualsOpen;
   syncPraiseCreateControls();
   syncSaveButtonChrome();
   updatePresenterRightSidebarToggleButtons();
@@ -14715,6 +14727,7 @@ function currentPageTabTitle() {
   }
   if (state.module === "calendar") return "교회력";
   if (state.module === "references") return "참고자료";
+  if (state.module === "manuals") return "운영 매뉴얼";
   return "홈";
 }
 
@@ -14794,6 +14807,7 @@ function pageTabTitleForSnapshot(snapshot = {}) {
   }
   if (moduleName === "calendar") return "교회력";
   if (moduleName === "references") return "참고자료";
+  if (moduleName === "manuals") return "운영 매뉴얼";
   return "홈";
 }
 
@@ -15836,6 +15850,10 @@ function renderSearchResultsForCurrentModule() {
 }
 
 function renderSongList() {
+  if (state.module === "manuals") {
+    renderModuleSidebarContext();
+    return;
+  }
   if (isAuthRequired() && !state.auth.session) {
     refs.songCount.textContent = "";
     refs.songList.innerHTML = renderConnectionList("로그인이 필요합니다.");
@@ -15852,13 +15870,13 @@ function renderSongList() {
     return;
   }
 
-  if (state.connectionError && !["calendar", "references"].includes(state.module)) {
+  if (state.connectionError && !["calendar", "references", "manuals"].includes(state.module)) {
     refs.songCount.textContent = "";
     refs.songList.innerHTML = renderConnectionList(state.connectionError);
     return;
   }
 
-  if (["calendar", "references"].includes(state.module)) {
+  if (["calendar", "references", "manuals"].includes(state.module)) {
     renderModuleSidebarContext();
     return;
   }
@@ -15926,7 +15944,7 @@ function renderSongList() {
 }
 
 function isGlobalSearchActive() {
-  return Boolean(normalizeSearchValue(state.search)) && state.module !== "references";
+  return Boolean(normalizeSearchValue(state.search)) && !["references", "manuals"].includes(state.module);
 }
 
 let globalPraiseSearchLoad = null;
@@ -16905,6 +16923,7 @@ function getListScrollKey() {
   if (state.module === "presenter") return `presenter:${search}`;
   if (state.module === "calendar") return `calendar:${search}`;
   if (state.module === "references") return `references:${search}`;
+  if (state.module === "manuals") return "manuals";
   return `praise:${state.praiseFilter}:${search}`;
 }
 
@@ -16963,6 +16982,10 @@ function scrollListItemIntoView(item) {
 
 function renderDetail() {
   if (state.module !== "presenter") setRightSidebarContent("");
+  if (state.module === "manuals") {
+    renderManualsDetail();
+    return;
+  }
   if (isAuthRequired() && !state.auth.session) {
     refs.detailPane.innerHTML = renderAuthRequiredDetail();
     refreshIcons(refs.detailPane);
@@ -17141,6 +17164,67 @@ function renderReferencesDetail() {
         ${renderReferenceGroups(links)}
       ` : ""}
       ${!hasLinks ? renderReferenceSetupNotice() : ""}
+    </div>
+  `;
+  refreshIcons(refs.detailPane);
+}
+
+function getMindexManuals() {
+  return Array.isArray(window.MINDEX_MANUALS) ? window.MINDEX_MANUALS : [];
+}
+
+function renderManualsDetail() {
+  const manuals = getMindexManuals();
+  const active = manuals.find((manual) => manual.id === state.manualGuide) || manuals[0];
+  if (!active) {
+    refs.detailPane.innerHTML = renderModuleEmptyDetail("manuals", "운영 매뉴얼", "매뉴얼을 불러오지 못했습니다.");
+    refreshIcons(refs.detailPane);
+    return;
+  }
+  state.manualGuide = active.id;
+  refs.detailPane.innerHTML = `
+    <div class="manuals-shell">
+      <header class="manuals-head">
+        <div>
+          <span>운영 문서</span>
+          <h2>운영 매뉴얼</h2>
+          <p>오늘 예배의 내용은 예배 데이터에서, 운영 절차는 여기에서 확인합니다.</p>
+        </div>
+        <a class="reference-new-btn secondary" href="./docs/manuals/README.md" target="_blank" rel="noopener noreferrer">
+          <i data-lucide="folder-open"></i>
+          <span>문서 목록</span>
+        </a>
+      </header>
+      <div class="manual-tabs" role="tablist" aria-label="운영 매뉴얼 선택">
+        ${manuals.map((manual) => `
+          <button class="manual-tab${manual.id === active.id ? " active" : ""}" type="button" role="tab"
+            data-manual-guide="${escapeAttr(manual.id)}" aria-selected="${manual.id === active.id ? "true" : "false"}">
+            <span>${escapeHtml(manual.eyebrow)}</span>
+            <strong>${escapeHtml(manual.title)}</strong>
+            <small>${escapeHtml(manual.summary)}</small>
+          </button>
+        `).join("")}
+      </div>
+      <article class="manual-guide" aria-labelledby="manualGuideTitle">
+        <header>
+          <div>
+            <span>${escapeHtml(active.eyebrow)}</span>
+            <h3 id="manualGuideTitle">${escapeHtml(active.title)}</h3>
+          </div>
+          <a class="icon-btn quiet" href="${escapeAttr(active.source)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeAttr(active.sourceLabel)} 열기" title="${escapeAttr(active.sourceLabel)} 열기">
+            <i data-lucide="file-text"></i>
+          </a>
+        </header>
+        <div class="manual-guide-grid">
+          ${active.sections.map((section) => `
+            <section>
+              <h4>${escapeHtml(section.title)}</h4>
+              <ol>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>
+            </section>
+          `).join("")}
+        </div>
+      </article>
+      <p class="manuals-footnote">원문 보존본은 파일 아이콘으로 열 수 있습니다. 장비 위치와 전원 순서는 현장 라벨을 최종 기준으로 확인합니다.</p>
     </div>
   `;
   refreshIcons(refs.detailPane);
@@ -20019,6 +20103,7 @@ function currentSaveButtonState() {
   if (state.saving) return { label: "저장 중", dirty: true, available: true, busy: true };
   if (state.module === "home") return { label: "저장", dirty: false, available: false };
   if (state.module === "calendar") return { label: "교회력은 여기서 읽기 전용입니다", dirty: false, available: false };
+  if (state.module === "manuals") return { label: "운영 매뉴얼은 자동 저장됩니다", dirty: false, available: false };
   if (state.module === "references") return { label: "참고자료 저장", dirty: state.dirty.references, available: true };
   if (isServiceDataModule()) {
     const serviceId = state.module === "presenter" ? presenterViewServiceId() : state.selectedServiceId;
@@ -20123,7 +20208,7 @@ async function confirmSaveBeforeLeaving() {
 function updateSaveState() {
   syncSaveButtonChrome();
   updatePresenterRightSidebarToggleButtons();
-  if (state.module === "home" || state.module === "calendar") {
+  if (state.module === "home" || state.module === "calendar" || state.module === "manuals") {
     renderConnectionStatus();
     return;
   }

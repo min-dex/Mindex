@@ -1017,6 +1017,7 @@ body.sidebar-collapsed .sidebar {
 body[data-module="home"] .sidebar-count,
 body[data-module="calendar"] .sidebar-count,
 body[data-module="references"] .sidebar-count,
+body[data-module="manuals"] .sidebar-count,
 body[data-module="backgrounds"] .sidebar-count,
 .sidebar-count:empty { display: none; }
 .search-wrap { display: grid; height: 30px; align-items: center; grid-template-columns: 16px minmax(0, 1fr); gap: var(--s2); overflow: hidden; padding: 0 var(--s2); }
@@ -1793,6 +1794,104 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 .reference-new-btn:disabled {
   cursor: default;
   opacity: .42;
+}
+.manuals-shell {
+  display: grid;
+  width: min(100%, 1120px);
+  gap: 22px;
+  padding: 4px 0 32px;
+}
+.manuals-head,
+.manual-guide > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.manuals-head > div,
+.manual-guide > header > div {
+  display: grid;
+  gap: 4px;
+}
+.manuals-head > div > span,
+.manual-guide > header span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+.manuals-head h2,
+.manual-guide h3,
+.manual-guide h4 {
+  margin: 0;
+  color: var(--ink);
+}
+.manuals-head h2 { font-size: var(--page-title-size); font-weight: var(--page-title-weight); line-height: 1.2; }
+.manuals-head p {
+  margin: 2px 0 0;
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 20px;
+}
+.manual-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.manual-tab {
+  display: grid;
+  min-height: 88px;
+  align-content: center;
+  justify-items: start;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--ink-2);
+  padding: 14px 16px;
+  text-align: left;
+}
+.manual-tab:hover { background: var(--panel-2); }
+.manual-tab.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+.manual-tab span { color: var(--accent); font-size: 11px; font-weight: 700; line-height: 14px; }
+.manual-tab strong { font-size: 16px; font-weight: 700; line-height: 21px; }
+.manual-tab small { color: var(--ink-3); font-size: 12px; font-weight: 500; line-height: 16px; }
+.manual-guide {
+  display: grid;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.manual-guide h3 { font-size: 20px; font-weight: 700; line-height: 27px; }
+.manual-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.manual-guide-grid section { min-width: 0; }
+.manual-guide h4 { color: var(--accent); font-size: 14px; font-weight: 700; line-height: 20px; }
+.manual-guide ol {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.manuals-footnote {
+  margin: 0;
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+}
+@media (max-width: 860px) {
+  .manual-guide-grid { grid-template-columns: 1fr; gap: 18px; }
+}
+@media (max-width: 580px) {
+  .manuals-head { display: grid; }
+  .manual-tabs { grid-template-columns: 1fr; }
 }
 .background-manager {
   display: grid;
