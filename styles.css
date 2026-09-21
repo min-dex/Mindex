@@ -689,7 +689,12 @@ body[data-module="praise"] .list-filter {
 .sidebar-count, .section-bar h3, .dirty-pill, .muted {
   color: var(--ink-4); font-size: var(--ui-label-size); font-weight: var(--ui-label-weight); letter-spacing: 0; line-height: 16px; text-transform: none;
 }
-.sidebar-count { color: var(--sidebar-label); font-weight: var(--ui-meta-weight); }
+.sidebar-count {
+  flex: 0 0 auto;
+  color: var(--sidebar-label);
+  font-weight: var(--ui-meta-weight);
+  padding: 7px var(--sidebar-item-end) 6px var(--sidebar-item-pad-x);
+}
 .sidebar-list-head {
   display: flex;
   min-height: 34px;
@@ -706,6 +711,8 @@ body[data-module="backgrounds"] .sidebar-list-head,
   display: none;
 }
 .field {
+  display: grid;
+  gap: var(--s1);
   color: var(--ink-4);
   font-size: var(--ui-label-size);
   font-weight: var(--ui-label-weight);
@@ -1084,11 +1091,7 @@ body[data-module="backgrounds"] .sidebar-count,
   color: var(--ink-3);
 }
 .field input:focus, .field textarea:focus, .field select:focus, .form-type-select:focus, .form-textarea:focus, .scripture-textarea:focus { background: color-mix(in srgb, var(--panel-2) 72%, transparent); }
-.list-filter,
-.sidebar-count {
-  flex: 0 0 auto;
-}
-.sidebar-count { padding: 7px var(--sidebar-item-end) 6px var(--sidebar-item-pad-x); }
+.list-filter { flex: 0 0 auto; }
 .song-list, .detail-pane {
   min-height: 0;
   overflow: auto;
@@ -2694,7 +2697,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   font-weight: 700;
 }
 .meta-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
-.field { display: grid; gap: var(--s1); }
 .field.wide { grid-column: 1 / -1; }
 .field input, .field select, .form-type-select {
   height: var(--h);
