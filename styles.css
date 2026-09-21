@@ -1131,8 +1131,7 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   line-height: 18px;
 }
 .song-item.active .song-hymn-no { color: var(--sidebar-sub); }
-.song-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.song-title-text { color: currentColor; }
+.song-title-text { min-width: 0; overflow: hidden; color: currentColor; text-overflow: ellipsis; white-space: nowrap; }
 .song-title .attention-icon { margin-left: auto; }
 .song-meta-line { color: var(--sidebar-sub); font-size: var(--ui-meta-size); font-weight: var(--ui-meta-weight); line-height: 18px; }
 .song-count-badge { display: inline-flex; min-width: 14px; height: 14px; flex: 0 0 auto; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: var(--sidebar-active-bg); color: var(--sidebar-label); font-size: 9px; line-height: 1; }
@@ -2681,8 +2680,7 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   font-size: 10px;
   font-weight: 700;
 }
-.meta-grid { display: grid; gap: var(--s3); }
-.meta-grid { grid-template-columns: minmax(0, 1fr); }
+.meta-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
 .field { display: grid; gap: var(--s1); }
 .field.wide { grid-column: 1 / -1; }
 .field input, .field select, .form-type-select {
@@ -3037,8 +3035,7 @@ body[data-module="scripture"] .scripture-editor .meta-attribute-label {
 }
 .scripture-memo .scripture-textarea { min-height: 80px; font-size: 13px; line-height: 1.5; }
 
-.section-bar { justify-content: space-between; }
-.section-bar { margin: 0; }
+.section-bar { justify-content: space-between; margin: 0; }
 .form-toolbar { align-items: flex-start; flex-wrap: wrap; gap: var(--s4); padding-bottom: 0; }
 .panel { display: grid; gap: var(--s3); }
 .form-buttons, .copy-actions { gap: var(--s1); }
@@ -3398,7 +3395,6 @@ body[data-module="scripture"] .scripture-editor .meta-attribute-label {
 }
 .version-picker:hover .form-block { background: color-mix(in srgb, var(--panel-2) 36%, transparent); }
 .version-empty-cell { min-height: 24px; }
-.form-block { border: 0; border-radius: var(--r); background: color-mix(in srgb, var(--panel-2) 24%, transparent); }
 .form-block {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -3406,6 +3402,9 @@ body[data-module="scripture"] .scripture-editor .meta-attribute-label {
   width: 100%;
   min-width: 0;
   gap: 7px;
+  border: 0;
+  border-radius: var(--r);
+  background: color-mix(in srgb, var(--panel-2) 24%, transparent);
   padding: 8px;
 }
 .form-block.needs-review {
@@ -3429,10 +3428,8 @@ body[data-module="scripture"] .scripture-editor .meta-attribute-label {
   padding: 8px 10px;
   white-space: pre-wrap;
 }
-.form-head { justify-content: space-between; margin-bottom: var(--s3); }
-.form-head { margin-bottom: 0; }
-.form-meta { display: flex; min-width: 0; align-items: center; gap: var(--s2); color: var(--ink); font-weight: 500; }
-.form-meta { flex-wrap: wrap; }
+.form-head { justify-content: space-between; margin-bottom: 0; }
+.form-meta { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--s2); color: var(--ink); font-weight: 500; }
 .form-label-text {
   display: inline-flex;
   min-height: 24px;
@@ -3560,14 +3557,17 @@ body[data-module="praise"] .song-count-badge {
 .toast-region { position: fixed; right: var(--s4); bottom: var(--s4); z-index: 20; display: grid; gap: var(--s2); width: min(360px, calc(100vw - 32px)); }
 .toast {
   --toast-tone: var(--info);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   border: 1px solid var(--line-soft);
   border-left: 3px solid var(--toast-tone);
   border-radius: var(--r);
   background: var(--panel);
+  color: var(--ink-2);
   box-shadow: var(--shadow-soft);
+  padding: var(--s3);
 }
-.toast { padding: var(--s3); color: var(--ink-2); }
-.toast { display: flex; align-items: flex-start; gap: 8px; }
 .toast[hidden] { display: none; }
 .toast.info { --toast-tone: var(--info); }
 .toast.success { --toast-tone: var(--success); }
@@ -6139,8 +6139,10 @@ body[data-theme="dark"] .service-week-empty:hover {
   background: color-mix(in srgb, var(--accent-soft) 34%, transparent);
   color: var(--accent);
 }
-.svc-group { display: flex; flex-direction: column; gap: 3px; }
 .svc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   margin: 8px 0 10px;
   border-radius: var(--r);
   background: color-mix(in srgb, var(--panel-2) 12%, transparent);
