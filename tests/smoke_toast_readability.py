@@ -27,8 +27,18 @@ def main():
                     check(toastDisplayDuration('연결 오류','error')===6000,'error duration');
                     check(toastDisplayDuration('일반 안내')===2000,'info duration');
                     check(toastDisplayDuration('저장 '+ '긴'.repeat(300))===10000,'long duration');
+                    showToast('반영 완료\\n상단 저장','success');
+                    const success=refs.toastRegion.firstElementChild;
+                    check(success.classList.contains('success') && success.getAttribute('role')==='status','success semantics');
+                    check(success.querySelector('.toast-icon svg'),'success icon missing');
+                    check(success.querySelectorAll('.toast-message-line').length===2,'structured lines missing');
+                    check(success.querySelector('.toast-message-line').classList.contains('is-summary'),'summary emphasis missing');
+                    check(parseFloat(getComputedStyle(success).borderLeftWidth)===3,'status line missing');
+                    check(Number(getComputedStyle(success.querySelector('.is-summary')).fontWeight)>=600,'summary weight');
+                    dismissToast(success);
                     showToast('저장했습니다.');
                     const first=refs.toastRegion.firstElementChild;
+                    check(first.classList.contains('info') && first.getAttribute('role')==='status','info semantics');
                     tick(3200);check(first.isConnected,'old premature timeout');
                     first.dispatchEvent(new MouseEvent('mouseenter'));
                     tick(30000);check(first.isConnected,'hover did not pause');
@@ -37,6 +47,8 @@ def main():
                     tick(1);check(!first.isConnected,'resume did not expire');
                     showToast('저장 실패','error');
                     const error=refs.toastRegion.firstElementChild;
+                    check(error.classList.contains('error') && error.getAttribute('role')==='alert','error semantics');
+                    check(error.querySelector('.toast-icon svg'),'error icon missing');
                     const button=error.querySelector('button');button.focus();
                     tick(20000);check(error.isConnected,'keyboard focus did not pause');
                     button.blur();await Promise.resolve();tick(6000);

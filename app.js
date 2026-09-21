@@ -20397,7 +20397,8 @@ function toastLines(...parts) {
 
 function showToast(message, type = "info") {
   if (!message || !refs.toastRegion) return;
-  const toastKey = `${type}:${message}`;
+  const toastType = ["info", "success", "error"].includes(type) ? type : "info";
+  const toastKey = `${toastType}:${message}`;
   const existingToast = Array.from(refs.toastRegion.children).find((toast) => toast.dataset.toastKey === toastKey);
   if (existingToast) {
     existingToast.scheduleRemoval();
@@ -20405,12 +20406,24 @@ function showToast(message, type = "info") {
   }
 
   const toast = document.createElement("div");
-  toast.className = `toast ${type === "error" ? "error" : ""}`;
+  toast.className = `toast ${toastType}`;
   toast.dataset.toastKey = toastKey;
+  toast.setAttribute("role", toastType === "error" ? "alert" : "status");
   toast.hidden = true;
+  const icon = document.createElement("span");
+  icon.className = "toast-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = `<i data-lucide="${toastType === "error" ? "circle-alert" : toastType === "success" ? "circle-check" : "info"}"></i>`;
   const text = document.createElement("span");
   text.className = "toast-message";
-  text.textContent = message;
+  const lines = String(message).split(/\r\n?|\n/);
+  lines.forEach((content, index) => {
+    if (index) text.append(document.createTextNode("\n"));
+    const line = document.createElement("span");
+    line.className = `toast-message-line${index === 0 && lines.length > 1 ? " is-summary" : ""}`;
+    line.textContent = content || " ";
+    text.append(line);
+  });
   const close = document.createElement("button");
   close.type = "button";
   close.className = "toast-close";
@@ -20418,12 +20431,12 @@ function showToast(message, type = "info") {
   close.title = "알림 닫기";
   close.innerHTML = '<i data-lucide="x"></i>';
   close.addEventListener("click", () => dismissToast(toast));
-  toast.append(text, close);
+  toast.append(icon, text, close);
   let hovered = false;
   toast.scheduleRemoval = () => {
     window.clearTimeout(toast.removeTimer);
     if (toast.hidden || hovered || toast.contains(document.activeElement)) return;
-    toast.removeTimer = window.setTimeout(() => dismissToast(toast), toastDisplayDuration(message, type));
+    toast.removeTimer = window.setTimeout(() => dismissToast(toast), toastDisplayDuration(message, toastType));
   };
   toast.addEventListener("mouseenter", () => { hovered = true; window.clearTimeout(toast.removeTimer); });
   toast.addEventListener("mouseleave", () => { hovered = false; toast.scheduleRemoval(); });
