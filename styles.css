@@ -3673,7 +3673,6 @@ body[data-module="presenter"] .detail-pane {
 .service-sidebar-add:hover,
 .service-sidebar-add:focus-visible {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
-  outline: none;
 }
 .service-sidebar-head small {
   color: var(--sidebar-label);
@@ -3787,7 +3786,6 @@ body[data-module="presenter"] .detail-pane {
 .service-sidebar-presenter:focus-visible {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
-  outline: none;
 }
 .service-sidebar-card:hover,
 .service-type-row:hover {
@@ -4730,7 +4728,6 @@ body[data-theme="dark"] .service-week-empty:hover {
 .svc-mode-tab:not(.active):focus-visible {
   background: var(--sidebar-hover-bg);
   color: var(--ink);
-  outline: none;
 }
 .svc-mode-tab.active {
   background: var(--tab-active-bg);
@@ -4762,7 +4759,6 @@ body[data-theme="dark"] .service-week-empty:hover {
 .svc-output-action:focus-visible {
   background: color-mix(in srgb, var(--panel-2) 58%, transparent);
   color: var(--ink-2);
-  outline: none;
 }
 .svc-output-action svg {
   width: 16px;
@@ -6369,7 +6365,6 @@ body[data-theme="dark"] .service-week-empty:hover {
 .svc-board-scale button:focus-visible {
   background: color-mix(in srgb, var(--panel-2) 66%, transparent);
   color: var(--ink);
-  outline: none;
 }
 .svc-board-scale button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
@@ -6677,7 +6672,6 @@ body[data-theme="dark"] .service-week-empty:hover {
 .svc-presenter-preparation-form:focus-visible {
   background: color-mix(in srgb, var(--panel-2) 66%, transparent);
   color: var(--ink);
-  outline: none;
 }
 .svc-presenter-preparation-form i { width: 14px; height: 14px; stroke-width: 1.75; }
 .service-sidebar-head .svc-presenter-preparation-form { color: var(--sidebar-label); }
@@ -7701,7 +7695,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-music-name:focus-visible {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--ink);
-  outline: none;
 }
 .svc-music-name svg { width: 16px; height: 16px; flex: 0 0 auto; }
 .svc-music-name span {
@@ -8087,7 +8080,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-reference-media-add:focus-visible {
   border-color: var(--accent);
   color: var(--accent);
-  outline: none;
 }
 .svc-reference-media-add i { width: var(--ui-icon-sm); height: var(--ui-icon-sm); stroke-width: 2; }
 .svc-reference-media-upload:hover,

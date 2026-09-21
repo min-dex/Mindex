@@ -25,7 +25,17 @@ def main():
                 <div class="presenter-section-editor-body"><div class="presenter-section-editor-list">
                 ${items.map((item,i)=>renderPresenterSectionEditorItem(item,i,{service,sectionItems:items})).join('')}
                 </div></div></section></div>
-                <span class="svc-presenter-pin-track"></span><div class="cal-view"><span id="calTokenProbe" style="color:var(--cal-text)">달력</span></div>`;
+                <span class="svc-presenter-pin-track"></span><div class="cal-view"><span id="calTokenProbe" style="color:var(--cal-text)">달력</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <button class="service-sidebar-add" data-focus-probe>추가</button>
+                  <button class="service-sidebar-presenter" data-focus-probe>송출</button>
+                  <button class="svc-mode-tab" data-focus-probe>모드</button>
+                  <button class="svc-output-action" data-focus-probe>출력</button>
+                  <span class="svc-board-scale"><button data-focus-probe>크기</button></span>
+                  <button class="svc-presenter-preparation-form" data-focus-probe>양식</button>
+                  <button class="svc-music-name" data-focus-probe>음악</button>
+                  <button class="svc-reference-media-add" data-focus-probe>파일</button>
+                </div>`;
               document.body.append(fixture); refreshIcons(fixture);
             }""")
             for theme in ('light','dark'):
@@ -36,12 +46,18 @@ def main():
                       const fixture=document.getElementById('cssFixture');
                       const rows=[...fixture.querySelectorAll('.presenter-section-editor-item')];
                       const pin=getComputedStyle(fixture.querySelector('.svc-presenter-pin-track'),'::after');
+                      const focusRings=[...fixture.querySelectorAll('[data-focus-probe]')].every(button=>{
+                        button.focus();
+                        const css=getComputedStyle(button);
+                        return css.outlineStyle!=='none' && parseFloat(css.outlineWidth)>=2;
+                      });
                       return {rowsFit:rows.every(row=>row.scrollWidth<=row.clientWidth+1),
                         fieldsFit:rows.every(row=>[...row.querySelectorAll('input,select,button')].every(el=>{
                           const r=el.getBoundingClientRect(),b=row.getBoundingClientRect();
                           return !r.width || r.left>=b.left-1 && r.right<=b.right+1;
                         })),
                         pinVisible:pin.backgroundColor!=='rgba(0, 0, 0, 0)',
+                        focusRings,
                         calendarToken:Boolean(getComputedStyle(fixture.querySelector('.cal-view')).getPropertyValue('--cal-text').trim())};
                     }""")
                     assert all(result.values()), (theme,width,result)
