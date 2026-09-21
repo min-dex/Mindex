@@ -24960,12 +24960,11 @@ function groupWorshipSetlistArchiveEntries(entries = [], view = state.worshipSet
   const groups = new Map();
   entries.forEach((entry) => {
     const week = byService ? null : worshipSetlistArchiveWeek(entry.source.service_date);
-    const key = byService
-      ? worshipAppServiceTypeId(entry.source.service_type_id) || ""
-      : week.key;
+    const typeId = worshipAppServiceTypeId(entry.source.service_type_id) || "";
+    const key = byService ? (typeId === "monthly" ? "friday" : typeId) : week.key;
     if (!groups.has(key)) groups.set(key, {
       key,
-      title: byService ? (key ? worshipSetlistArchiveTypeName(key) : "예배 미지정") : week.title,
+      title: byService ? (key === "friday" ? "금요예배" : key ? worshipSetlistArchiveTypeName(key) : "예배 미지정") : week.title,
       entries: [],
     });
     groups.get(key).entries.push(entry);
@@ -25019,7 +25018,8 @@ function renderWorshipWeekStatus(entry) {
 function worshipSetlistArchiveAliases(source = {}) {
   const values = Array.isArray(source.aliases) ? source.aliases : [source.aliases || ""];
   const typeName = worshipSetlistArchiveTypeName(source.service_type_id);
-  return [...new Set(values.map(value => String(value || "").trim()).filter(value => value && value !== typeName))].join(" · ");
+  const aliases = [...new Set(values.map(value => String(value || "").trim()).filter(value => value && value !== typeName))].join(" · ");
+  return aliases || (state.worshipSetlistArchiveView === "service" && worshipAppServiceTypeId(source.service_type_id) === "monthly" ? typeName : "");
 }
 
 const worshipSetlistLeaderDrafts = new Map();
