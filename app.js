@@ -24909,9 +24909,15 @@ function renderServiceSetlistArchiveDetail() {
   }
   const archive = state.worshipSetlistArchive;
   const rawEntries = worshipSetlistArchiveEntries();
-  const allEntries = window.MindexWorshipWeek
+  const actualYears = new Set([...rawEntries.map(entry => entry.source.service_date),
+    ...(archive.live?.services || []).map(service => service.service_date)]
+    .map(date => String(date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year)));
+  const allEntries = (window.MindexWorshipWeek
     ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || []).flatMap(group => group.entries)
-    : rawEntries;
+    : rawEntries).filter(entry => actualYears.has(String(entry.source.service_date || "").slice(0,4)));
+  if (state.worshipSetlistArchiveYear && !actualYears.has(state.worshipSetlistArchiveYear)) {
+    state.worshipSetlistArchiveYear = "";
+  }
   const entries = filterWorshipSetlistArchivePeriod(filterWorshipSetlistArchiveEntries(allEntries));
   refs.detailPane.innerHTML = `
     <div class="service-date-list service-date-list--setlists">
