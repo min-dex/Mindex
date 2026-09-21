@@ -748,25 +748,6 @@ body:not(.right-sidebar-open) .right-sidebar .svc-presenter-side-panel {
   pointer-events: none;
   visibility: hidden;
 }
-.right-sidebar-head {
-  display: flex;
-  min-width: 0;
-  height: var(--topbar-btn-size);
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--sidebar-ink);
-  padding: 0 var(--sidebar-item-pad-x);
-}
-.right-sidebar-head strong {
-  min-width: 0;
-  overflow: hidden;
-  font-size: var(--ui-body-size);
-  font-weight: 800;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .svc-right-sidebar-toggle {
   border: 0;
   background: transparent;
@@ -1059,17 +1040,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   opacity: .9;
 }
 .global-search-result .song-meta-line { padding-left: 0; }
-.global-search-result--primary {
-  background: color-mix(in srgb, var(--accent-soft) 44%, transparent);
-  color: var(--sidebar-ink);
-}
-.global-search-result--primary:hover {
-  background: color-mix(in srgb, var(--accent-soft) 64%, var(--sidebar-hover-bg));
-}
-.global-search-result--primary .song-title-text {
-  color: color-mix(in srgb, var(--accent) 72%, var(--sidebar-ink));
-  font-weight: 700;
-}
 .song-list-empty { display: grid; gap: 3px; padding: var(--s3) var(--sidebar-item-pad-x); color: var(--ink-4); font-size: 11px; line-height: 1.35; }
 .song-list-empty--loading { padding-top: 7px; }
 .song-list-empty strong { color: var(--ink-3); font-size: 12px; font-weight: 700; }
@@ -3121,29 +3091,6 @@ body[data-module="presenter"] .detail-pane {
   line-height: normal;
   text-transform: none;
 }
-.service-sidebar-add {
-  display: inline-flex;
-  height: 24px;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  border-radius: var(--r);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
-  cursor: pointer;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 0 8px;
-}
-.service-sidebar-add svg {
-  width: 16px;
-  height: 16px;
-}
-.service-sidebar-add:hover,
-.service-sidebar-add:focus-visible {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-}
 .service-sidebar-head small {
   color: var(--sidebar-label);
   font-size: var(--ui-label-size);
@@ -3229,33 +3176,6 @@ body[data-module="presenter"] .detail-pane {
 .service-sidebar-card-row:hover .service-sidebar-card--compact,
 .service-sidebar-card-row.active .service-sidebar-card--compact {
   background: transparent;
-}
-.service-sidebar-presenter {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: var(--r);
-  background: transparent;
-  color: var(--sidebar-label);
-  cursor: pointer;
-  opacity: .58;
-}
-.service-sidebar-presenter svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 1.5;
-}
-.service-sidebar-card-row:hover .service-sidebar-presenter,
-.service-sidebar-card-row:focus-within .service-sidebar-presenter {
-  opacity: 1;
-}
-.service-sidebar-presenter:hover,
-.service-sidebar-presenter:focus-visible {
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
 }
 .service-sidebar-card:hover,
 .service-type-row:hover {

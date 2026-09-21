@@ -27,8 +27,6 @@ def main():
                 </div></div></section></div>
                 <span class="svc-presenter-pin-track"></span><div class="cal-view"><span id="calTokenProbe" style="color:var(--cal-text)">달력</span></div>
                 <div style="display:flex;flex-wrap:wrap;gap:8px">
-                  <button class="service-sidebar-add" data-focus-probe>추가</button>
-                  <button class="service-sidebar-presenter" data-focus-probe>송출</button>
                   <button class="svc-mode-tab" data-focus-probe>모드</button>
                   <button class="svc-output-action" data-focus-probe>출력</button>
                   <span class="svc-board-scale"><button data-focus-probe>크기</button></span>
