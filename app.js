@@ -24911,7 +24911,7 @@ function renderServiceSetlistArchiveDetail() {
   const rawEntries = worshipSetlistArchiveEntries();
   const actualYears = new Set([...rawEntries.map(entry => entry.source.service_date),
     ...(archive.live?.services || []).map(service => service.service_date)]
-    .map(date => String(date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year)));
+    .map(date => String(date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year) && Number(year) >= 2026));
   const allEntries = (window.MindexWorshipWeek
     ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || []).flatMap(group => group.entries)
     : rawEntries).filter(entry => actualYears.has(String(entry.source.service_date || "").slice(0,4)));
