@@ -145,9 +145,10 @@ function renderPresenterServiceInputRail(service) {
         <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
         </div>
         <div class="svc-presenter-preparation-actions">
-          <button class="svc-presenter-preparation-apply" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}" ${applying ? "disabled" : ""}>
+          <button class="svc-presenter-preparation-apply" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}"
+            aria-label="${applying ? "예배 입력 반영 중" : "예배 입력 반영"}" title="${applying ? "반영 중" : "입력창에서 Enter 두 번 또는 ⌘/Ctrl+Enter"}" ${applying ? "disabled" : ""}>
             <i data-lucide="wand-sparkles"></i>
-            <span>${applying ? "반영 중" : "반영 (Enter 2번)"}</span>
+            <span>${applying ? "반영 중" : "반영"}</span>
           </button>
         </div>
       </section>

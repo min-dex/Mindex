@@ -17,6 +17,11 @@ def main():
               const service = { id: '__prep_form_default__', type_id: 'sunday-main', date: '2026-09-20', title: '주일예배 [3부]' };
               const previous = { services: state.services, drafts: state.presenterPreparationDrafts, dirty: state.dirty.service };
               const textareaValue = (html) => { const host = document.createElement('div'); host.innerHTML = html; return host.querySelector('[data-presenter-preparation-input]').value; };
+              const applyButtonState = (html) => {
+                const host = document.createElement('div'); host.innerHTML = html;
+                const button = host.querySelector('[data-presenter-preparation-apply]');
+                return { label: button?.textContent?.replace(/\s+/g, ' ').trim(), title: button?.title, ariaLabel: button?.getAttribute('aria-label') };
+              };
               try {
                 state.services = [service, ...previous.services];
                 state.presenterPreparationDrafts = {};
@@ -26,6 +31,11 @@ def main():
                 // untouched: both panels start with the form
                 check(textareaValue(renderPresenterServiceInputRail(service)) === form, 'right panel starts with the form');
                 check(textareaValue(renderPresenterSidebarPreparationInput(service)) === form, 'sidebar panel starts with the form');
+                for (const state of [applyButtonState(renderPresenterServiceInputRail(service)), applyButtonState(renderPresenterSidebarPreparationInput(service))]) {
+                  check(state.label === '반영', 'apply button label: ' + JSON.stringify(state));
+                  check(state.title === '입력창에서 Enter 두 번 또는 ⌘/Ctrl+Enter', 'apply button tooltip: ' + JSON.stringify(state));
+                  check(state.ariaLabel === '예배 입력 반영', 'apply button accessible label: ' + JSON.stringify(state));
+                }
                 check(state.dirty.service === previous.dirty && Object.keys(state.presenterPreparationDrafts).length === 0, 'showing the form must not create a draft or mark the service dirty');
 
                 // a filled form has nothing to apply: blank labels are skipped, nothing becomes a song or a note

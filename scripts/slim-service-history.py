@@ -65,6 +65,23 @@ def size(value):
     return len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode())
 
 
+def write_backup(backup, backup_dir, now=None):
+    out_dir = pathlib.Path(backup_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stamp = (now or datetime.datetime.now()).strftime("%Y%m%d-%H%M%S-%f")
+    payload = json.dumps(backup, ensure_ascii=False)
+    for suffix in range(1000):
+        marker = "" if suffix == 0 else f"-{suffix}"
+        path = out_dir / f"service-history-before-slim-{stamp}{marker}.json"
+        try:
+            with path.open("x", encoding="utf-8", errors="strict", newline="") as handle:
+                handle.write(payload)
+            return path
+        except FileExistsError:
+            continue
+    raise RuntimeError("Could not create a unique service-history backup file")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
@@ -93,10 +110,7 @@ def main():
     targets = [r for r in rows if isinstance(r["source_ref"].get(HIST), list) and r["source_ref"][HIST]]
     backup = {"created": datetime.datetime.now().isoformat(timespec="seconds"),
               "rows": [{"id": r["id"], "updated_at": r["updated_at"], "history": r["source_ref"][HIST]} for r in targets]}
-    out_dir = pathlib.Path(args.backup_dir); out_dir.mkdir(parents=True, exist_ok=True)
-    backup_path = out_dir / f"service-history-before-slim-{datetime.date.today():%Y%m%d}.json"
-    if not backup_path.exists():
-        backup_path.write_text(json.dumps(backup, ensure_ascii=False))
+    backup_path = write_backup(backup, args.backup_dir)
     print(f"services total {len(rows)}, with history {len(targets)}; backup -> {backup_path} ({backup_path.stat().st_size // 1000} KB)")
 
     total_before = total_after = 0
