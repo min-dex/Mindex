@@ -653,6 +653,7 @@ body[data-theme="dark"] .top-module-entry.active {
 .list-filter {
   display: grid;
   width: 100%;
+  flex: 0 0 auto;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   margin-top: 0;
@@ -1091,7 +1092,6 @@ body[data-module="backgrounds"] .sidebar-count,
   color: var(--ink-3);
 }
 .field input:focus, .field textarea:focus, .field select:focus, .form-type-select:focus, .form-textarea:focus, .scripture-textarea:focus { background: color-mix(in srgb, var(--panel-2) 72%, transparent); }
-.list-filter { flex: 0 0 auto; }
 .song-list, .detail-pane {
   min-height: 0;
   overflow: auto;
