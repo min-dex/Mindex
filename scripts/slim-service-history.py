@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--restore")
     parser.add_argument("--backup-dir", default=str(ROOT / "backups"))
     parser.add_argument("--limit", type=int, default=0, help="with --apply: rewrite only the newest N services first (canary)")
+    parser.add_argument("--only", default="", help="with --apply: rewrite only services whose id starts with this prefix (canary)")
     args = parser.parse_args()
     url, key = load_env()
 
@@ -116,6 +117,9 @@ def main():
         print("DRY RUN: nothing was written. Re-run with --apply to rewrite.")
         return
     ok = skipped = 0
+    if args.only:
+        plans = [plan for plan in plans if plan[0]["id"].startswith(args.only)]
+        print(f"canary: only ids starting with {args.only} ({len(plans)} service(s))")
     if args.limit:
         plans = plans[-args.limit:]
         print(f"canary: only the newest {len(plans)} service(s)")
