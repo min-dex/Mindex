@@ -1200,7 +1200,6 @@ async function loadHymnScoreManifest({ silent = false } = {}) {
 function cacheRefs() {
   refs.brandNameHome = document.getElementById("brandNameHome");
   refs.sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
-  refs.moduleButtons = [...document.querySelectorAll(".module-tab[data-module]")];
   refs.pageTabs = document.getElementById("pageTabs");
   refs.pageTabAddBtn = document.getElementById("pageTabAddBtn");
   refs.pageTabLabel = document.getElementById("pageTabLabel");
@@ -1228,9 +1227,6 @@ function cacheRefs() {
 function bindStaticEvents() {
   refs.sidebarToggleBtn?.addEventListener("click", handleSidebarToggle);
   refs.brandNameHome?.addEventListener("click", goHome);
-  refs.moduleButtons.forEach((button) => {
-    button.addEventListener("click", () => switchModule(button.dataset.module));
-  });
   refs.pageTabAddBtn?.addEventListener("click", () => { void openNewPageTab(); });
   refs.pageTabs?.addEventListener("click", handlePageTabClick);
   refs.pageTabs?.addEventListener("keydown", handlePageTabKeydown);
@@ -14654,17 +14650,6 @@ function adventStartDate(churchYear) {
 
 function renderModuleSwitcher() {
   renderLiveServiceReturnControl();
-  const moduleButtons = Array.isArray(refs.moduleButtons)
-    ? refs.moduleButtons
-    : [...document.querySelectorAll(".module-tab[data-module]")];
-  refs.moduleButtons = moduleButtons;
-  for (const button of moduleButtons) {
-    const buttonModule = button.dataset.module;
-    const active = buttonModule === state.module || (buttonModule === "service" && state.module === "presenter");
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", String(active));
-    button.setAttribute("aria-current", active ? "page" : "false");
-  }
   const homeActive = state.module === "home";
   refs.brandNameHome?.setAttribute("aria-current", homeActive ? "page" : "false");
   renderPageTabTitle();
