@@ -6622,6 +6622,7 @@ body[data-theme="dark"] .service-week-empty:hover {
   gap: 24px;
 }
 .svc-presenter-side-panel {
+  --svc-panel-control-height: 34px;
   display: grid;
   width: 100%;
   min-width: 0;
@@ -7531,7 +7532,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 }
 .svc-presenter-side-panel .svc-slide-jump-input {
   width: 48px;
-  height: 34px;
+  height: var(--svc-panel-control-height);
   background: color-mix(in srgb, var(--panel) 78%, transparent);
   font-size: var(--ui-body-size);
   line-height: normal;
@@ -8834,7 +8835,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 .svc-board-subgroup-flow {
   --svc-control-height: 30px;
 }
-.svc-board-subgroup-flow { gap: 8px; }
 .svc-board-subgroup-flow :is(.svc-board-subgroup-commit, .svc-reference-media-upload, .svc-board-subgroup-audio-upload) {
   display: inline-flex;
   align-items: center;
@@ -8849,7 +8849,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
 }
 .svc-board-subgroup-flow :is(.svc-board-subgroup-commit, .svc-reference-media-upload, .svc-board-subgroup-audio-upload) :is(i, svg) { width: 16px; height: 16px; flex-shrink: 0; }
 .svc-board-subgroup-flow .svc-board-subgroup-audio { gap: 6px; min-height: 30px; }
-.svc-presenter-side-panel { --svc-panel-control-height: 34px; }
 .svc-presenter-side-panel :is(button, summary.icon-btn, .svc-presenter-screen-select, .svc-presenter-pin-toggle) {
   box-sizing: border-box;
   height: var(--svc-panel-control-height);
@@ -8861,7 +8860,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   gap: 6px;
 }
 .svc-presenter-side-panel button :is(i, svg) { width: 16px; height: 16px; flex-shrink: 0; }
-.svc-presenter-side-panel .svc-slide-jump-input { height: var(--svc-panel-control-height); }
 .svc-presenter-window-controls > :is(button, label) { white-space: nowrap; padding-inline: 4px; }
 .svc-board-subgroup-flow > .svc-board-subgroup-commit {
   order: 10;
