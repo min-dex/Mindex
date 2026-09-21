@@ -662,6 +662,8 @@ const state = {
   worshipTemplateItems: [],
   worshipSetlistSongCatalog: { key: "", status: "idle", index: null },
   worshipSetlistArchiveView: "date",
+  worshipSetlistArchiveYear: "",
+  worshipSetlistArchiveMonth: "",
   worshipSetlistArchive: {
     sources: [],
     candidates: [],
@@ -8832,6 +8834,14 @@ function handleDetailClick(event) {
     return;
   }
 
+  const setlistJump = event.target.closest("[data-setlist-jump]");
+  if (setlistJump) {
+    const heading = document.getElementById(setlistJump.dataset.setlistJump);
+    heading?.scrollIntoView({ block: "start", behavior: "instant" });
+    heading?.focus({ preventScroll: true });
+    return;
+  }
+
   const serviceSetlistViewBtn = event.target.closest("[data-service-setlist-view]");
   if (serviceSetlistViewBtn) {
     const view = serviceSetlistViewBtn.dataset.serviceSetlistView;
@@ -9742,6 +9752,16 @@ function handleDetailSubmit(event) {
 }
 
 function handleDetailChange(event) {
+  const setlistPeriod = event.target.closest("[data-setlist-period]");
+  if (setlistPeriod) {
+    const field = setlistPeriod.dataset.setlistPeriod;
+    if (field === "year") state.worshipSetlistArchiveYear = setlistPeriod.value;
+    if (field === "month") state.worshipSetlistArchiveMonth = setlistPeriod.value;
+    renderServiceSetlistArchiveDetail();
+    refs.detailPane.querySelector(`[data-setlist-period="${field}"]`)?.focus();
+    return;
+  }
+
   const citationAutoOutput = event.target.closest("[data-presenter-citation-auto-output]");
   if (citationAutoOutput) {
     presenterCitationAutoOutput = citationAutoOutput.checked;
@@ -24862,6 +24882,27 @@ function filterWorshipSetlistArchiveEntries(entries = []) {
   });
 }
 
+function filterWorshipSetlistArchivePeriod(entries = []) {
+  if (state.worshipSetlistArchiveView !== "date") return entries;
+  return entries.filter(({source}) => {
+    const date = String(source.service_date || "");
+    return (!state.worshipSetlistArchiveYear || date.slice(0,4) === state.worshipSetlistArchiveYear)
+      && (!state.worshipSetlistArchiveMonth || date.slice(5,7) === state.worshipSetlistArchiveMonth);
+  });
+}
+
+function renderWorshipSetlistArchiveNavigation(allEntries, entries) {
+  if (state.worshipSetlistArchiveView === "service") {
+    return `<nav class="svc-setlist-navigation" aria-label="예배별 바로가기">${groupWorshipSetlistArchiveEntries(entries, "service").map(group =>
+      `<button type="button" data-setlist-jump="setlist-group-${escapeAttr(group.key)}">${escapeHtml(group.title)}</button>`).join("")}</nav>`;
+  }
+  const years = [...new Set(allEntries.map(entry => String(entry.source.service_date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year)))].sort().reverse();
+  return `<div class="svc-setlist-navigation svc-setlist-period" role="group" aria-label="콘티 기간 선택">
+    <select data-setlist-period="year" aria-label="연도"><option value="">전체 연도</option>${years.map(year => `<option value="${year}" ${state.worshipSetlistArchiveYear === year ? "selected" : ""}>${year}년</option>`).join("")}</select>
+    <select data-setlist-period="month" aria-label="월"><option value="">전체 월</option>${Array.from({length:12}, (_,index) => {const month=String(index+1).padStart(2,"0");return `<option value="${month}" ${state.worshipSetlistArchiveMonth === month ? "selected" : ""}>${index+1}월</option>`;}).join("")}</select>
+  </div>`;
+}
+
 function renderServiceSetlistArchiveDetail() {
   if (!state.worshipSetlistArchive.loaded && !state.worshipSetlistArchive.loading) {
     void loadWorshipSetlistArchive();
@@ -24871,7 +24912,7 @@ function renderServiceSetlistArchiveDetail() {
   const allEntries = window.MindexWorshipWeek
     ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || []).flatMap(group => group.entries)
     : rawEntries;
-  const entries = filterWorshipSetlistArchiveEntries(allEntries);
+  const entries = filterWorshipSetlistArchivePeriod(filterWorshipSetlistArchiveEntries(allEntries));
   refs.detailPane.innerHTML = `
     <div class="service-date-list service-date-list--setlists">
       <div class="service-section-head">
@@ -24887,10 +24928,11 @@ function renderServiceSetlistArchiveDetail() {
       </div>
       ${archive.error ? `<p class="service-no-results">${escapeHtml(archive.error)}</p>` : ""}
       <div class="svc-setlist-view-switch" role="group" aria-label="콘티 보기 방식">
-        ${[["date", "주별"], ["service", "예배별"]].map(([view, label]) => `
+        ${[["date", "기간별"], ["service", "예배별"]].map(([view, label]) => `
           <button type="button" data-service-setlist-view="${view}" aria-pressed="${state.worshipSetlistArchiveView === view}">${label}</button>
         `).join("")}
       </div>
+      ${renderWorshipSetlistArchiveNavigation(allEntries, entries)}
       ${archive.loading && !archive.loaded ? renderLoadingDetail() : renderWorshipSetlistArchiveGroups(entries)}
     </div>`;
   finishDetailRender();
@@ -24940,7 +24982,7 @@ function renderWorshipSetlistArchiveGroups(entries = []) {
     <div class="svc-setlist-month-groups">
       ${groups.map((group) => `
         <section class="svc-setlist-month-group">
-          <h3>${escapeHtml(group.title)} <span class="svc-setlist-group-count">${group.entries.filter(entry => entry.candidates.length).length}개 콘티</span></h3>
+          <h3 id="setlist-group-${escapeAttr(group.key)}" tabindex="-1">${escapeHtml(group.title)} <span class="svc-setlist-group-count">${group.entries.filter(entry => entry.candidates.length).length}개 콘티</span></h3>
           <div class="svc-setlist-entry-list">
             ${group.entries.map(entry => entry.weeklyStatus ? renderWorshipWeekStatus(entry) : renderWorshipSetlistArchiveEntry(entry)).join("")}
           </div>
@@ -24959,7 +25001,7 @@ function renderWorshipWeekStatus(entry) {
     : `<strong>${escapeHtml(title)}</strong>`;
   return `<article class="svc-setlist-entry svc-setlist-entry--status svc-setlist-entry--${kind}">
     <header><div class="svc-setlist-entry-title">
-      <div class="svc-setlist-entry-heading">${heading}</div>
+      <div class="svc-setlist-entry-heading">${heading}${worshipSetlistArchiveAliases(entry.source) ? `<span class="svc-setlist-alias">${escapeHtml(worshipSetlistArchiveAliases(entry.source))}</span>` : ""}</div>
       ${state.worshipSetlistArchiveView !== "service" ? `<span class="svc-setlist-leader">${escapeHtml(entry.source.service_date)}</span>` : ""}
     </div></header>
     <div class="svc-setlist-week-status"><strong>${escapeHtml(status === "기록 없음" ? "집회 여부 미확인" : status)}</strong>

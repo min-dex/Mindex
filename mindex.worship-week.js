@@ -25,17 +25,17 @@
         const matching=actual.filter(e=>type(e.source.service_type_id)===id);
         if(matching.length) return matching.map(e=>{
           used.add(e);
-          if(e.candidates.length) return {...e,slotName:name};
+          if(e.candidates.length) return {...e,slotName:e.source.service_type_id==='monthly'?'월삭예배':name};
           const saved=scheduled.find(s=>s.service_date===e.source.service_date && type(s.service_type_id)===id);
           const noGathering=absent(e.source)||absent(saved);
-          return {...e,slotName:name,weeklyStatus:e.source.weekly_status||(noGathering?'집회 없음':'콘티 미등록'),
+          return {...e,slotName:e.source.service_type_id==='monthly'?'월삭예배':name,weeklyStatus:e.source.weekly_status||(noGathering?'집회 없음':'콘티 미등록'),
             weeklyReason:e.source.weekly_reason||(noGathering?(saved?.service_alias||saved?.title||''):'찬양 목록이 아직 등록되지 않았습니다')};
         });
         const saved=scheduled.find(s=>type(s.service_type_id)===id);
         const merged=allGeneration && ['children','youth'].includes(id);
         const noGathering=absent(saved);
-        return [{source:{...(saved||{}),service_type_id:id,service_date:saved?.service_date||add(key,day),aliases:saved?.service_alias||''},
-          candidates:[],missing:true,slotName:name,weeklyStatus:merged?'집회 없음':noGathering?'집회 없음':saved?'콘티 미등록':'기록 없음',
+        return [{source:{...(saved||{}),service_type_id:saved?.service_type_id||id,service_date:saved?.service_date||add(key,day),aliases:saved?.service_alias||''},
+          candidates:[],missing:true,slotName:saved?.service_type_id==='monthly'?'월삭예배':name,weeklyStatus:merged?'집회 없음':noGathering?'집회 없음':saved?'콘티 미등록':'기록 없음',
           weeklyReason:merged?'온세대 찬양예배':noGathering?(saved.service_alias||saved.title||''):saved?'찬양 목록이 아직 등록되지 않았습니다':'집회 여부 미확인'}];
       });
       for(const e of actual) if(!used.has(e)) cells.push(e);
