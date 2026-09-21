@@ -145,12 +145,19 @@ class WorshipRuleGuardTests(unittest.TestCase):
         self.assertNotIn("materializeSharedSundayContentForPersistence", element_patch)
         self.assertLess(
             save.index("preserveExistingWorshipContentRows(rows, existingSections, existingElements)"),
+            save.index("normalizeWorshipPersistenceSortOrders(rows)"),
+        )
+        self.assertLess(
+            save.index("normalizeWorshipPersistenceSortOrders(rows)"),
             save.index("validateWorshipPersistenceRows(rows, { serviceId })"),
         )
         should_preserve = function_block(self.source, "shouldPreserveExistingWorshipElement")
         self.assertIn("worshipElementHasPersistedContent(element)", should_preserve)
         self.assertIn("rows.elements.push(element)", preserve)
         self.assertIn("rows.sections.push(section)", preserve)
+        ordering = function_block(self.source, "normalizeWorshipPersistenceSortOrders")
+        self.assertIn("section.sort_order = index + 1", ordering)
+        self.assertIn("element.sort_order = nextOrder", ordering)
 
     def test_sermon_scripture_slot_wins_over_generic_sermon_label(self) -> None:
         derive = function_block(self.source, "deriveWorshipSlotKey")

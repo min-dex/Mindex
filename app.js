@@ -6921,6 +6921,7 @@ async function saveWorshipServiceInstance(service) {
   sanitizeWorshipPersistenceRows(rows, { elementTypedStateColumns });
   compactWorshipPersistenceRows(rows);
   preserveExistingWorshipContentRows(rows, existingSections, existingElements);
+  normalizeWorshipPersistenceSortOrders(rows);
   validateWorshipPersistenceRows(rows, { serviceId });
 
   const atomic = await worshipAtomicClient();
@@ -7713,6 +7714,26 @@ function compactWorshipPersistenceRows(rows = {}) {
   };
   rows.sections = compactById(rows.sections);
   rows.elements = compactById(rows.elements);
+  return rows;
+}
+
+// Full saves append preserved/hidden template rows after the visible document.
+// Give that final payload a deterministic, unique order so old suppression
+// markers cannot leave an ambiguous database order behind.
+function normalizeWorshipPersistenceSortOrders(rows = {}) {
+  const sections = Array.isArray(rows.sections) ? rows.sections : [];
+  const elements = Array.isArray(rows.elements) ? rows.elements : [];
+  sections.forEach((section, index) => {
+    if (section && typeof section === "object") section.sort_order = index + 1;
+  });
+  const elementOrders = new Map();
+  elements.forEach((element) => {
+    const sectionId = String(element?.section_id || "").trim();
+    if (!sectionId || !element || typeof element !== "object") return;
+    const nextOrder = (elementOrders.get(sectionId) || 0) + 1;
+    elementOrders.set(sectionId, nextOrder);
+    element.sort_order = nextOrder;
+  });
   return rows;
 }
 
