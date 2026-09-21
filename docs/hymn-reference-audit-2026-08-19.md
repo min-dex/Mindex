@@ -158,11 +158,16 @@ python3 -m unittest tests.test_audit_hbible_hymns
 python3 scripts/audit_hbible_hymns.py --book both \
   --workers 4 --delay 0.05 \
   --output /tmp/mindex-hymn-audit-full.json
-python3 scripts/repair_confirmed_unified_hymn_amen_mapping.py --apply
-python3 scripts/remove_hymn_legacy_versions.py --apply
-python3 scripts/add_unified_hymn_443.py --apply
 python3 scripts/audit_identical_hymn_lyrics.py --workers 4 --timeout 30 \
   --retries 2 --output /tmp/mindex-identical-hymn-candidates.json
 python3 scripts/backfill_identical_unified_hymn_lyrics.py \
   --report /tmp/mindex-identical-hymn-candidates.json --apply
 ```
+
+## Completed repair tool cleanup — 2026-09-22
+
+The one-time repair tools were removed after their final conditions were checked
+against the current production database. Their dedicated tests were also removed;
+reusable audits, import tools, schema sources, and application regression tests remain.
+No database records were changed by this cleanup. Historical repair implementations
+are available in Git at `73dc5a45:scripts/`; do not rerun them as current maintenance.

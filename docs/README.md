@@ -58,3 +58,7 @@ must come from the contract documents above.
 If a user-facing behavior changes, update the current decision log or data
 contract with the same commit. Do not restore retired drafts or incident logs
 as behavior sources.
+
+Completed one-time hymn repair tools and their dedicated tests were retired on
+2026-09-22 after read-only production postcondition checks. See the hymn audit
+records above for the retained repair evidence and Git reference.

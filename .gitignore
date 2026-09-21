@@ -13,8 +13,6 @@ scripts/*
 !scripts/import-keynote-deck.mjs
 !scripts/ensure_default_songs.py
 !scripts/audit_hbible_hymns.py
-!scripts/repair_confirmed_unified_hymn_titles.py
-!scripts/repair_confirmed_unified_hymn_duplicates.py
 !scripts/activities-schema.sql
 !scripts/service_templates.py
 !scripts/backfill_song_versions_from_memo.py
