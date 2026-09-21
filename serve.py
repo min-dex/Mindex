@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import sys
+from urllib.parse import unquote, urlsplit
 
 ROOT = pathlib.Path(__file__).resolve().parent
 ENV_PATHS = (
@@ -56,6 +57,19 @@ def inject_local_config(markup):
 class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     def send_head(self):
         self.byte_range = None
+        parts = pathlib.Path(unquote(urlsplit(self.path).path)).parts
+        target = pathlib.Path(self.translate_path(self.path)).resolve()
+        try:
+            relative = target.relative_to(ROOT.resolve())
+        except ValueError:
+            self.send_error(404)
+            return None
+        blocked_dirs = {'docs', 'tests', 'tools', 'scripts', 'data', 'backups', 'migrations'}
+        if (any(p.startswith('.') for p in (*parts, *relative.parts))
+                or (relative.parts and relative.parts[0] in blocked_dirs)
+                or target.suffix.lower() in {'.py', '.md', '.sql', '.log', '.sqlite', '.db', '.sh', '.toml', '.plist'}):
+            self.send_error(404)
+            return None
         requested = self.headers.get("Range", "")
         match = re.fullmatch(r"bytes=(\d*)-(\d*)", requested.strip())
         if self.command != "GET" or not match or self.headers.get("If-Range"):
@@ -92,6 +106,10 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         self.byte_range = (start, end)
         return source
 
+    def list_directory(self, path):
+        self.send_error(404)
+        return None
+
     def copyfile(self, source, outputfile):
         if self.byte_range is None:
             return super().copyfile(source, outputfile)
@@ -123,7 +141,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     os.chdir(ROOT)
     port = int(os.environ.get("PORT", sys.argv[1] if len(sys.argv) > 1 else 2300))
-    http.server.test(HandlerClass=NoCacheHandler, port=port)
+    http.server.test(HandlerClass=NoCacheHandler, port=port, bind='127.0.0.1')
 
 
 if __name__ == "__main__":

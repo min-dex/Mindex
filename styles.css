@@ -758,11 +758,12 @@ body[data-module="backgrounds"] .sidebar-list-head,
 .topbar-actions .icon-btn > * { position: relative; }
 .topbar-actions .btn span { display: none; }
 .topbar-actions svg { display: block; width: 16px; height: 16px; stroke-width: 1.5; }
-.topbar-actions .btn.secondary { background: transparent; color: var(--ink-3); }
+.topbar-actions .icon-btn:not(.primary),
+.topbar-actions .btn.secondary { background: transparent; color: var(--sidebar-ink); }
 .topbar-actions .btn:not(:disabled):hover,
 .topbar-actions .icon-btn:not(:disabled):hover { background: transparent; }
 .topbar-actions .btn:not(:disabled):hover::before,
-.topbar-actions .icon-btn:not(:disabled):hover::before { background: var(--panel-2); }
+.topbar-actions .icon-btn:not(:disabled):hover::before { background: var(--sidebar-hover-bg); }
 .topbar-actions .btn:not(:disabled):active,
 .topbar-actions .icon-btn:not(:disabled):active {
   transform: translateY(1px) scale(.98);
@@ -771,7 +772,7 @@ body[data-module="backgrounds"] .sidebar-list-head,
 .topbar-actions .icon-btn:not(:disabled):active::before {
   background: color-mix(in srgb, var(--panel-2) 82%, var(--line));
 }
-.topbar-actions .btn.secondary:not(:disabled):hover { background: transparent; color: var(--ink-2); }
+.topbar-actions .btn.secondary:not(:disabled):hover { background: transparent; color: var(--sidebar-ink); }
 .topbar-actions .icon-btn.primary {
   background: transparent;
   color: var(--ink-4);
