@@ -158,9 +158,16 @@ body[data-theme="dark"] {
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { min-width: 320px; height: 100vh; margin: 0; overflow: hidden; background: var(--bg); color: var(--ink); line-height: 1.4; text-rendering: geometricPrecision; }
 body {
   --shell-left-w: var(--rail-w);
+  min-width: 320px;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.4;
+  text-rendering: geometricPrecision;
   transition:
     --shell-left-w var(--rail-motion),
     --shell-right-w var(--rail-motion);
@@ -557,8 +564,8 @@ body[data-theme="dark"] .top-module-entry.active {
   letter-spacing: 0;
   padding: 0 16px;
   transition: width 140ms ease, flex-basis 140ms ease;
+  min-width: 0;
 }
-.top-module-entry { min-width: 0; }
 .worship-entry {
   width: var(--module-tab-w);
   flex-basis: var(--module-tab-w);
@@ -1020,7 +1027,21 @@ body[data-module="references"] .sidebar-count,
 body[data-module="manuals"] .sidebar-count,
 body[data-module="backgrounds"] .sidebar-count,
 .sidebar-count:empty { display: none; }
-.search-wrap { display: grid; height: 30px; align-items: center; grid-template-columns: 16px minmax(0, 1fr); gap: var(--s2); overflow: hidden; padding: 0 var(--s2); }
+.search-wrap {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  height: 30px;
+  align-items: center;
+  gap: var(--s2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r);
+  background: var(--control-surface);
+  box-shadow: none;
+  color: var(--ink-3);
+  outline: 0;
+  padding: 0 var(--s2);
+}
 .global-search-wrap {
   max-width: none;
   min-width: 200px;
@@ -1032,14 +1053,6 @@ body[data-module="backgrounds"] .sidebar-count,
   width: calc(var(--sidebar-content-w) - var(--sidebar-item-x) - var(--sidebar-item-end));
   min-width: 0;
   margin: var(--s1) var(--sidebar-item-end) var(--s2) var(--sidebar-item-x);
-}
-.search-wrap {
-  border: 0;
-  border-radius: var(--r);
-  background: var(--control-surface);
-  box-shadow: none;
-  color: var(--ink-3);
-  outline: 0;
 }
 .field input, .field textarea, .field select, .form-type-select, .form-textarea {
   border: 0; border-radius: var(--r); background: color-mix(in srgb, var(--panel-2) 42%, transparent); color: var(--ink); outline: 0;
