@@ -10,7 +10,7 @@
   const week = text => {const d=date(text);return Number.isNaN(+d)?'':add(text,-d.getUTCDay());};
   const aliases = s => [s.source_name,s.title,s.service_alias,...(Array.isArray(s.aliases)?s.aliases:[s.aliases])].filter(Boolean).join(' ');
   const absent = s => s && (s.no_gathering === true || s.no_gathering === 'true' || s.source_ref?.no_gathering === true || s.source_ref?.no_gathering === 'true' || /집회\s*없음/.test(aliases(s)));
-  function build(entries = [], services = []) {
+  function build(entries = [], services = [], options = {}) {
     const usable = services.filter(s=>!['sunday-first','sunday-second'].includes(type(s.service_type_id)));
     const keys=[...entries.map(e=>week(e.source.service_date)),...usable.map(s=>week(s.service_date))].filter(Boolean).sort();
     if (!keys.length) return [];
@@ -32,6 +32,7 @@
             weeklyReason:e.source.weekly_reason||(noGathering?(saved?.service_alias||saved?.title||''):'찬양 목록이 아직 등록되지 않았습니다')};
         });
         const saved=scheduled.find(s=>type(s.service_type_id)===id);
+        if (!saved && options.statusStartDate && add(key,day) < options.statusStartDate) return [];
         const merged=allGeneration && ['children','youth'].includes(id);
         const noGathering=absent(saved);
         return [{source:{...(saved||{}),service_type_id:saved?.service_type_id||id,service_date:saved?.service_date||add(key,day),aliases:saved?.service_alias||''},

@@ -662,7 +662,6 @@ const state = {
   worshipTemplateItems: [],
   worshipSetlistSongCatalog: { key: "", status: "idle", index: null },
   worshipSetlistArchiveView: "date",
-  worshipSetlistArchiveYear: "",
   worshipSetlistArchiveMonth: "",
   worshipSetlistArchive: {
     sources: [],
@@ -9755,7 +9754,6 @@ function handleDetailChange(event) {
   const setlistPeriod = event.target.closest("[data-setlist-period]");
   if (setlistPeriod) {
     const field = setlistPeriod.dataset.setlistPeriod;
-    if (field === "year") state.worshipSetlistArchiveYear = setlistPeriod.value;
     if (field === "month") state.worshipSetlistArchiveMonth = setlistPeriod.value;
     renderServiceSetlistArchiveDetail();
     refs.detailPane.querySelector(`[data-setlist-period="${field}"]`)?.focus();
@@ -24886,19 +24884,16 @@ function filterWorshipSetlistArchivePeriod(entries = []) {
   if (state.worshipSetlistArchiveView !== "date") return entries;
   return entries.filter(({source}) => {
     const date = String(source.service_date || "");
-    return (!state.worshipSetlistArchiveYear || date.slice(0,4) === state.worshipSetlistArchiveYear)
-      && (!state.worshipSetlistArchiveMonth || date.slice(5,7) === state.worshipSetlistArchiveMonth);
+    return !state.worshipSetlistArchiveMonth || date.slice(5,7) === state.worshipSetlistArchiveMonth;
   });
 }
 
-function renderWorshipSetlistArchiveNavigation(allEntries, entries) {
+function renderWorshipSetlistArchiveNavigation(entries) {
   if (state.worshipSetlistArchiveView === "service") {
     return `<nav class="svc-setlist-navigation" aria-label="예배별 바로가기">${groupWorshipSetlistArchiveEntries(entries, "service").map(group =>
       `<button type="button" data-setlist-jump="setlist-group-${escapeAttr(group.key)}">${escapeHtml(group.title)}</button>`).join("")}</nav>`;
   }
-  const years = [...new Set(allEntries.map(entry => String(entry.source.service_date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year)))].sort().reverse();
   return `<div class="svc-setlist-navigation svc-setlist-period" role="group" aria-label="콘티 기간 선택">
-    <select data-setlist-period="year" aria-label="연도"><option value="">전체 연도</option>${years.map(year => `<option value="${year}" ${state.worshipSetlistArchiveYear === year ? "selected" : ""}>${year}년</option>`).join("")}</select>
     <select data-setlist-period="month" aria-label="월"><option value="">전체 월</option>${Array.from({length:12}, (_,index) => {const month=String(index+1).padStart(2,"0");return `<option value="${month}" ${state.worshipSetlistArchiveMonth === month ? "selected" : ""}>${index+1}월</option>`;}).join("")}</select>
   </div>`;
 }
@@ -24909,15 +24904,9 @@ function renderServiceSetlistArchiveDetail() {
   }
   const archive = state.worshipSetlistArchive;
   const rawEntries = worshipSetlistArchiveEntries();
-  const actualYears = new Set([...rawEntries.map(entry => entry.source.service_date),
-    ...(archive.live?.services || []).map(service => service.service_date)]
-    .map(date => String(date || "").slice(0,4)).filter(year => /^\d{4}$/.test(year) && Number(year) >= 2026));
-  const allEntries = (window.MindexWorshipWeek
-    ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || []).flatMap(group => group.entries)
-    : rawEntries).filter(entry => actualYears.has(String(entry.source.service_date || "").slice(0,4)));
-  if (state.worshipSetlistArchiveYear && !actualYears.has(state.worshipSetlistArchiveYear)) {
-    state.worshipSetlistArchiveYear = "";
-  }
+  const allEntries = window.MindexWorshipWeek
+    ? window.MindexWorshipWeek.build(rawEntries, archive.live?.services || [], { statusStartDate: "2026-01-01" }).flatMap(group => group.entries)
+    : rawEntries;
   const entries = filterWorshipSetlistArchivePeriod(filterWorshipSetlistArchiveEntries(allEntries));
   refs.detailPane.innerHTML = `
     <div class="service-date-list service-date-list--setlists">
@@ -24938,7 +24927,7 @@ function renderServiceSetlistArchiveDetail() {
           <button type="button" data-service-setlist-view="${view}" aria-pressed="${state.worshipSetlistArchiveView === view}">${label}</button>
         `).join("")}
       </div>
-      ${renderWorshipSetlistArchiveNavigation(allEntries, entries)}
+      ${renderWorshipSetlistArchiveNavigation(entries)}
       ${archive.loading && !archive.loaded ? renderLoadingDetail() : renderWorshipSetlistArchiveGroups(entries)}
     </div>`;
   finishDetailRender();
