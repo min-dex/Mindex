@@ -28152,12 +28152,7 @@ function isMainPraiseLabel(label) {
 }
 
 function serviceAllowsDynamicMainPraiseCount(service = null) {
-  if (!service) return false;
-  // Friday prayer meetings normally start with five songs, but historical and
-  // special services may extend the set. Keep their baseline template while
-  // allowing a numbered bulk-input line to materialize the next real slot.
-  return isAllGenerationsWorshipService(service)
-    || worshipAppServiceTypeId(service.type_id) === "friday";
+  return Boolean(service);
 }
 
 function createDynamicMainPraiseProjectedItem(service, label) {
@@ -28188,6 +28183,34 @@ function createDynamicMainPraiseProjectedItem(service, label) {
     _worshipTemplatePlaceholder: true,
     _worshipElementTemplateModified: false,
   }, ordinal - 1);
+}
+
+function reconcileMainPraiseItemsFromPreparationEntries(service, items = [], entries = []) {
+  const enteredOrdinals = entries
+    .map((entry) => Number(compactSearchValue(entry.rawLabel || entry.label).match(/^찬양(\d+)$/)?.[1]) || 0)
+    .filter(Boolean);
+  if (!enteredOrdinals.length || !enteredOrdinals.includes(1)) return items;
+  const maxOrdinal = Math.max(...enteredOrdinals);
+  // A complete numbered run is an intentional replacement of the main-praise
+  // set. A partial line such as "찬양6" is an additive edit and must never
+  // remove existing songs.
+  if (!Array.from({ length: maxOrdinal }, (_, index) => index + 1).every((ordinal) => enteredOrdinals.includes(ordinal))) {
+    return items;
+  }
+  return items.filter((item) => {
+    if (!isMainPraiseServiceItem(item)) return true;
+    const ordinal = Number(compactSearchValue(item.label).match(/^찬양(\d+)$/)?.[1]) || 0;
+    if (!ordinal || ordinal <= maxOrdinal) return true;
+    if (item.id && TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service?.type_id))) {
+      state.templateElementSuppressions.set(item.id, {
+        ...item,
+        service_id: service.id,
+        memo: serializeServiceItemMemo({ ...parseServiceItemMemo(item.memo), templateSuppressed: true }),
+        _worshipElementTemplateModified: true,
+      });
+    }
+    return false;
+  });
 }
 
 function servicePraiseAssignee(service, items = []) {
@@ -28872,6 +28895,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
       });
     }
 
+    items = reconcileMainPraiseItemsFromPreparationEntries(service, items, entries);
     const projectedItems = projectWorshipServiceItemsFromTemplate(
       service,
       normalizeServiceItemsInCurrentOrder(items),

@@ -23,6 +23,7 @@ const context = {
   parseBibleReference: text => text === '요 3:16' ? {} : null,
   markServiceItemSharedContentDirty: () => {}, serializeServiceItemMemo: JSON.stringify,
   projectWorshipServiceItemsFromTemplate: (_, items) => items,
+  reconcileMainPraiseItemsFromPreparationEntries: (_, items) => items,
   normalizeServiceItemsInCurrentOrder: items => items,
   refreshPresenterForService: () => {}, updateSaveState: () => {},
   renderCurrentServiceModuleDetail: () => {},

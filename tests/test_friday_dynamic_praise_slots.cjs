@@ -17,6 +17,10 @@ const context = {
   }],
   isMainPraiseServiceItem: (item) => item._worshipSectionKey === 'praise',
   normalizeServiceItem: (item) => item,
+  TEMPLATE_PROJECTED_SERVICE_TYPES: new Set(['friday', 'wednesday']),
+  state: { templateElementSuppressions: new Map() },
+  parseServiceItemMemo: () => ({}),
+  serializeServiceItemMemo: JSON.stringify,
 };
 vm.createContext(context);
 vm.runInContext(source.slice(start, end), context);
@@ -27,5 +31,17 @@ const sixth = context.createDynamicMainPraiseProjectedItem(friday, '찬양6');
 assert.equal(sixth.label, '찬양 6');
 assert.equal(sixth._worshipSectionKey, 'praise');
 assert.equal(sixth._worshipTemplateProjected, true);
-assert.equal(context.createDynamicMainPraiseProjectedItem({ id: 'ordinary', type_id: 'wednesday' }, '찬양6'), null);
-console.log('PASS Friday bulk input materializes a sixth main-praise slot without changing other services');
+const wednesday = { id: 'wed-20260715', type_id: 'wednesday' };
+assert.equal(context.serviceAllowsDynamicMainPraiseCount(wednesday), true);
+assert.equal(context.createDynamicMainPraiseProjectedItem(wednesday, '찬양6').label, '찬양 6');
+const original = [1, 2, 3, 4].map((ordinal) => ({
+  id: `praise-${ordinal}`, label: `찬양 ${ordinal}`, _worshipSectionKey: 'praise', memo: '',
+}));
+const reduced = context.reconcileMainPraiseItemsFromPreparationEntries(wednesday, original, [
+  { label: '찬양1' }, { label: '찬양2' },
+]);
+assert.deepEqual(reduced.map((item) => item.label), ['찬양 1', '찬양 2']);
+assert.equal(context.state.templateElementSuppressions.size, 2);
+const appended = context.reconcileMainPraiseItemsFromPreparationEntries(wednesday, original, [{ label: '찬양6' }]);
+assert.equal(appended.length, 4, 'a partial append must not remove earlier songs');
+console.log('PASS numbered main praise expands or shrinks across service types without deleting partial edits');
