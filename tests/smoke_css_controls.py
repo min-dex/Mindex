@@ -35,6 +35,15 @@ def main():
                   <button class="svc-presenter-preparation-form" data-focus-probe>양식</button>
                   <button class="svc-music-name" data-focus-probe>음악</button>
                   <button class="svc-reference-media-add" data-focus-probe>파일</button>
+                </div>
+                <div class="svc-prep-editor">
+                  <details class="svc-item-note" open>
+                    <summary>추가 정보</summary>
+                    <div class="svc-item-note-grid">
+                      <label><span>담당</span><input value="담당자"></label>
+                      <label><span>메모</span><textarea>내용</textarea></label>
+                    </div>
+                  </details>
                 </div>`;
               document.body.append(fixture); refreshIcons(fixture);
             }""")
@@ -45,6 +54,7 @@ def main():
                     result=page.evaluate("""() => {
                       const fixture=document.getElementById('cssFixture');
                       const rows=[...fixture.querySelectorAll('.presenter-section-editor-item')];
+                      const noteGrid=fixture.querySelector('.svc-item-note-grid');
                       const pin=getComputedStyle(fixture.querySelector('.svc-presenter-pin-track'),'::after');
                       const focusRings=[...fixture.querySelectorAll('[data-focus-probe]')].every(button=>{
                         button.focus();
@@ -56,6 +66,10 @@ def main():
                           const r=el.getBoundingClientRect(),b=row.getBoundingClientRect();
                           return !r.width || r.left>=b.left-1 && r.right<=b.right+1;
                         })),
+                        noteGridFits:noteGrid.scrollWidth<=noteGrid.clientWidth+1 && [...noteGrid.querySelectorAll('input,textarea')].every(el=>{
+                          const r=el.getBoundingClientRect(),b=noteGrid.getBoundingClientRect();
+                          return r.left>=b.left-1 && r.right<=b.right+1;
+                        }),
                         pinVisible:pin.backgroundColor!=='rgba(0, 0, 0, 0)',
                         focusRings,
                         calendarToken:Boolean(getComputedStyle(fixture.querySelector('.cal-view')).getPropertyValue('--cal-text').trim())};
