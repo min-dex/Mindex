@@ -870,3 +870,7 @@ Small visual polish that does not alter behavior does not need an entry.
 - 이전 저장본 목록의 개수 표시와 원문 복구 동작은 그대로다. 옛 항목(배열 포함)도 읽고, 다음 저장 때 얇은 형태로 다시 쓴다.
 - 서명은 같지만 슬라이드·기록·예외 내용이 달라진 저장은 여전히 이력에 남는다(`contentSignature`로 판정).
 - 자세한 근거와 기존 데이터 재작성 절차는 `design-worship-service-history-storage.md`.
+
+
+### 2026-09-21 미등록 예배 종류 정렬
+- DB 종류 목록에 없는 예배도 SERVICE_CATEGORIES의 같은 그룹 내 위치를 사용한다. 등록된 이웃의 순위 사이에 배치하며 기존 DB 순위는 보존한다. 유치부는 어린이부 앞에 표시된다.
