@@ -6664,7 +6664,10 @@ async function openWorshipConflictReview(serviceId) {
     renderCurrentServiceModuleDetail();
     finishServiceSaveDirtyState(true);
     updateSaveState();
-    showToast('최신본을 열었습니다. 기존 입력은 예배 원문의 로컬 복구본에서 확인할 수 있습니다.', 'info');
+    showToast(toastLines(
+      "최신본을 열었습니다.",
+      "기존 입력은 예배 원문의 로컬 복구본에서 확인할 수 있습니다.",
+    ), "info");
   });
   worshipConflictReview = dialog;
   const close = () => dialog.close();
@@ -20388,6 +20391,10 @@ function dismissToast(toast) {
   showQueuedToasts();
 }
 
+function toastLines(...parts) {
+  return parts.flat().map((part) => String(part || "").trim()).filter(Boolean).join("\n");
+}
+
 function showToast(message, type = "info") {
   if (!message || !refs.toastRegion) return;
   const toastKey = `${type}:${message}`;
@@ -26217,7 +26224,10 @@ function applyServiceSourceText(serviceId = state.selectedServiceId, options = {
     renderServiceList();
   }
   updateSaveState();
-  if (!options.silent) showToast(`예배 원문 ${applied}개 항목을 반영했습니다. 상단 저장을 눌러 확정해 주세요.`, "info");
+  if (!options.silent) showToast(toastLines(
+    `예배 원문 ${applied}개 항목을 반영했습니다.`,
+    "상단 저장을 눌러 확정해 주세요.",
+  ), "info");
   return true;
 }
 
@@ -28955,12 +28965,18 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
     renderCurrentServiceModuleDetail();
     renderServiceList();
     updateSaveState();
-    const createdNote = createdSongTitles.length ? ` 빈 곡 ${createdSongTitles.length}개를 찬양 DB에 만들었습니다.` : "";
+    const createdNote = createdSongTitles.length ? `빈 곡 ${createdSongTitles.length}개를 찬양 DB에 만들었습니다.` : "";
     const versionNote = versionWarnings.length
-      ? ` ${versionWarnings.join(", ")}에 여러 버전이 있어 첫 번째 버전을 우선 선택했습니다. 필요하면 버전을 골라 주세요.`
+      ? `${versionWarnings.join(", ")}에 여러 버전이 있어 첫 번째 버전을 우선 선택했습니다. 필요하면 버전을 골라 주세요.`
       : "";
-    const skippedNote = skipped.length ? ` 비어 있는 ${skipped.length}개 항목은 건너뛰었습니다.` : "";
-    showToast(`예배 입력 ${entries.length}개 항목을 반영했습니다.${skippedNote}${createdNote}${versionNote} 상단 저장을 눌러 확정해 주세요.`, "info");
+    const skippedNote = skipped.length ? `비어 있는 ${skipped.length}개 항목은 건너뛰었습니다.` : "";
+    showToast(toastLines(
+      `예배 입력 ${entries.length}개 항목을 반영했습니다.`,
+      skippedNote,
+      createdNote,
+      versionNote,
+      "상단 저장을 눌러 확정해 주세요.",
+    ), "info");
   } finally {
     state.presenterPreparationApplyingServiceIds.delete(serviceId);
     renderServiceList();

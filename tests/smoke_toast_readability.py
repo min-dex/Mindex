@@ -11,7 +11,7 @@ def main():
                 page = browser.new_page(viewport={"width": 390, "height": 844})
                 page.route("**/*supabase*/**", lambda route: route.abort())
                 page.goto(url, wait_until="domcontentloaded")
-                page.wait_for_function("typeof toastDisplayDuration === 'function' && Boolean(refs.toastRegion)")
+                page.wait_for_function("typeof toastDisplayDuration === 'function' && typeof toastLines === 'function' && Boolean(refs.toastRegion)")
                 print(engine, page.evaluate("""async () => {
                   const check=(value,message)=>{if(!value)throw Error(message)};
                   const originalSet=window.setTimeout,originalClear=window.clearTimeout;
@@ -22,6 +22,7 @@ def main():
                   window.setTimeout=(fn,delay)=>{timers.set(++id,{fn,at:now+delay});return id};
                   window.clearTimeout=key=>timers.delete(key);
                   try {
+                    check(toastLines('반영 완료', '', ['2개 건너뜀', null], '저장 필요')==='반영 완료\\n2개 건너뜀\\n저장 필요','toast lines');
                     check(toastDisplayDuration('저장했습니다.')===4000,'save duration');
                     check(toastDisplayDuration('연결 오류','error')===6000,'error duration');
                     check(toastDisplayDuration('일반 안내')===2000,'info duration');
