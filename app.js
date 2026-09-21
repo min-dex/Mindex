@@ -28110,7 +28110,12 @@ function isMainPraiseLabel(label) {
 }
 
 function serviceAllowsDynamicMainPraiseCount(service = null) {
-  return Boolean(service && isAllGenerationsWorshipService(service));
+  if (!service) return false;
+  // Friday prayer meetings normally start with five songs, but historical and
+  // special services may extend the set. Keep their baseline template while
+  // allowing a numbered bulk-input line to materialize the next real slot.
+  return isAllGenerationsWorshipService(service)
+    || worshipAppServiceTypeId(service.type_id) === "friday";
 }
 
 function createDynamicMainPraiseProjectedItem(service, label) {

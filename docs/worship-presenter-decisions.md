@@ -418,7 +418,9 @@ Small visual polish that does not alter behavior does not need an entry.
   `봉헌찬송 찬 187장`처럼 colon 없는 known-label line도 인식한다.
 - `예배 입력`의 placeholder는 선택된 예배의 editable input만 예시로
   보여준다. Fixed/default/shared output은 예시에 넣지 않는다.
-- 금요기도회 메인 찬양은 `찬양 1`부터 `찬양 5`까지 독립 슬롯이다.
+- 금요기도회 메인 찬양은 기본 `찬양 1`부터 `찬양 5`까지 독립 슬롯이다.
+  실제 콘티가 더 길면 `찬양 6` 이후도 붙여넣기 입력으로 같은 `찬양` section에
+  동적으로 추가한다.
   `찬양 1 곡명` 형식은 같은 번호 슬롯에 연결하고, 성경봉독 직전 찬양은
   성경봉독과 설교 사이의 독립 `입례찬양` section/element로 유지한다. 붙여넣기 입력의 `[팀명.날짜]` 같은
   머리말과 `금요기도회입니다!` 같은 마무리말은 무시하며, 곡명 뒤의 조성
