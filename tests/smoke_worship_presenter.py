@@ -8570,11 +8570,11 @@ def main() -> int:
                     """
                 )
                 if (
-                    blank_cross_animation["verticalAnimation"] == "none"
+                    blank_cross_animation["verticalAnimation"] == "presenter-blank-cross-vertical"
                     and blank_cross_animation["verticalDelay"] == "0s"
                     and blank_cross_animation["verticalOrigin"].endswith(" 0px")
-                    and blank_cross_animation["horizontalAnimation"] == "none"
-                    and blank_cross_animation["horizontalDelay"] == "0s"
+                    and blank_cross_animation["horizontalAnimation"] == "presenter-blank-cross-horizontal"
+                    and blank_cross_animation["horizontalDelay"] == "0.55s"
                     and blank_cross_animation["horizontalOrigin"].startswith("0px ")
                     and blank_cross_animation["repeatActivePreserved"]
                     and blank_cross_animation["inactiveVerticalDisplay"] in ["", "none"]

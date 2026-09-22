@@ -1244,18 +1244,18 @@
   left: 50%;
   width: var(--presenter-blank-cross-stroke);
   height: calc(450 * var(--presenter-stage-unit));
-  transform: translateX(-50%) scaleY(1);
+  transform: translateX(-50%) scaleY(0);
   transform-origin: center top;
-  animation: none;
+  animation: presenter-blank-cross-vertical 550ms ease-out forwards;
 }
 .presenter-output-root.no-chromakey.is-blank .presenter-slide--blank::after {
   top: calc(50% - (85 * var(--presenter-stage-unit)));
   left: calc(50% - (140 * var(--presenter-stage-unit)));
   width: calc(280 * var(--presenter-stage-unit));
   height: var(--presenter-blank-cross-stroke);
-  transform: translateY(-50%) scaleX(1);
+  transform: translateY(-50%) scaleX(0);
   transform-origin: left center;
-  animation: none;
+  animation: presenter-blank-cross-horizontal 450ms ease-out 550ms forwards;
 }
 .presenter-output-root.no-chromakey.is-blank
   > .presenter-output-layer:not(.is-active)
@@ -1277,6 +1277,12 @@
   height: calc(12 * var(--presenter-stage-unit));
   animation: none;
   transform: translateY(-50%) scaleX(1);
+}
+@keyframes presenter-blank-cross-vertical {
+  to { transform: translateX(-50%) scaleY(1); }
+}
+@keyframes presenter-blank-cross-horizontal {
+  to { transform: translateY(-50%) scaleX(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .presenter-output-root.no-chromakey.is-blank .presenter-slide--blank::before,
