@@ -1027,7 +1027,7 @@ def main() -> int:
                 and save_state_scope["praiseOwnDirty"] == {"label": "찬양 저장", "title": "찬양 저장", "disabled": False}
                 and save_state_scope["scriptureOtherDirty"] == {"label": "말씀 저장", "title": "말씀 저장", "disabled": True}
                 and save_state_scope["scriptureOwnDirty"] == {"label": "말씀 저장", "title": "말씀 저장", "disabled": False}
-                and save_state_scope["calendar"] == {"label": "교회력은 여기서 읽기 전용입니다", "title": "교회력은 여기서 읽기 전용입니다", "disabled": True}
+                and save_state_scope["calendar"] == {"label": "교회력 자동 저장", "title": "교회력 자동 저장", "disabled": True}
                 and save_state_scope["saving"] == {"label": "저장 중", "title": "저장 중", "disabled": True}
             ):
                 pass_("save-state-current-module-scope", json.dumps(save_state_scope, ensure_ascii=False))

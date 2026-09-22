@@ -16219,6 +16219,14 @@ function renderHomeDetail() {
     renderHomeSearchDetail();
     return;
   }
+  if (state.selectedServiceTypeId === SERVICE_LIST_PANEL_ID) {
+    renderServiceListDetail();
+    return;
+  }
+  if (state.selectedServiceTypeId === SERVICE_SETLIST_ARCHIVE_PANEL_ID) {
+    renderServiceSetlistArchiveDetail();
+    return;
+  }
   renderServiceDashboard();
 }
 
