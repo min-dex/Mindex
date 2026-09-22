@@ -6550,6 +6550,9 @@ function serviceSaveErrorMessage(error) {
   if (/PENDING_PROJECT_UNKNOWN/.test(message)) {
     return "이전 저장 요청의 프로젝트를 확인할 수 없어 재전송하지 않았습니다. 입력과 이전 요청은 유지됩니다.";
   }
+  if (/PENDING_REQUEST_REQUIRES_RESOLUTION/.test(message)) {
+    return "이전 저장 결과를 먼저 확인해야 합니다. 입력은 유지됩니다. 화면을 새로고침한 뒤 다시 저장해 주세요.";
+  }
   if (/REVISION_CONFLICT|ATOMIC_RELOAD_REQUIRED/.test(message)) {
     return "다른 저장과 충돌해 덮어쓰지 않았습니다. 입력은 유지됩니다. 최신 DB와 비교한 뒤 다시 저장해 주세요.";
   }
@@ -6558,6 +6561,18 @@ function serviceSaveErrorMessage(error) {
   }
   if (/BASELINE_REQUIRED/.test(message)) {
     return "예배의 저장 기준을 확인하지 못했습니다. 입력은 유지됩니다. DB 연결과 최신 예배 상태를 확인해 주세요.";
+  }
+  if (/SERVICE_NOT_FOUND|SERVICE_DELETED/.test(message)) {
+    return "서버에서 이 예배를 찾을 수 없습니다. 입력은 유지됩니다. 예배 목록을 새로고침해 주세요.";
+  }
+  if (/DOCUMENT_(?:ELEMENT|SECTION)_OWNERSHIP|DOCUMENT_(?:PARENT|SLOT|SONG|VERSION)_MISMATCH|ROW_OWNERSHIP/.test(message)) {
+    return "예배 원문과 저장 항목이 맞지 않아 덮어쓰지 않았습니다. 입력은 유지됩니다. 화면을 새로고침한 뒤 다시 저장해 주세요.";
+  }
+  if (/SONG_VERSION_MISMATCH/.test(message)) {
+    return "찬양과 선택한 버전이 맞지 않아 저장하지 않았습니다. 입력은 유지됩니다. 찬양 버전을 다시 선택해 주세요.";
+  }
+  if (/DUPLICATE_OR_MISSING_ROW_ID|DUPLICATE_(?:DOCUMENT_RECORD|DOCUMENT_SLIDE|ID)|CONFLICTING_STRUCTURE/.test(message)) {
+    return "같은 예배 항목이 겹쳐 저장하지 않았습니다. 입력은 유지됩니다. 화면을 새로고침한 뒤 다시 저장해 주세요.";
   }
   if (/ON CONFLICT DO UPDATE command cannot affect row a second time/i.test(message)) {
     return "예배 저장 항목이 겹쳐 저장하지 못했습니다. 항목을 정리한 뒤 다시 저장해 주세요.";

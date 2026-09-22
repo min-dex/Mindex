@@ -15,6 +15,7 @@ function between(source, start, end) {
 const context = vm.createContext({});
 vm.runInContext(between(app, "function isUnavailableRelationError(", "function isUnavailableRpcError("), context);
 vm.runInContext(between(app, "function referenceTableErrorMessage(", "async function saveScripture("), context);
+vm.runInContext(between(app, "function serviceSaveErrorMessage(", "let worshipConflictReview"), context);
 const message = context.referenceTableErrorMessage;
 for (const error of [{ code: "42501" }, { message: "permission denied for table links" },
   { details: "new row violates row-level security policy" }]) {
@@ -27,6 +28,20 @@ for (const error of [{ code: "PGRST205" }, { message: "schema cache is stale" }]
 }
 assert.equal(message({ message: "Network request failed" }), "Network request failed");
 assert.equal(message(null), "링크를 업데이트하지 못했습니다.");
+
+const serviceMessage = context.serviceSaveErrorMessage;
+for (const [code, expected] of [
+  ["PENDING_REQUEST_REQUIRES_RESOLUTION", /이전 저장 결과.*입력은 유지/],
+  ["SERVICE_DELETED", /예배를 찾을 수 없습니다.*입력은 유지/],
+  ["DOCUMENT_ELEMENT_OWNERSHIP", /예배 원문과 저장 항목.*입력은 유지/],
+  ["DOCUMENT_PARENT_MISMATCH", /예배 원문과 저장 항목.*입력은 유지/],
+  ["SONG_VERSION_MISMATCH", /찬양과 선택한 버전.*입력은 유지/],
+  ["DUPLICATE_DOCUMENT_RECORD", /예배 항목이 겹쳐.*입력은 유지/],
+]) {
+  assert.match(serviceMessage({ message: code }), expected);
+  assert.doesNotMatch(serviceMessage({ message: code }), new RegExp(`^${code}$`));
+}
+assert.equal(serviceMessage({ message: "Network request failed" }), "Network request failed");
 
 const notices = [];
 let rendered = 0;
