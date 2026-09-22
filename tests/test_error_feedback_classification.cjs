@@ -43,6 +43,16 @@ for (const [code, expected] of [
 }
 assert.equal(serviceMessage({ message: "Network request failed" }), "Network request failed");
 
+for (const staleEnglish of ["Could not load calendar.", "File read failed.",
+  "Image is too large for local storage.", "Background update failed.",
+  "No background to download.", "File downloaded.", "Copy failed.",
+  "Lyrics are required for XML.", "Lyrics are required for FreeShow .show."]) {
+  assert.ok(!app.includes(`\"${staleEnglish}\"`), `stale English feedback: ${staleEnglish}`);
+}
+for (const koreanFeedback of ["교회력을 불러오지 못했습니다.", "파일을 내려받았습니다.", "복사하지 못했습니다."]) {
+  assert.ok(app.includes(koreanFeedback), `missing Korean feedback: ${koreanFeedback}`);
+}
+
 const notices = [];
 let rendered = 0;
 const popup = vm.createContext({

@@ -5292,8 +5292,8 @@ async function loadCalendarDataOnce({ silent = false } = {}) {
     state.calendarError = "";
   } catch (e) {
     state.calendarLoaded = false;
-    state.calendarError = e.message || "Could not load calendar.";
-    if (!silent) showToast(e.message || "Could not load calendar.", "error");
+    state.calendarError = e.message || "교회력을 불러오지 못했습니다.";
+    if (!silent) showToast(e.message || "교회력을 불러오지 못했습니다.", "error");
   } finally {
     state.calendarLoading = false;
     if (state.module === "calendar") {
@@ -14462,7 +14462,7 @@ function runCopyAction(action, index, versionId = "") {
       const version = getVersionById(versionId) || getSelectedVersion();
       downloadTextFile(formatFreeShowShowJson(song, version, getFormsForVersionId(versionId)), getShowFileName(song, version), "application/json");
     } catch (error) {
-      showToast(error.message || "FreeShow file export failed.", "error");
+      showToast(error.message || "FreeShow 파일을 내보내지 못했습니다.", "error");
     }
     return;
   }
@@ -14473,7 +14473,7 @@ function runCopyAction(action, index, versionId = "") {
       const version = getVersionById(versionId) || getSelectedVersion();
       downloadTextFile(formatSongXml(song, version, getFormsForVersionId(versionId)), getXmlFileName(song, version), "application/xml");
     } catch (error) {
-      showToast(error.message || "XML export failed.", "error");
+      showToast(error.message || "XML 파일을 내보내지 못했습니다.", "error");
     }
     return;
   }
@@ -15552,7 +15552,7 @@ async function registerSelectedWorshipBackground(fileName) {
   try {
     dataUrl = await readFileAsDataUrl(file);
   } catch (error) {
-    showToast(error.message || "File read failed.", "error");
+    showToast(error.message || "이미지 파일을 읽지 못했습니다.", "error");
     return;
   }
 
@@ -15568,7 +15568,7 @@ async function registerSelectedWorshipBackground(fileName) {
     },
   };
   if (!saveWorshipBackgroundRegistry(nextRegistry)) {
-    showToast("Image is too large for local storage.", "error");
+    showToast("이미지가 너무 커서 브라우저에 저장하지 못했습니다.", "error");
     return;
   }
   state.worshipBackgroundRegistry = nextRegistry;
@@ -15577,14 +15577,14 @@ async function registerSelectedWorshipBackground(fileName) {
   refreshPresenterBackgrounds();
   renderWorshipBackgroundsDetail();
   renderSongList();
-  showToast(`${fileName} registered.`);
+  showToast(`${fileName} 배경을 등록했습니다.`);
 }
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(reader.error || new Error("File read failed."));
+    reader.onerror = () => reject(reader.error || new Error("이미지 파일을 읽지 못했습니다."));
     reader.readAsDataURL(file);
   });
 }
@@ -15599,14 +15599,14 @@ function clearRegisteredWorshipBackground(fileName) {
   const nextRegistry = { ...state.worshipBackgroundRegistry };
   delete nextRegistry[fileName];
   if (!saveWorshipBackgroundRegistry(nextRegistry)) {
-    showToast("Background update failed.", "error");
+    showToast("배경 정보를 업데이트하지 못했습니다.", "error");
     return;
   }
   state.worshipBackgroundRegistry = nextRegistry;
   refreshPresenterBackgrounds();
   renderWorshipBackgroundsDetail();
   renderSongList();
-  showToast(`${fileName} cleared.`);
+  showToast(`${fileName} 배경 등록을 해제했습니다.`);
 }
 
 function refreshPresenterBackgrounds() {
@@ -15624,7 +15624,7 @@ function downloadWorshipBackground(fileName) {
     downloadUrlFile(worshipBackgroundPath(fileName), fileName);
     return;
   }
-  showToast("No background to download.", "error");
+  showToast("내려받을 배경이 없습니다.", "error");
 }
 
 function downloadWorshipBackgroundManifest() {
@@ -18421,7 +18421,7 @@ function formatFreeShowShowJson(song = getSelectedSong(), version = getSelectedV
 
 function formatSongXml(song = getSelectedSong(), version = getSelectedVersion(), forms = state.forms) {
   const copyableForms = getCopyableForms(forms);
-  if (!copyableForms.length) throw new Error("Lyrics are required for XML.");
+  if (!copyableForms.length) throw new Error("XML로 내보낼 가사가 없습니다.");
   const versionName = versionDisplayName(song, version || {}) || "";
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -18439,7 +18439,7 @@ function formatSongXml(song = getSelectedSong(), version = getSelectedVersion(),
 
 function buildFreeShowShow(song = getSelectedSong(), version = getSelectedVersion(), forms = state.forms) {
   const copyableForms = getCopyableForms(forms);
-  if (!copyableForms.length) throw new Error("Lyrics are required for FreeShow .show.");
+  if (!copyableForms.length) throw new Error("FreeShow로 내보낼 가사가 없습니다.");
 
   const now = Date.now();
   const title = nullIfBlank(song?.title) || nullIfBlank(version?.name) || "Untitled Song";
@@ -18591,7 +18591,7 @@ function downloadTextFile(text, fileName, mimeType = "text/plain") {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
-  showToast("File downloaded.");
+  showToast("파일을 내려받았습니다.");
 }
 
 function downloadDataUrlFile(dataUrl, fileName) {
@@ -18601,7 +18601,7 @@ function downloadDataUrlFile(dataUrl, fileName) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  showToast("File downloaded.");
+  showToast("파일을 내려받았습니다.");
 }
 
 function downloadUrlFile(url, fileName) {
@@ -18611,7 +18611,7 @@ function downloadUrlFile(url, fileName) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  showToast("File downloaded.");
+  showToast("파일을 내려받았습니다.");
 }
 
 async function copyText(text) {
@@ -18628,7 +18628,7 @@ async function copyText(text) {
       fallbackCopy(value);
       showToast("복사했어요.");
     } catch (fallbackError) {
-      showToast(fallbackError.message || "Copy failed.", "error");
+      showToast(fallbackError.message || "복사하지 못했습니다.", "error");
     }
   }
 }
@@ -18642,7 +18642,7 @@ function fallbackCopy(text) {
     textarea.style.opacity = "0";
     document.body.appendChild(textarea);
     textarea.select();
-    if (!document.execCommand("copy")) throw new Error("Copy failed.");
+    if (!document.execCommand("copy")) throw new Error("복사하지 못했습니다.");
   } finally {
     textarea.remove();
   }
