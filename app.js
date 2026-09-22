@@ -16251,14 +16251,14 @@ function renderModuleSidebarContext() {
   refs.songCount.textContent = "";
   refs.songList.innerHTML = `
     <div class="operations-sidebar">
-      <section class="operations-sidebar-section" aria-label="운영">
+      <nav class="operations-sidebar-section" aria-label="운영">
         <div class="operations-sidebar-head">운영</div>
         ${OPERATIONS_MODULES.map(([moduleName, label]) => `
           <button class="song-item operations-sidebar-item${state.module === moduleName ? " active" : ""}" type="button" data-home-module="${moduleName}" aria-current="${state.module === moduleName ? "page" : "false"}">
             <span class="song-title"><span class="song-title-text">${label}</span></span>
           </button>
         `).join("")}
-      </section>
+      </nav>
     </div>`;
   finishListRender();
 }
