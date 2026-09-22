@@ -1822,6 +1822,32 @@ function presenterElementSlideFromMemoCore(item, section, index, memo, displayTe
     if (!source) return null;
     const referenceMedia = compactSearchValue(label) === "참고화면"
       && String(memo?.inputMode || "").trim() === "asset";
+    const referenceSlides = referenceMedia ? normalizeServiceAssetSlides(asset.slides) : [];
+    if (referenceSlides.length > 1) {
+      return referenceSlides.map((slide, slideIndex) => {
+        const slideSource = normalizePresenterMediaSource(slide.url);
+        if (!slideSource) return null;
+        const slideTitle = slide.name || title;
+        return {
+          id: `${item.id || index}:reference-image:${slideIndex}`,
+          ...section,
+          sectionLabel: label || "Image",
+          sectionTitle: title,
+          sectionName: title,
+          elementType: PRESENTER_ELEMENT_TYPES.IMAGE,
+          layout: PRESENTER_SLIDE_LAYOUTS.MEDIA,
+          type: "image",
+          label,
+          title: slideTitle,
+          marker: slideIndex === 0 ? (label || "Image") : "",
+          text: slideTitle,
+          imageSrc: slideSource,
+          asset: { ...asset, url: slideSource, name: slideTitle },
+          referenceMedia,
+          sort: index + slideIndex / 100,
+        };
+      }).filter(Boolean);
+    }
     return {
       id: `${item.id || index}:image`,
       ...section,

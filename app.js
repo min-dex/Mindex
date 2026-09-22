@@ -4405,44 +4405,6 @@ async function ensureUpcomingPublicWorshipServices(baseDate = new Date()) {
   return data.map(normalizeWorshipService);
 }
 
-const WORSHIP_SERVICE_TYPE_ALIASES = {
-  sun_1st: "sunday-first",
-  sun_2nd: "sunday-second",
-  sun_3rd: "sunday-main",
-  sun_4th: "sunday-afternoon",
-  sunday_4th: "sunday-afternoon",
-  "sunday-fourth": "sunday-afternoon",
-  sunday_fourth: "sunday-afternoon",
-  sunday_afternoon: "sunday-afternoon",
-  "주일예배": "sunday-main",
-  "주일예배 [1부]": "sunday-first",
-  "주일예배 (1부)": "sunday-first",
-  "주일예배 [2부]": "sunday-second",
-  "주일예배 (2부)": "sunday-second",
-  "주일예배 [3부]": "sunday-main",
-  "주일예배 (3부)": "sunday-main",
-  "주일오후예배": "sunday-afternoon",
-  "주일예배 [4부]": "sunday-afternoon",
-  "주일예배 (4부)": "sunday-afternoon",
-  wed: "wednesday",
-  "수요예배": "wednesday",
-  fri: "friday",
-  "금요기도회": "friday",
-  "월삭예배": "monthly",
-  young_adult: "young-adult",
-  "어린이부 예배": "children",
-  nursery: "nursery",
-  kindergarten: "nursery",
-  preschool: "nursery",
-  "유치부": "nursery",
-  "유치부 예배": "nursery",
-  "청소년부 예배": "youth",
-  "청년부 예배": "young-adult",
-  holy_week_dawn: "holy-week-dawn",
-  "특별새벽기도회": "holy-week-dawn",
-  "특별예배": "special",
-};
-
 function worshipAppServiceTypeId(typeId) {
   return WORSHIP_SERVICE_TYPE_ALIASES[typeId] || typeId || "";
 }
@@ -4685,65 +4647,6 @@ function normalizeWorshipServiceTitle(title = "", service = {}) {
 function serviceTypeUsesCanonicalTitle(typeId) {
   const appTypeId = worshipAppServiceTypeId(typeId);
   return SERVICE_CATEGORIES.public.includes(appTypeId);
-}
-
-const WORSHIP_SLOT_KEYS = new Set([
-  "ready.waiting",
-  "prayer.silent",
-  "faith.creed",
-  "confession.prayer",
-  "confession.assurance",
-  "praise.welcome",
-  "praise.main",
-  "praise.entrance",
-  "prayer.representative",
-  "word.reading",
-  "word.body",
-  "hymn.main",
-  "special.song",
-  "sermon.title",
-  "sermon.scripture",
-  "sermon.media",
-  "sermon.live_scripture",
-  "response.song",
-  "response.prayer",
-  "prayer.corporate.song",
-  "prayer.meeting.free",
-  "offering.praise",
-  "offering.special",
-  "offering.media",
-  "offering.prayer",
-  "announcements.main",
-  "announcements.department",
-  "announcements.media",
-  "announcements.new_family",
-  "new_family.welcome",
-  "sending.doxology",
-  "sending.benediction",
-  "sending.lords_prayer",
-  "closing.visual",
-  "closing.hymn",
-  "community.confession",
-  "fellowship.person",
-]);
-
-function normalizeWorshipSlotKey(value = "") {
-  const text = String(value || "").trim();
-  if (!text) return "";
-  if (/^praise\.song\.[1-9]\d*$/.test(text)) return text;
-  if (/^sermon\.citation(?:\.[1-9]\d*)?$/.test(text)) return text;
-  if (/^prayer\.corporate\.[1-9]\d*$/.test(text)) return text;
-  if (/^prayer\.meeting\.song\.[1-9]\d*$/.test(text)) return text;
-  return WORSHIP_SLOT_KEYS.has(text) ? text : "";
-}
-
-function explicitWorshipSlotKey(...sources) {
-  for (const source of sources) {
-    if (!source || typeof source !== "object") continue;
-    const slotKey = normalizeWorshipSlotKey(source.slotKey || source.slot_key);
-    if (slotKey) return slotKey;
-  }
-  return "";
 }
 
 function deriveWorshipSlotKey(context = {}) {
@@ -13537,7 +13440,7 @@ function currentServiceItemForMutation(serviceId, item) {
   return getServiceItems(serviceId).find((candidate) => candidate.id === itemId) || item;
 }
 
-async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input = null, silentSuccess = false } = {}) {
+async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input = null, silentSuccess = false, slideMode = "single" } = {}) {
   const targetItem = currentServiceItemForMutation(serviceId, item);
   const kind = presenterReferenceMediaKindForFile(file);
   const memo = parseServiceItemMemo(targetItem?.memo);
@@ -13581,7 +13484,25 @@ async function uploadPresenterReferenceMediaAsset({ file, serviceId, item, input
     memo.elementType = kind;
     memo.componentType = kind;
     memo.inputMode = "asset";
-    memo.asset = { kind, name: file.name, url };
+    if (referenceMedia && ["replace", "append"].includes(slideMode)) {
+      const previousAsset = normalizeServiceAsset(memo.asset);
+      const previousSlides = slideMode === "append"
+        ? normalizeServiceAssetSlides(previousAsset.slides)
+        : [];
+      const slides = [
+        ...previousSlides,
+        { url, name: file.name, order: previousSlides.length + 1 },
+      ];
+      memo.asset = {
+        ...previousAsset,
+        kind,
+        name: previousAsset.name || file.name,
+        url: previousAsset.url || url,
+        slides,
+      };
+    } else {
+      memo.asset = { kind, name: file.name, url };
+    }
     writtenMemo = serializeServiceItemMemo(memo);
     targetItem.memo = writtenMemo;
     targetItem._worshipElementTemplateModified = true;
@@ -13657,17 +13578,22 @@ async function addAndUploadPresenterReferenceMedia(input, initialItem = null) {
   presenterReferenceMediaBatchServices.add(serviceId);
   input.disabled = true;
   let completed = 0;
-  let afterItemId = initialItem?.id || "";
+  let targetItem = initialItem || null;
+  const isBatch = files.length > 1;
   try {
     for (const file of files) {
-      const replacing = completed === 0 && initialItem;
-      const item = replacing ? getServiceItems(serviceId).find((candidate) => candidate.id === initialItem.id)
-        : addPresenterReferenceMedia(serviceId, sectionKey, { focus: false, render: false, afterItemId });
+      if (!targetItem) {
+        targetItem = addPresenterReferenceMedia(serviceId, sectionKey, { focus: false, render: false });
+      } else {
+        targetItem = getServiceItems(serviceId).find((candidate) => candidate.id === targetItem.id) || targetItem;
+      }
+      const slideMode = isBatch ? (completed === 0 ? "replace" : "append") : "single";
+      const item = targetItem;
       if (!item) break;
-      const uploaded = await uploadPresenterReferenceMediaAsset({ file, serviceId, item, silentSuccess: true });
+      const uploaded = await uploadPresenterReferenceMediaAsset({ file, serviceId, item, silentSuccess: true, slideMode });
       if (!uploaded) {
-        // Remove only this failed insertion; retain successful files and concurrent edits.
-        if (!replacing) {
+        // Remove only a newly inserted empty item; retain successful files and concurrent edits.
+        if (!initialItem && completed === 0) {
           state.serviceItems[serviceId] = normalizeServiceItemsInCurrentOrder(
             getServiceItems(serviceId).filter((candidate) => candidate.id !== item.id));
         }
@@ -13677,9 +13603,8 @@ async function addAndUploadPresenterReferenceMedia(input, initialItem = null) {
         break;
       }
       completed += 1;
-      afterItemId = item.id;
     }
-    if (completed === files.length) showToast(`참고 화면 ${completed}개를 추가했습니다.`);
+    if (completed === files.length) showToast(isBatch ? `참고 화면 1개에 ${completed}장을 추가했습니다.` : `참고 화면 ${completed}개를 추가했습니다.`);
     else showToast(`${files.length}개 중 ${completed}개 저장됨. 나머지 ${files.length - completed}개는 추가되지 않았습니다.`, "error");
   } finally {
     presenterReferenceMediaBatchServices.delete(serviceId);
