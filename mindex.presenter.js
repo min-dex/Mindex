@@ -3823,6 +3823,7 @@ function presenterOutputFrameStateForSlide(slide, payload = {}) {
   const cleanOutput = !slideChromakey;
   const blankSlide = presenterSlideLayout(slide) === PRESENTER_SLIDE_LAYOUTS.BLANK;
   const scoreOutput = presenterSlideIsScoreLike(slide);
+  const scriptureReadingOutput = slide?.scriptureContext === "reading";
   const suppressBackground = Boolean(slide?.suppressBackgroundImage || slide?.noBackgroundImage);
   const usesDedicatedScriptureBackground = slide?.scriptureContext === "reading" && !suppressBackground;
   // A fullscreen blank stays inside the service visual system: retain the same
@@ -3833,6 +3834,7 @@ function presenterOutputFrameStateForSlide(slide, payload = {}) {
     showBackground,
     blankOutput: Boolean(blankSlide && cleanOutput),
     scoreOutput,
+    scriptureReadingOutput,
     backgroundImage: backgroundImages[0] || "",
     backgroundImages,
     serviceType: payload?.serviceType || "",
@@ -4034,6 +4036,7 @@ function presenterOutputShouldAnimateFrameTransition(root, frameState = {}) {
   if (!frameState.cleanOutput) return false;
   if (frameState.scoreOutput) return false;
   if (frameState.blankOutput) return false;
+  if (frameState.scriptureReadingOutput) return false;
   if (root?.classList?.contains("svc-slide-mini-canvas")) return false;
   if (root?.querySelector?.(":scope > .presenter-output-layer.is-active .presenter-slide--score")) return false;
   if (root?.querySelector?.(":scope > .presenter-output-layer.is-next .presenter-slide--score")) return false;

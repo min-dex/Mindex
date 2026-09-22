@@ -1,6 +1,28 @@
 // Persistence-shaped worship document rules.
 // Supabase I/O stays in app.js; this file owns only source_ref normalization and history compaction.
 
+function serviceRawSourceRef(service = null) {
+  if (!service || typeof service !== "object") return {};
+  if (service._worshipSourceRef && typeof service._worshipSourceRef === "object") return service._worshipSourceRef;
+  if (service.source_ref && typeof service.source_ref === "object") return service.source_ref;
+  return {};
+}
+
+const serviceSourceRefCache = new WeakMap();
+function serviceSourceRef(service = null) {
+  const raw = serviceRawSourceRef(service);
+  const keys = Object.keys(raw);
+  if (!keys.length) return {};
+  const cached = serviceSourceRefCache.get(raw);
+  if (cached && cached.keys.length === keys.length
+    && keys.every((key, index) => cached.keys[index] === key && cached.values[index] === raw[key])) {
+    return cached.result;
+  }
+  const result = normalizeServiceSourceRef(raw);
+  serviceSourceRefCache.set(raw, { keys, values: keys.map((key) => raw[key]), result });
+  return result;
+}
+
 function normalizeServiceSourceRef(sourceRef = {}) {
   if (!sourceRef || typeof sourceRef !== "object") return {};
   const normalized = { ...sourceRef };

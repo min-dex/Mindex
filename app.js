@@ -22456,33 +22456,6 @@ function serviceAlias(service) {
   return String(service?.alias || "").replace(/\s+/g, " ").trim();
 }
 
-// Raw source ref for reading scalar fields (friday_variant, backgrounds, ...). These
-// lookups run inside render loops, so they must not normalize the whole document.
-function serviceRawSourceRef(service = null) {
-  if (!service || typeof service !== "object") return {};
-  if (service._worshipSourceRef && typeof service._worshipSourceRef === "object") return service._worshipSourceRef;
-  if (service.source_ref && typeof service.source_ref === "object") return service.source_ref;
-  return {};
-}
-
-// Normalizing the stored document and its history is expensive (it re-signs every
-// slide). Cache it per raw object; the shallow key/value check invalidates the entry
-// when a key is reassigned in place. Callers treat the result as read-only.
-const serviceSourceRefCache = new WeakMap();
-function serviceSourceRef(service = null) {
-  const raw = serviceRawSourceRef(service);
-  const keys = Object.keys(raw);
-  if (!keys.length) return {};
-  const cached = serviceSourceRefCache.get(raw);
-  if (cached && cached.keys.length === keys.length
-    && keys.every((key, index) => cached.keys[index] === key && cached.values[index] === raw[key])) {
-    return cached.result;
-  }
-  const result = normalizeServiceSourceRef(raw);
-  serviceSourceRefCache.set(raw, { keys, values: keys.map((key) => raw[key]), result });
-  return result;
-}
-
 // Services read from the light list view have no stored document/history yet. These helpers
 // fetch the full source_ref when a service is opened and refuse to save before that happened,
 // because a save merges the previous history into the outgoing source_ref.
