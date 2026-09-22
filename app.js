@@ -801,6 +801,7 @@ const state = {
   theme: "light",
   connectionError: "",
   scriptureError: "",
+  scriptureBooksLoading: false,
   bibleReaderError: "",
   bibleReaderLoading: false,
   metadataPopupOpen: false,
@@ -2220,7 +2221,7 @@ function applyTheme(theme) {
   state.theme = theme;
   document.body.dataset.theme = theme;
   if (!refs.themeBtn) return;
-  const themeLabel = theme === "dark" ? "Use light mode" : "Use dark mode";
+  const themeLabel = theme === "dark" ? "라이트 모드 사용" : "다크 모드 사용";
   refs.themeBtn.setAttribute("aria-label", themeLabel);
   refs.themeBtn.setAttribute("title", themeLabel);
   refs.themeBtn.innerHTML = `<i data-lucide="${theme === "dark" ? "sun" : "moon"}"></i>`;
@@ -3397,7 +3398,7 @@ async function loadScriptures({ silent = false } = {}) {
   }
 
   if (error) {
-    state.scriptureError = error.message || "Could not load scripture.";
+    state.scriptureError = error.message || "말씀을 불러오지 못했습니다.";
     if (!silent && state.module === "scripture") showToast(state.scriptureError, "error");
     render();
     return;
@@ -3430,6 +3431,9 @@ async function loadScriptureBooks({ silent = false } = {}) {
 async function loadScriptureBooksOnce({ silent = false } = {}) {
   if (!requireClient({ silent })) return;
 
+  state.scriptureBooksLoading = true;
+  renderLoadingStatus();
+  if (state.module === "scripture") renderScriptureList();
   try {
     const { data, error } = await state.client
       .from("mindex_scripture_books")
@@ -3448,6 +3452,10 @@ async function loadScriptureBooksOnce({ silent = false } = {}) {
   } catch (error) {
     state.scriptureBooks = [];
     if (!silent && state.module === "scripture") showToast(error.message || "성경 권 목록을 불러오지 못했습니다.", "error");
+  } finally {
+    state.scriptureBooksLoading = false;
+    renderLoadingStatus();
+    if (state.module === "scripture") renderScriptureList();
   }
 }
 
@@ -14852,10 +14860,10 @@ function renderPageTabs() {
   refs.pageTabs.innerHTML = state.pageTabs.map((tab, index) => {
     const active = index === state.pageTabIndex;
     const close = state.pageTabs.length > 1 || tab.snapshot?.module !== "home"
-      ? `<button class="page-tab-close" type="button" data-page-tab-close="${escapeAttr(String(index))}" aria-label="Close ${escapeAttr(tab.label)}"><i data-lucide="x"></i></button>`
+      ? `<button class="page-tab-close" type="button" data-page-tab-close="${escapeAttr(String(index))}" aria-label="${escapeAttr(tab.label)} 탭 닫기"><i data-lucide="x"></i></button>`
       : "";
     return `
-      <div class="page-tab${active ? " active" : ""}" role="tab" tabindex="0" draggable="${state.pageTabs.length > 1 ? "true" : "false"}" data-page-tab-index="${escapeAttr(String(index))}" aria-selected="${active ? "true" : "false"}" ${active ? 'aria-current="page"' : ""}>
+      <div class="page-tab${active ? " active" : ""}" role="tab" tabindex="${active ? "0" : "-1"}" draggable="${state.pageTabs.length > 1 ? "true" : "false"}" data-page-tab-index="${escapeAttr(String(index))}" aria-selected="${active ? "true" : "false"}" ${active ? 'aria-current="page"' : ""}>
         <span>${escapeHtml(tab.label)}</span>
         ${close}
       </div>
@@ -14943,9 +14951,22 @@ async function handlePageTabClick(event) {
 
 async function handlePageTabKeydown(event) {
   if (event.target.closest("[data-page-tab-close]")) return;
-  if (event.key !== "Enter" && event.key !== " ") return;
   const tab = event.target.closest("[data-page-tab-index]");
   if (!tab) return;
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight" || event.key === "Home" || event.key === "End") {
+    event.preventDefault();
+    const currentIndex = Number(tab.dataset.pageTabIndex);
+    const lastIndex = state.pageTabs.length - 1;
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? lastIndex
+        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + state.pageTabs.length) % state.pageTabs.length;
+    await activatePageTab(nextIndex);
+    refs.pageTabs?.querySelector(`[data-page-tab-index="${nextIndex}"]`)?.focus();
+    return;
+  }
+  if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
   await activatePageTab(Number(tab.dataset.pageTabIndex));
 }
@@ -15796,7 +15817,7 @@ function currentLoadingStatusItems() {
   if (moduleName === "praise" && backgroundSongLoadScheduled && !songCatalogLoaded) items.push("찬양 백그라운드");
   if (moduleName === "praise" && hymnScoreManifestLoadPromise) items.push("악보 목록");
   if (moduleName === "calendar" && state.calendarLoading) items.push("교회력");
-  if (moduleName === "scripture" && state.loadingModules.has("scripture")) items.push("성경 목록");
+  if (moduleName === "scripture" && (state.loadingModules.has("scripture") || state.scriptureBooksLoading)) items.push("성경 목록");
   if (moduleName === "scripture" && state.bibleReaderLoading) items.push("성경 본문");
   if (moduleName === "scripture" && state.bibleTextSearchLoading) items.push("말씀 검색");
   if (state.saving) items.push("저장");
@@ -16582,6 +16603,12 @@ function renderScriptureList() {
     return;
   }
 
+  if (state.scriptureBooksLoading && !state.scriptureBooks.length) {
+    refs.songCount.textContent = "";
+    refs.songList.innerHTML = renderLoadingList();
+    return;
+  }
+
   const reference = parseBibleReference(state.search);
   const books = reference ? getBibleBooks() : getBibleBooksForScriptureFilter();
   const filtered = getFilteredBibleBooks();
@@ -16593,7 +16620,7 @@ function renderScriptureList() {
   if (state.scriptureError) {
     refs.songList.innerHTML = isConnectionUnavailableMessage(state.scriptureError)
       ? renderConnectionList(state.connectionError || state.scriptureError)
-      : renderListEmptyState("Scripture unavailable", state.scriptureError);
+      : renderListEmptyState("말씀을 불러올 수 없습니다", state.scriptureError);
     return;
   }
 
@@ -17767,7 +17794,7 @@ function renderVersionAttentionStatus(song, version, forms, options = {}) {
       <span class="version-attention-mark">!</span>
       <span>${escapeHtml(visibleLabel)}</span>
       ${options.active && info.needsReview ? `
-        <button class="version-review-btn review-action" type="button" data-version-action="mark-all-reviewed" aria-label="Mark this version reviewed">
+        <button class="version-review-btn review-action" type="button" data-version-action="mark-all-reviewed" aria-label="이 버전 검토 완료 표시">
           <i data-lucide="check"></i>
         </button>
       ` : ""}
@@ -17794,7 +17821,7 @@ function getFormsForVersionId(versionId) {
 
 function renderFormToolbar(song) {
   return `
-    <div class="section-bar form-toolbar" aria-label="Add song form">
+    <div class="section-bar form-toolbar" aria-label="찬양 입력 양식">
       <div class="form-buttons">
         ${STRUCTURAL_PART_TYPES
           .map(
