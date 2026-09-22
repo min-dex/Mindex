@@ -948,6 +948,22 @@ function isServiceDataModule(moduleName = state.module) {
   return moduleName === "home" || moduleName === "service" || moduleName === "presenter";
 }
 
+function isOperationsModule(moduleName = state.module) {
+  return ["calendar", "references", "manuals"].includes(moduleName);
+}
+
+function renderOperationsTabs(activeModule = state.module) {
+  const tabs = [
+    ["calendar", "교회력"],
+    ["references", "참고자료"],
+    ["manuals", "운영 매뉴얼"],
+  ];
+  return `
+    <nav class="operations-tabs" aria-label="운영">
+      ${tabs.map(([moduleName, label]) => `<button class="operations-tab${moduleName === activeModule ? " active" : ""}" type="button" data-operations-module="${moduleName}" aria-selected="${moduleName === activeModule}">${label}</button>`).join("")}
+    </nav>`;
+}
+
 function renderCurrentServiceModuleDetail() {
   return withServiceItemsScope(() => renderCurrentServiceModuleDetailUnscoped());
 }
@@ -5456,6 +5472,7 @@ function renderCalendarView() {
 
   refs.detailPane.innerHTML = `
     <div class="cal-view">
+      ${renderOperationsTabs("calendar")}
       <div class="cal-header">
         <div class="utility-title-block">
           <h2 class="cal-title">교회력</h2>
@@ -8714,6 +8731,13 @@ function handleDetailClick(event) {
       state.calendarDetailTab = tab;
       renderCalendarView();
     }
+    return;
+  }
+
+  const operationsTab = event.target.closest("[data-operations-module]");
+  if (operationsTab) {
+    const moduleName = operationsTab.dataset.operationsModule;
+    if (isOperationsModule(moduleName)) void switchModule(moduleName);
     return;
   }
 
@@ -14990,7 +15014,9 @@ async function applyPageTabSnapshot(index) {
 function renderNavigationSidebarState() {
   refs.navButtons?.forEach((button) => {
     const moduleName = button.dataset.homeModule;
-    const active = moduleName === state.module || (moduleName === "service" && state.module === "presenter");
+    const active = button.hasAttribute("data-operations-nav")
+      ? isOperationsModule()
+      : moduleName === state.module || (moduleName === "service" && state.module === "presenter");
     button.classList.toggle("active", active);
     button.setAttribute("aria-current", active ? "page" : "false");
   });
@@ -15017,6 +15043,10 @@ async function handleNavigationRailClick(button) {
     persistUiState();
     render();
     syncBrowserHistory();
+    return;
+  }
+  if (button.hasAttribute("data-operations-nav")) {
+    await switchModule("calendar");
     return;
   }
   await switchModule(moduleName);
@@ -16914,6 +16944,7 @@ function renderReferencesDetail() {
   const hasLinks = links.length && !state.referenceError;
   refs.detailPane.innerHTML = `
     <div class="editor-shell references-shell">
+      ${renderOperationsTabs("references")}
       <header class="editor-head">
         <div class="editor-title">
           <h2>참고자료</h2>
@@ -16983,6 +17014,7 @@ function renderManualsDetail() {
           <h2>운영 매뉴얼</h2>
         </div>
       </header>
+      ${renderOperationsTabs("manuals")}
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
         <h3 id="manualGuideTitle" class="sr-only">${escapeHtml(active.title)}</h3>
         <div class="manual-guide-grid">
