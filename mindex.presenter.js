@@ -3929,6 +3929,13 @@ function activatePresenterOutputLayer(root, activeLayer, nextLayer, frameState =
   const transitionEntryDelay = 220;
   const swap = () => {
     if (token !== presenterOutputRenderState.token) return;
+    if (animated) {
+      root.classList.add("is-transitioning");
+      root.dataset.presenterTransitionToken = String(token);
+    } else {
+      root.classList.remove("is-transitioning");
+      delete root.dataset.presenterTransitionToken;
+    }
     activeLayer.classList.remove("is-entering");
     activeLayer.removeAttribute("data-presenter-entering-token");
     nextLayer.classList.remove("is-entering");
@@ -3963,6 +3970,13 @@ function activatePresenterOutputLayer(root, activeLayer, nextLayer, frameState =
     };
     if (animated) window.setTimeout(clearPreviousLayer, transitionClearDelay);
     else clearPreviousLayer();
+    if (animated) {
+      window.setTimeout(() => {
+        if (root.dataset.presenterTransitionToken !== String(token)) return;
+        root.classList.remove("is-transitioning");
+        delete root.dataset.presenterTransitionToken;
+      }, transitionClearDelay);
+    }
   };
   if (!animated) {
     swap();
@@ -3993,12 +4007,11 @@ function presenterOutputFrameKey(payload = {}, slide = null, frameState = {}) {
 function presenterOutputShouldAnimateFrameTransition(root, frameState = {}) {
   if (!frameState.cleanOutput) return false;
   if (frameState.scoreOutput) return false;
+  if (frameState.blankOutput) return false;
   if (root?.classList?.contains("svc-slide-mini-canvas")) return false;
   if (root?.querySelector?.(":scope > .presenter-output-layer.is-active .presenter-slide--score")) return false;
   if (root?.querySelector?.(":scope > .presenter-output-layer.is-next .presenter-slide--score")) return false;
-  // Fullscreen output shares the same physical surface across clean slides.
-  // Cross-fading exposes the stage background between layers, so swap directly.
-  return false;
+  return true;
 }
 
 function fitPresenterChromakeyScriptureText(host, frameState = {}) {
