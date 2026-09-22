@@ -952,17 +952,11 @@ function isOperationsModule(moduleName = state.module) {
   return ["calendar", "references", "manuals"].includes(moduleName);
 }
 
-function renderOperationsTabs(activeModule = state.module) {
-  const tabs = [
-    ["calendar", "교회력"],
-    ["references", "참고자료"],
-    ["manuals", "운영 매뉴얼"],
-  ];
-  return `
-    <nav class="operations-tabs" aria-label="운영">
-      ${tabs.map(([moduleName, label]) => `<button class="operations-tab${moduleName === activeModule ? " active" : ""}" type="button" data-operations-module="${moduleName}" aria-selected="${moduleName === activeModule}">${label}</button>`).join("")}
-    </nav>`;
-}
+const OPERATIONS_MODULES = [
+  ["calendar", "교회력"],
+  ["references", "참고자료"],
+  ["manuals", "예배 매뉴얼"],
+];
 
 function renderCurrentServiceModuleDetail() {
   return withServiceItemsScope(() => renderCurrentServiceModuleDetailUnscoped());
@@ -5472,7 +5466,6 @@ function renderCalendarView() {
 
   refs.detailPane.innerHTML = `
     <div class="cal-view">
-      ${renderOperationsTabs("calendar")}
       <div class="cal-header">
         <div class="utility-title-block">
           <h2 class="cal-title">교회력</h2>
@@ -8731,13 +8724,6 @@ function handleDetailClick(event) {
       state.calendarDetailTab = tab;
       renderCalendarView();
     }
-    return;
-  }
-
-  const operationsTab = event.target.closest("[data-operations-module]");
-  if (operationsTab) {
-    const moduleName = operationsTab.dataset.operationsModule;
-    if (isOperationsModule(moduleName)) void switchModule(moduleName);
     return;
   }
 
@@ -14681,7 +14667,7 @@ function renderModuleSwitcher() {
   syncSidebarCollapsedState();
   const manualsOpen = state.module === "manuals";
   refs.searchInput.placeholder = manualsOpen ? "매뉴얼" : "검색...";
-  refs.searchInput.setAttribute("aria-label", manualsOpen ? "운영 매뉴얼" : "검색");
+  refs.searchInput.setAttribute("aria-label", manualsOpen ? "예배 매뉴얼" : "검색");
   refs.searchInput.disabled = manualsOpen;
   syncPraiseCreateControls();
   syncSaveButtonChrome();
@@ -14722,7 +14708,7 @@ function currentPageTabTitle() {
   }
   if (state.module === "calendar") return "교회력";
   if (state.module === "references") return "참고자료";
-  if (state.module === "manuals") return "운영 매뉴얼";
+  if (state.module === "manuals") return "예배 매뉴얼";
   return "홈";
 }
 
@@ -14802,7 +14788,7 @@ function pageTabTitleForSnapshot(snapshot = {}) {
   }
   if (moduleName === "calendar") return "교회력";
   if (moduleName === "references") return "참고자료";
-  if (moduleName === "manuals") return "운영 매뉴얼";
+  if (moduleName === "manuals") return "예배 매뉴얼";
   return "홈";
 }
 
@@ -16248,7 +16234,17 @@ function renderHomeList() {
 
 function renderModuleSidebarContext() {
   refs.songCount.textContent = "";
-  refs.songList.innerHTML = "";
+  refs.songList.innerHTML = `
+    <div class="operations-sidebar">
+      <section class="operations-sidebar-section" aria-label="운영">
+        <div class="operations-sidebar-head">운영</div>
+        ${OPERATIONS_MODULES.map(([moduleName, label]) => `
+          <button class="song-item operations-sidebar-item${state.module === moduleName ? " active" : ""}" type="button" data-home-module="${moduleName}" aria-current="${state.module === moduleName ? "page" : "false"}">
+            <span class="song-title"><span class="song-title-text">${label}</span></span>
+          </button>
+        `).join("")}
+      </section>
+    </div>`;
   finishListRender();
 }
 
@@ -16944,7 +16940,6 @@ function renderReferencesDetail() {
   const hasLinks = links.length && !state.referenceError;
   refs.detailPane.innerHTML = `
     <div class="editor-shell references-shell">
-      ${renderOperationsTabs("references")}
       <header class="editor-head">
         <div class="editor-title">
           <h2>참고자료</h2>
@@ -17002,7 +16997,7 @@ function renderManualsDetail() {
   const manuals = getMindexManuals();
   const active = manuals[0];
   if (!active) {
-    refs.detailPane.innerHTML = renderModuleEmptyDetail("manuals", "운영 매뉴얼", "매뉴얼을 불러오지 못했습니다.");
+    refs.detailPane.innerHTML = renderModuleEmptyDetail("manuals", "예배 매뉴얼", "매뉴얼을 불러오지 못했습니다.");
     refreshIcons(refs.detailPane);
     return;
   }
@@ -17011,10 +17006,9 @@ function renderManualsDetail() {
       <header class="manuals-head">
         <div>
           <span>${escapeHtml(active.eyebrow)}</span>
-          <h2>운영 매뉴얼</h2>
+          <h2>예배 매뉴얼</h2>
         </div>
       </header>
-      ${renderOperationsTabs("manuals")}
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
         <h3 id="manualGuideTitle" class="sr-only">${escapeHtml(active.title)}</h3>
         <div class="manual-guide-grid">
@@ -19904,7 +19898,7 @@ function currentSaveButtonState() {
   if (state.saving) return { label: "저장 중", dirty: true, available: true, busy: true };
   if (state.module === "home") return { label: "저장", dirty: false, available: false };
   if (state.module === "calendar") return { label: "교회력은 여기서 읽기 전용입니다", dirty: false, available: false };
-  if (state.module === "manuals") return { label: "운영 매뉴얼은 자동 저장됩니다", dirty: false, available: false };
+  if (state.module === "manuals") return { label: "예배 매뉴얼은 자동 저장됩니다", dirty: false, available: false };
   if (state.module === "references") return { label: "참고자료 저장", dirty: state.dirty.references, available: true };
   if (isServiceDataModule()) {
     const serviceId = state.module === "presenter" ? presenterViewServiceId() : state.selectedServiceId;

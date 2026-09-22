@@ -1,7 +1,7 @@
 window.MINDEX_MANUALS = Object.freeze([
   {
     id: "operations",
-    title: "운영 매뉴얼",
+    title: "예배 매뉴얼",
     eyebrow: "예배와 방송",
     summary: "예배 입력부터 방송 마무리까지",
     sections: [

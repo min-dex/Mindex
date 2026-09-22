@@ -1683,7 +1683,7 @@ def main() -> int:
                     })()
                     """
                 )
-                expected_topbar_order = ["예배", "말씀", "찬양", "교회력", "참고자료", "운영 매뉴얼"]
+                expected_topbar_order = ["예배", "말씀", "찬양", "운영"]
                 if (
                     topbar_state["order"] == expected_topbar_order
                     and topbar_state["active"] == "scripture"
@@ -1692,7 +1692,7 @@ def main() -> int:
                     and topbar_state["activeIconWidth"] == 16
                     and topbar_state["activeIconHeight"] == 16
                     and topbar_state["activeIconStroke"] == "1.5px"
-                    and topbar_state["referencesIconRotation"] == 45
+                    and topbar_state["referencesIconRotation"] is None
                 ):
                     pass_("navigation-rail-order-active-style", json.dumps(topbar_state, ensure_ascii=False))
                 else:
