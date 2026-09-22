@@ -5604,7 +5604,7 @@ function renderCalendarDetailTabs() {
 
 function renderCalendarEditCell(row, field) {
   const val = escapeHtml(row[field] || "");
-  return `<td class="cal-cell ${escapeAttr(calendarCellClassForField(field))}" data-cal-id="${escapeAttr(row.id)}" data-cal-field="${escapeAttr(field)}" data-placeholder="—" contenteditable="true" spellcheck="false">${val}</td>`;
+  return `<td class="cal-cell ${escapeAttr(calendarCellClassForField(field))}" data-cal-id="${escapeAttr(row.id)}" data-cal-field="${escapeAttr(field)}" data-placeholder="—" contenteditable="true" spellcheck="false" title="입력 후 자동 저장">${val}</td>`;
 }
 
 function renderCalendarOccasionScheduleCell(row) {
@@ -5620,7 +5620,7 @@ function renderCalendarOccasionScheduleItem(row, field, label) {
   return `
     <div class="cal-occasion-schedule-item">
       <span class="cal-occasion-schedule-label">${escapeHtml(label)}</span>
-      <span class="cal-cell cal-occasion-schedule-value ${escapeAttr(calendarCellClassForField(field))}" data-cal-id="${escapeAttr(row.id)}" data-cal-field="${escapeAttr(field)}" contenteditable="true" spellcheck="false">${val}</span>
+      <span class="cal-cell cal-occasion-schedule-value ${escapeAttr(calendarCellClassForField(field))}" data-cal-id="${escapeAttr(row.id)}" data-cal-field="${escapeAttr(field)}" contenteditable="true" spellcheck="false" title="입력 후 자동 저장">${val}</span>
     </div>`;
 }
 
@@ -19939,7 +19939,7 @@ function hasDirtyChanges({ reconcile = false } = {}) {
 function currentSaveButtonState() {
   if (state.saving) return { label: "저장 중", dirty: true, available: true, busy: true };
   if (state.module === "home") return { label: "저장", dirty: false, available: false };
-  if (state.module === "calendar") return { label: "교회력은 여기서 읽기 전용입니다", dirty: false, available: false };
+  if (state.module === "calendar") return { label: "교회력 자동 저장", dirty: false, available: false };
   if (state.module === "manuals") return { label: "예배 매뉴얼은 자동 저장됩니다", dirty: false, available: false };
   if (state.module === "references") return { label: "참고자료 저장", dirty: state.dirty.references, available: true };
   if (isServiceDataModule()) {
@@ -24993,7 +24993,7 @@ function renderWorshipSetlistLeaderEditor(source) {
   const leader = String(source.leader || "").trim();
   const value = draft ? draft.value : leader;
   return `<label class="svc-setlist-leader svc-setlist-leader-form"><span>인도</span>
-    <input type="text" data-setlist-leader-input="${escapeAttr(id)}" data-leader-original="${escapeAttr(draft?.original ?? leader)}" aria-label="찬양인도자" placeholder="—" value="${escapeAttr(value)}" maxlength="100" style="width:${worshipSetlistLeaderInputWidth(value)}em" ${draft?.saving ? "readonly" : ""}>
+    <input type="text" data-setlist-leader-input="${escapeAttr(id)}" data-leader-original="${escapeAttr(draft?.original ?? leader)}" aria-label="찬양인도자" title="입력 후 포커스를 옮기면 자동 저장" placeholder="—" value="${escapeAttr(value)}" maxlength="100" style="width:${worshipSetlistLeaderInputWidth(value)}em" ${draft?.saving ? "readonly" : ""}>
   </label>`;
 }
 
