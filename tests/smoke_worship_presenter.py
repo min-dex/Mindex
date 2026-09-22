@@ -6194,6 +6194,11 @@ def main() -> int:
                         readingNoChromakey: outputs[0]?.classList.contains('no-chromakey') || false,
                         readingHasClass: slides[0]?.classList.contains('presenter-slide--scripture-reading') || false,
                         readingSlideBackground: slides[0]?.style.getPropertyValue('--presenter-slide-bg-image') || '',
+                        readingRequiredImage: presenterSlideImageSource(readingSlide),
+                        readingShowsServiceBackground: presenterOutputFrameStateForSlide(readingSlide, {
+                          chromakey: false,
+                          backgroundImages: ['assets/worship-backgrounds/monthly-fullscreen-a.png'],
+                        }).showBackground,
                         readingHasLowerBarText: Boolean(slides[0]?.querySelector('.presenter-slide-text')),
                         readingReference: readingRef?.textContent?.trim() || '',
                         hebrewsChapterReference: presenterScriptureReadingHeaderReference({
@@ -6287,6 +6292,8 @@ def main() -> int:
                     and scripture_context_state["readingNoChromakey"]
                     and scripture_context_state["readingHasClass"]
                     and scripture_context_state["readingSlideBackground"] != ""
+                    and scripture_context_state["readingRequiredImage"].endswith("scripture-reading-cross.png")
+                    and not scripture_context_state["readingShowsServiceBackground"]
                     and not scripture_context_state["readingHasLowerBarText"]
                     and scripture_context_state["readingReference"] == "출애굽기 23:14"
                     and scripture_context_state["hebrewsChapterReference"] == "히브리서 10장"
@@ -10198,6 +10205,7 @@ def main() -> int:
                           outputContext: 'clean',
                         },
                       ];
+                      await preloadPresenterOutputImage(PRESENTER_SCRIPTURE_READING_BACKGROUND);
                       renderPresenterOutput({
                         serviceId: '__smoke_transition_service__',
                         serviceType: 'friday',
@@ -10219,7 +10227,10 @@ def main() -> int:
                         index: 1,
                         safetyBlank: false,
                       });
-                      await new Promise((resolve) => setTimeout(resolve, 120));
+                      for (let attempt = 0; attempt < 40; attempt += 1) {
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+                        if (root.querySelector('.presenter-output-layer.is-active .presenter-slide--scripture-reading')) break;
+                      }
                       const active = root.querySelector('.presenter-output-layer.is-active');
                       const entering = root.querySelector('.presenter-output-layer.is-entering');
                       const exiting = root.querySelector('.presenter-output-layer.is-exiting');
@@ -10289,7 +10300,10 @@ def main() -> int:
                         index: 1,
                         safetyBlank: false,
                       });
-                      await new Promise((resolve) => setTimeout(resolve, 120));
+                      for (let attempt = 0; attempt < 40; attempt += 1) {
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+                        if (root.querySelector('.presenter-output-layer.is-active .presenter-slide--scripture-reading')) break;
+                      }
                       const active = root.querySelector('.presenter-output-layer.is-active');
                       return {
                         noChromakey: root?.classList.contains('no-chromakey') || false,
@@ -10552,7 +10566,7 @@ def main() -> int:
                 )
                 scripture_blank_background_state = output_page.evaluate(
                     """
-                    (payload) => {
+                    async (payload) => {
                       const finalIndex = payload.slides.findIndex((slide) =>
                         slide?.type === 'scripture'
                         && slide?.sectionKey === 'scripture_reading'
@@ -10562,6 +10576,10 @@ def main() -> int:
                       const blankModel = payload.slides[blankIndex] || {};
                       renderPresenterOutput({ ...payload, index: finalIndex, safetyBlank: false }, {});
                       const root = document.getElementById('presenterOutputRoot');
+                      for (let attempt = 0; attempt < 40; attempt += 1) {
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+                        if (root.querySelector('.presenter-output-layer.is-active .presenter-slide--scripture-reading')) break;
+                      }
                       const finalSlide = root?.querySelector('.presenter-slide');
                       const finalState = {
                         hasBackground: root?.classList.contains('has-background') || false,
@@ -10572,6 +10590,10 @@ def main() -> int:
                         fin: finalSlide?.querySelector('.presenter-scripture-reading-fin')?.textContent?.trim() || '',
                       };
                       renderPresenterOutput({ ...payload, index: blankIndex, safetyBlank: false }, {});
+                      for (let attempt = 0; attempt < 20; attempt += 1) {
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+                        if (root.querySelector('.presenter-output-layer.is-active .presenter-slide--blank')) break;
+                      }
                       const blankSlide = root?.querySelector('.presenter-slide');
                       return {
                         blankIndex,
@@ -10599,8 +10621,8 @@ def main() -> int:
                     scripture_blank_background_state["blankIndex"] == scripture_blank_background_state["finalIndex"] + 1
                     and scripture_blank_background_state["finalIndex"] >= 0
                     and scripture_blank_background_state["noChromakey"]
-                    and scripture_blank_background_state["hasBackground"]
-                    and scripture_blank_background_state["inlineBackground"] != ""
+                    and not scripture_blank_background_state["hasBackground"]
+                    and scripture_blank_background_state["inlineBackground"] == ""
                     and "presenter-slide--scripture-reading" in scripture_blank_background_state["slideClass"]
                     and scripture_blank_background_state["renderedReference"] == "출애굽기 23:14"
                     and scripture_blank_background_state["fin"] == "Fin."
@@ -10625,7 +10647,7 @@ def main() -> int:
 
                 scripture_final_background_state = output_page.evaluate(
                     """
-                    (payload) => {
+                    async (payload) => {
                       const finalIndex = payload.slides.findIndex((slide) =>
                         slide?.type === 'scripture'
                         && slide?.sectionKey === 'scripture_reading'
@@ -10634,6 +10656,10 @@ def main() -> int:
                       const finalSlide = payload.slides[finalIndex] || {};
                       renderPresenterOutput({ ...payload, index: finalIndex, safetyBlank: false }, {});
                       const root = document.getElementById('presenterOutputRoot');
+                      for (let attempt = 0; attempt < 40; attempt += 1) {
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+                        if (root.querySelector('.presenter-output-layer.is-active .presenter-slide--scripture-reading')) break;
+                      }
                       const slide = root?.querySelector('.presenter-slide');
                       return {
                         finalIndex,
@@ -10656,8 +10682,8 @@ def main() -> int:
                     scripture_final_background_state["finalIndex"] >= 0
                     and not scripture_final_background_state["suppressBackgroundImage"]
                     and scripture_final_background_state["noChromakey"]
-                    and scripture_final_background_state["hasBackground"]
-                    and scripture_final_background_state["inlineBackground"] != ""
+                    and not scripture_final_background_state["hasBackground"]
+                    and scripture_final_background_state["inlineBackground"] == ""
                     and scripture_final_background_state["slideBackground"] != ""
                     and scripture_final_background_state["renderedReference"] == "출애굽기 23:14"
                     and scripture_final_background_state["fin"] == "Fin."

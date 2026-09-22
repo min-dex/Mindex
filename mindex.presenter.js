@@ -3798,9 +3798,10 @@ function presenterOutputFrameStateForSlide(slide, payload = {}) {
   const blankSlide = presenterSlideLayout(slide) === PRESENTER_SLIDE_LAYOUTS.BLANK;
   const scoreOutput = presenterSlideIsScoreLike(slide);
   const suppressBackground = Boolean(slide?.suppressBackgroundImage || slide?.noBackgroundImage);
+  const usesDedicatedScriptureBackground = slide?.scriptureContext === "reading" && !suppressBackground;
   // A fullscreen blank stays inside the service visual system: retain the same
   // background while the cross draws over it. Chromakey remains background-free.
-  const showBackground = Boolean(backgroundImages.length && cleanOutput && !suppressBackground);
+  const showBackground = Boolean(backgroundImages.length && cleanOutput && !suppressBackground && !usesDedicatedScriptureBackground);
   return {
     cleanOutput,
     showBackground,
@@ -4700,6 +4701,9 @@ function presenterSlidePreloadGroupKey(slide) {
 
 function presenterSlideImageSource(slide) {
   if (!slide) return "";
+  if (slide.scriptureContext === "reading" && !slide.suppressBackgroundImage && !slide.noBackgroundImage) {
+    return PRESENTER_SCRIPTURE_READING_BACKGROUND;
+  }
   const layout = presenterSlideLayout(slide);
   const elementType = presenterSlideElementType(slide);
   if (layout !== PRESENTER_SLIDE_LAYOUTS.MEDIA || elementType !== PRESENTER_ELEMENT_TYPES.IMAGE) return "";
