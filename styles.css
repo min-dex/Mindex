@@ -3378,11 +3378,6 @@ body[data-module="presenter"] .detail-pane {
 .svc-setlist-entry-meta > :first-child {
   flex-shrink: 0;
 }
-.svc-setlist-entry-leader {
-  margin-left: auto;
-  max-width: 100%;
-  text-align: right;
-}
 .svc-setlist-entry-title strong {
   color: var(--ink);
   font-size: var(--ui-card-title-size);
@@ -3913,58 +3908,6 @@ body[data-theme="dark"] .service-week-card:hover {
 .presenter-viewer {
   --svc-service-header-sticky-h: 0px;
 }
-.svc-header {
-  position: sticky;
-  top: var(--svc-service-sticky-top);
-  z-index: 30;
-  display: flex;
-  min-height: var(--svc-service-header-sticky-h);
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s4);
-  border-bottom: 0;
-  background: var(--bg);
-  isolation: isolate;
-  padding: 0 0 12px;
-}
-.svc-header::before {
-  content: "";
-  position: absolute;
-  inset: calc((var(--content-pad-y) + var(--svc-service-header-sticky-h)) * -1) 0 0;
-  z-index: -1;
-  background: var(--bg);
-  pointer-events: none;
-}
-.svc-header-date {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  gap: 8px;
-}
-.svc-header-actions {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--s2);
-}
-.svc-prep-editor-open.icon-btn {
-  color: var(--ink-3);
-}
-.svc-prep-editor-open.icon-btn:hover {
-  color: var(--ink-2);
-}
-.svc-service-title {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--ink);
-  font-size: var(--page-title-size);
-  font-weight: var(--page-title-weight);
-  line-height: 1.25;
-  margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .svc-prep-editor-layer {
   display: block;
   width: 100%;
@@ -4026,59 +3969,6 @@ body[data-theme="dark"] .service-week-card:hover {
   gap: 4px;
   padding-top: 4px;
 }
-.svc-date-text {
-  flex: 0 0 auto;
-  color: var(--ink-4);
-  font-size: 13px;
-  font-weight: 700;
-}
-.svc-mode-tabs {
-  display: inline-flex;
-  height: 32px;
-  min-width: 0;
-  align-items: center;
-  gap: 0;
-  overflow: hidden;
-  border-radius: var(--r);
-  background: color-mix(in srgb, var(--panel-2) 26%, transparent);
-  padding: 2px;
-}
-.svc-mode-tab {
-  display: inline-flex;
-  height: 28px;
-  min-width: 74px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 0;
-  border-radius: calc(var(--r) - 1px);
-  background: transparent;
-  color: var(--ink-3);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-  padding: 0 10px;
-  white-space: nowrap;
-}
-.svc-mode-tab svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 1.5;
-}
-.svc-mode-tab:not(.active):hover,
-.svc-mode-tab:not(.active):focus-visible {
-  background: var(--sidebar-hover-bg);
-  color: var(--ink);
-}
-.svc-mode-tab.active {
-  background: var(--tab-active-bg);
-  color: var(--ink);
-}
-.svc-mode-tab.active span {
-  color: var(--accent);
-}
 .svc-output-action {
   display: inline-flex;
   height: 32px;
@@ -4107,15 +3997,6 @@ body[data-theme="dark"] .service-week-card:hover {
   width: 16px;
   height: 16px;
   stroke-width: 1.5;
-}
-.svc-output-action--quiet {
-  background: var(--panel-2);
-  color: var(--ink-3);
-}
-.svc-output-action--quiet:hover,
-.svc-output-action--quiet:focus-visible {
-  background: var(--sidebar-hover-bg);
-  color: var(--ink);
 }
 .service-bulletin-workbench {
   display: grid;
@@ -4435,29 +4316,6 @@ body[data-theme="dark"] .service-week-card:hover {
   gap: 8px;
   padding: 2px 10px 10px;
 }
-.svc-editor-section-title {
-  display: flex;
-  min-height: 30px;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s2);
-  padding: 2px 2px 0;
-}
-.svc-editor-section-title strong {
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 20px;
-}
-.svc-editor-section-title span {
-  overflow: hidden;
-  color: var(--ink-4);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .svc-meta-input { height: 28px; border: 0; border-radius: calc(var(--r) - 2px); background: color-mix(in srgb, var(--panel-2) 38%, transparent); color: var(--ink-3); font: inherit; font-size: 12px; font-weight: 500; padding: 0 var(--s2); outline: none; width: 110px; }
 .svc-meta-input--title { width: 180px; }
 .svc-meta-input:focus { background: color-mix(in srgb, var(--panel-2) 66%, transparent); color: var(--ink); }
@@ -4514,109 +4372,6 @@ body[data-theme="dark"] .service-week-card:hover {
   font-size: 11px;
   letter-spacing: 0;
   text-transform: none;
-}
-.svc-items { display: flex; flex-direction: column; }
-.svc-worship-structure {
-  display: grid;
-  gap: var(--s2);
-}
-.svc-worship-section-block {
-  display: grid;
-  gap: 8px;
-  border-radius: var(--r);
-  background: color-mix(in srgb, var(--panel-2) 22%, transparent);
-  padding: 10px;
-}
-.svc-worship-section-head {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
-}
-.svc-worship-section-no {
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 11px;
-  font-weight: 800;
-}
-.svc-worship-section-title {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s2);
-}
-.svc-worship-section-title strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.svc-worship-section-title small {
-  flex: 0 0 auto;
-  color: var(--ink-4);
-  font-size: 10px;
-  font-weight: 700;
-}
-.svc-worship-element-list {
-  display: grid;
-  gap: 0;
-  border-radius: calc(var(--r) - 3px);
-  background: color-mix(in srgb, var(--bg) 34%, transparent);
-  padding: 0 9px;
-}
-.svc-worship-outline-row {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 46%, transparent);
-  padding: 9px 0;
-}
-.svc-worship-outline-row:last-child { border-bottom: 0; }
-.svc-worship-outline-no {
-  color: var(--ink-4);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 20px;
-  text-align: right;
-}
-.svc-worship-outline-main {
-  display: grid;
-  min-width: 0;
-  gap: 3px;
-}
-.svc-worship-outline-label {
-  color: var(--accent);
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 12px;
-}
-.svc-worship-outline-main strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 18px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.svc-worship-outline-main small {
-  overflow: hidden;
-  color: var(--ink-4);
-  font-size: 11px;
-  line-height: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .svc-template-guide { display: block; border: 0; border-radius: var(--r); background: transparent; padding: 0; }
 .svc-template-head {
@@ -5411,7 +5166,6 @@ body[data-theme="dark"] .service-week-card:hover {
 .svc-item-note.compact:not([open]) { margin-bottom: 2px; }
 .service-search-count { font-size: var(--ui-meta-size); font-weight: var(--ui-meta-weight); color: var(--ink-4); }
 .service-section-head-actions { display: flex; align-items: center; gap: var(--s2); }
-.svc-new-btn { width: 28px; height: 28px; }
 .svc-new-form { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); border-radius: var(--r); background: color-mix(in srgb, var(--panel-2) 28%, transparent); }
 .svc-new-form-fields { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: flex-end; }
 .svc-new-field { display: flex; flex-direction: column; gap: 4px; }
@@ -5423,7 +5177,6 @@ body[data-theme="dark"] .service-week-card:hover {
 .svc-new-form-actions { display: flex; gap: var(--s2); }
 .service-no-results { font-size: var(--ui-body-size); color: var(--ink-4); margin: 0; padding: var(--s3) 0; }
 .service-date-card-note { font-size: var(--ui-label-size); color: var(--ink-4); font-style: italic; margin-top: 1px; }
-.svc-copy-btn { height: 28px; padding: 0 var(--s2); }
 .svc-presenter-strip {
   min-width: 0;
   max-width: 100%;

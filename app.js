@@ -26533,47 +26533,6 @@ function servicePrepEditorItems(serviceId) {
     }));
 }
 
-function renderWorshipSectionBlock(section, index, structure) {
-  const elements = structure.elementsBySection[section.id] || [];
-  const slideCount = elements.reduce((total, element) => total + (structure.slideCountsByElement[element.id] || 0), 0);
-  return `
-    <section class="svc-worship-section-block">
-      <div class="svc-worship-section-head">
-        <span class="svc-worship-section-no">${index + 1}</span>
-        <div class="svc-worship-section-title">
-          <strong>${escapeHtml(section.title || section.section_key || "Section")}</strong>
-          <small>${elements.length} 요소 · ${slideCount} 슬라이드</small>
-        </div>
-      </div>
-      <div class="svc-worship-element-list">
-        ${elements.length
-          ? elements.map((element, elementIndex) => renderWorshipElementRow(element, elementIndex, structure)).join("")
-          : `<p class="service-no-results">요소가 없습니다.</p>`}
-      </div>
-    </section>`;
-}
-
-function renderWorshipElementRow(element, index, structure) {
-  const typeLabel = worshipElementTypeLabel(element.element_type);
-  const title = cleanList([element.title, element.body]).join(" · ") || typeLabel;
-  const meta = cleanList([
-    element.person,
-    element.song_id ? "찬양 연결" : "",
-    element.scripture_reference || element.scripture_id ? "말씀 연결" : "",
-    element.review_status === "needs_review" ? "검토 필요" : "",
-  ]).join(" · ");
-  const slideCount = structure.slideCountsByElement[element.id] || 0;
-  return `
-    <article class="svc-worship-outline-row">
-      <span class="svc-worship-outline-no">${index + 1}</span>
-      <div class="svc-worship-outline-main">
-        <span class="svc-worship-outline-label">${escapeHtml(typeLabel)}</span>
-        <strong>${escapeHtml(title)}</strong>
-        <small>${escapeHtml(cleanList([meta, `${slideCount} 슬라이드`]).join(" · "))}</small>
-      </div>
-    </article>`;
-}
-
 function renderServicePraiseDatalist() {
   const options = state.songs
     .map((song) => songServiceOptionLabel(song))
