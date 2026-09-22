@@ -3896,7 +3896,7 @@ async function worshipAtomicClient() {
   if (!state.client) throw new Error("DB 연결을 확인해 주세요.");
   if (!worshipAtomicRuntime || worshipAtomicRuntime.client !== state.client) {
     const client = state.client;
-    const promise = import("./mindex.worship-atomic-client.mjs?v=atomic-recovery-prep-20260919-001").then(({ createWorshipAtomicClient }) =>
+    const promise = import("./mindex.worship-atomic-client.mjs?v=atomic-production-20260922-001").then(({ createWorshipAtomicClient }) =>
       createWorshipAtomicClient({ rpc: (name, args) => client.rpc(name, args),
         journal: sessionStorage, namespace: state.config.url }));
     worshipAtomicRuntime = { client, promise };

@@ -1,8 +1,9 @@
 # Atomic Client Preparation
 
-2026-09-19: client preparation only. This release does not enable atomic saving,
-apply SQL, change production rows or revoke existing write permissions.
-`MINDEX_WORSHIP_ATOMIC_PROTOCOL` is deliberately unset in index.html.
+2026-09-22: the additive production migration is installed and the live aggregate
+read RPC matches REST. `MINDEX_WORSHIP_ATOMIC_PROTOCOL` is enabled in index.html;
+existing write permissions remain available until the client deployment and
+reviewed save are verified.
 
 ## Included
 
@@ -18,9 +19,9 @@ apply SQL, change production rows or revoke existing write permissions.
   remains in place. Its legacy branch constructs the document before writes.
 - Desktop packaging includes the two dynamically imported runtime modules.
 
-The default/production path still uses the existing direct-write protocol.
-Existing partial-commit and stale-write risks are not fixed by this preparation
-release; the characterization test continues to document them.
+The production path now selects the aggregate RPC protocol. Legacy permissions
+remain temporarily available as an operational rollback path, but the enabled
+client does not fall back to direct writes after an RPC failure.
 
 ## Verification
 
@@ -51,4 +52,4 @@ The refreshed [live audit and staged conflict review](worship-atomic-live-audit-
 records actual production schema/permission findings. Conflict review preserves
 drafts, supports comparison/export and explicit archive-before-reopen. Source text
 can be deliberately reapplied using the recovery picker; no automatic merge is
-performed. The atomic client is still not enabled in production.
+performed. The atomic client is enabled after the production aggregate read check.
