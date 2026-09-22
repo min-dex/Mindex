@@ -16944,6 +16944,29 @@ function getMindexManuals() {
   return Array.isArray(window.MINDEX_MANUALS) ? window.MINDEX_MANUALS : [];
 }
 
+function renderManualSectionContent(section = {}) {
+  if (section.layout === "schedule") {
+    return `<div class="manual-schedule-grid">${(section.groups || []).map((group) => `
+      <div class="manual-schedule-group">
+        <h5>${escapeHtml(group.title)}</h5>
+        <dl>${(group.rows || []).map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>
+      </div>
+    `).join("")}</div>`;
+  }
+  if (section.layout === "flow") {
+    return `<ul class="manual-flow">${(section.steps || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>`;
+  }
+  if (section.layout === "camera") {
+    return `<div class="manual-camera-grid">${(section.cameras || []).map((camera) => `
+      <section>
+        <h5>${escapeHtml(camera.title)}</h5>
+        <dl>${(camera.positions || []).map(([position, label]) => `<div><dt>${escapeHtml(position)}</dt><dd>${escapeHtml(label)}</dd></div>`).join("")}</dl>
+      </section>
+    `).join("")}</div>`;
+  }
+  return `<ul class="manual-checklist">${(section.items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
 function renderManualsDetail() {
   const manuals = getMindexManuals();
   const active = manuals[0];
@@ -16956,23 +16979,17 @@ function renderManualsDetail() {
     <div class="manuals-shell">
       <header class="manuals-head">
         <div>
-          <span>운영 문서</span>
+          <span>${escapeHtml(active.eyebrow)}</span>
           <h2>운영 매뉴얼</h2>
-          <p>예배 준비와 방송 진행에 필요한 내용을 확인합니다.</p>
         </div>
       </header>
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
-        <header>
-          <div>
-            <span>${escapeHtml(active.eyebrow)}</span>
-            <h3 id="manualGuideTitle">${escapeHtml(active.title)}</h3>
-          </div>
-        </header>
+        <h3 id="manualGuideTitle" class="sr-only">${escapeHtml(active.title)}</h3>
         <div class="manual-guide-grid">
           ${active.sections.map((section) => `
-            <section>
+            <section class="manual-section${section.layout ? ` manual-section--${escapeAttr(section.layout)}` : ""}">
               <h4>${escapeHtml(section.title)}</h4>
-              <ol>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>
+              ${renderManualSectionContent(section)}
             </section>
           `).join("")}
         </div>
