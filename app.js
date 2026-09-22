@@ -841,6 +841,7 @@ const referenceInputNormalizationCache = {
 
 document.addEventListener("DOMContentLoaded", init);
 
+// ─── Runtime bootstrap and UI wiring ─────────────────────────────────────────
 async function init() {
   if (isPresenterOutputRoute()) {
     document.body.classList.remove("ui-booting");
@@ -1911,6 +1912,7 @@ function handlePresenterBoardPointerOver(event) {
   return true;
 }
 
+// ─── Navigation, keyboard input, and local UI state ──────────────────────────
 async function handleSearchKeydown(event) {
   if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
   const query = state.search;
@@ -3002,6 +3004,7 @@ function runModuleEntryLoads(moduleName) {
 
 let songLoadContext = null;
 
+// ─── Database loading and cache boundaries ───────────────────────────────────
 async function loadSongs(options = {}) {
   if (songLoadPromise) {
     if (!options.searchOnly && songLoadContext) songLoadContext.searchOnly = false;
@@ -5633,6 +5636,7 @@ function calendarCellClassForField(field) {
   return "cal-cell-person";
 }
 
+// ─── Worship data normalization and service persistence ──────────────────────
 async function loadServiceItems(serviceId) {
   if (!serviceId) return;
   loadFullServiceSourceRefInBackground(serviceId);
@@ -5711,6 +5715,7 @@ async function loadServiceItems(serviceId) {
   }
 }
 
+// ─── Scripture data and reference workflows ──────────────────────────────────
 async function loadBibleTranslations({ silent = false } = {}) {
   if (bibleTranslationLoadPromise) return bibleTranslationLoadPromise;
   bibleTranslationLoadPromise = loadBibleTranslationsOnce({ silent });
@@ -19936,6 +19941,7 @@ function hasDirtyChanges({ reconcile = false } = {}) {
   return state.dirty.song || state.dirty.forms || state.dirty.scripture || state.dirty.service || state.dirty.references;
 }
 
+// ─── Save state, conflict handling, and user feedback ────────────────────────
 function currentSaveButtonState() {
   if (state.saving) return { label: "저장 중", dirty: true, available: true, busy: true };
   if (state.module === "home") return { label: "저장", dirty: false, available: false };
@@ -20432,7 +20438,7 @@ function resizeFormTextarea(textarea) {
   });
 }
 
-// ─── Service module ───────────────────────────────────────────────────────────
+// ─── Service editor, templates, and bulk input ────────────────────────────────
 
 // Public-worship templates begin from one reviewed quarterly baseline. Add a
 // later entry only when a lasting rule changes; one-off service edits stay local.
@@ -29733,6 +29739,7 @@ async function returnToLiveService() {
   syncBrowserHistory();
 }
 
+// ─── Presenter runtime, live controls, and output synchronization ────────────
 function currentPresenterAudioContext(serviceId = state.presenter.serviceId) {
   if (!serviceId || state.presenter.serviceId !== serviceId) return { source: "", label: "", slideId: "", playback: null };
   if (state.presenter.safetyBlank || state.presenter.liveScripture?.active) return { source: "", label: "", slideId: "", playback: null };
