@@ -2278,10 +2278,10 @@ function setPresenterThumbScale(key) {
 function renderPresenterThumbScaleControl() {
   const current = document.documentElement.dataset.thumbScale || readPresenterThumbScale();
   return `
-    <div class="svc-board-scale" role="group" aria-label="슬라이드 크기">
-      <span>슬라이드 크기</span>
+    <div class="svc-board-scale" role="group" aria-label="보기 배율">
+      <span class="svc-board-scale-icon" title="보기 배율 · 송출 화면에는 적용되지 않아요" aria-hidden="true"><i data-lucide="layout-grid"></i></span>
       ${PRESENTER_THUMB_SCALES.map((scale) => `
-        <button type="button" data-presenter-thumb-scale="${scale.key}" aria-pressed="${scale.key === current ? "true" : "false"}">${scale.label}</button>`).join("")}
+        <button type="button" data-presenter-thumb-scale="${scale.key}" aria-label="보기 배율 ${Math.round(Number(scale.key) * 100)}%" title="보기 배율 ${Math.round(Number(scale.key) * 100)}%" aria-pressed="${scale.key === current ? "true" : "false"}">${Math.round(Number(scale.key) * 100)}%</button>`).join("")}
     </div>`;
 }
 
