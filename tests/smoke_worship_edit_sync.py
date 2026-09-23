@@ -43,11 +43,12 @@ def main():
                   const manual={...praise,song_id:null,raw_title:'Manual',memo:serializeServiceItemMemo({elementType:'praise',inputMode:'manual_praise',outputMode:'lyrics',slides:['New lyrics']})};
                   const appliedManual=parseServiceItemMemo(applySundayEditSync(praise,manual).memo);
                   check(appliedManual.inputMode==='manual_praise'&&appliedManual.outputMode==='lyrics'&&appliedManual.slides[0]==='New lyrics','manual lyric mode lost');
-                  const raw='Memo before\\n[설교]\\n설교 제목: Original\\n  담당: 담당\\n\\n[별도]\\n사용자 항목: Keep exactly\\n  알수없는정보: keep';
+                  const raw='Memo before\\n[설교]\\n설교 제목: Original\\n  담당: 담당\\n  알수없는정보: keep target\\n\\n[별도]\\n사용자 항목: Keep exactly\\n  알수없는정보: keep';
                   const replaced=sundayEditSyncSourceText({sourceText:raw},previous,edited,source);
                   check(replaced.startsWith('Memo before\\n'),'source preamble lost');
                   check(replaced.endsWith('[별도]\\n사용자 항목: Keep exactly\\n  알수없는정보: keep'),'unrelated source text changed');
                   check(replaced.includes('설교 제목: Edited'),'source block not changed');
+                  check(replaced.includes('  알수없는정보: keep target'),'target metadata lost');
                   check(!Object.hasOwn(parseServiceSourceText(raw)[0],'startLine'),'parser default contract changed');
                   persistSundayEditSync=originalPersist;
                   worshipAtomicClient=async()=>null;

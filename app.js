@@ -7413,23 +7413,49 @@ function sundayEditSyncHasLocalDraft(serviceId) {
 
 function sundayEditSyncSourceText(document, item, next, service) {
   const source = String(document.sourceText || "").replace(/\r\n?/g, "\n");
+  const portable = /^\s*\[\[[^\]]+\]\]/m.test(source);
   const records = parseServiceSourceText(source, { includeRanges: true });
   const matches = records.filter((record) => serviceSourceLabelsMatch(record.label, item.label));
   const scoped = matches.filter((record) => record.sectionTitle === serviceSourceSectionTitle(item));
   const candidates = scoped.length ? scoped : matches;
-  const replacementLines = serviceSourceItemLines(next, service);
-  if (!candidates.length) return `${source.trimEnd()}\n\n[${serviceSourceSectionTitle(item)}]\n${replacementLines.join("\n")}`.trim();
+  const sourceLines = source.split("\n");
+  const appendLines = portable
+    ? serviceSourceItemLines(next, service)
+    : sundayEditSyncLegacySourceItemLines([], { label: item.label }, next, service);
+  if (!candidates.length) {
+    const heading = portable ? `[[${serviceSourceSectionTitle(item)}]]` : `[${serviceSourceSectionTitle(item)}]`;
+    return `${source.trimEnd()}\n\n${heading}\n${appendLines.join("\n")}`.trim();
+  }
   if (candidates.length !== 1) throw new Error("연결 예배 원문의 항목 위치가 중복되어 반영하지 않았습니다.");
   const record = candidates[0];
-  // Preserve the user's source label (for example, `설교 제목`) while updating its content.
-  const firstSeparator = replacementLines[0]?.indexOf(":") ?? -1;
-  if (firstSeparator >= 0) replacementLines[0] = `${record.label}:${replacementLines[0].slice(firstSeparator + 1)}`;
+  const replacementLines = portable
+    ? serviceSourceItemLines(next, service)
+    : sundayEditSyncLegacySourceItemLines(sourceLines, record, next, service);
   const replacement = replacementLines.join("\n");
-  const lines = source.split("\n");
-  const trailing = lines.slice(record.startLine, record.endLine).reverse().findIndex((line) => line.trim());
+  const trailing = sourceLines.slice(record.startLine, record.endLine).reverse().findIndex((line) => line.trim());
   const keepBlankLines = trailing < 0 ? 0 : trailing;
-  return [...lines.slice(0, record.startLine), replacement,
-    ...Array(keepBlankLines).fill(""), ...lines.slice(record.endLine)].join("\n");
+  return [...sourceLines.slice(0, record.startLine), replacement,
+    ...Array(keepBlankLines).fill(""), ...sourceLines.slice(record.endLine)].join("\n");
+}
+
+function sundayEditSyncLegacySourceItemLines(sourceLines = [], record = {}, next = {}, service = null) {
+  const lines = sourceLines.slice(record.startLine, record.endLine);
+  const memo = parseServiceItemMemo(next.memo);
+  const value = serviceSourceItemValue(next, service, memo);
+  const label = String(record.label || next.label || "항목").trim();
+  const firstLine = lines[0] || "";
+  const firstMatch = firstLine.match(/^(\s*[^:\[\]\n][^:\n]*?):\s*.*$/);
+  lines[0] = `${firstMatch ? `${firstMatch[1]}:` : `${label}:`} ${value}`;
+
+  const assignee = serviceItemEditableAssigneeValue(next, service);
+  const assigneeIndex = lines.findIndex((line, index) => index > 0 && /^\s{2,}담당\s*:/.test(line));
+  if (assigneeIndex >= 0) {
+    if (assignee) lines[assigneeIndex] = lines[assigneeIndex].replace(/^(\s{2,}담당\s*:)\s*.*/, `$1 ${assignee}`);
+    else lines.splice(assigneeIndex, 1);
+  } else if (assignee) {
+    lines.splice(1, 0, `  담당: ${assignee}`);
+  }
+  return lines.filter((line, index) => index < lines.length - 1 || line.trim());
 }
 
 function serviceSourceLabelsMatch(left = "", right = "") {
