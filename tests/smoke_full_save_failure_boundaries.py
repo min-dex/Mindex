@@ -16,6 +16,9 @@ def run(browser, url):
           const stages=['mindex_worship_services','mindex_worship_sections','mindex_worship_elements'];
           const results=[];
           refs.detailPane=document.createElement('section');document.body.append(refs.detailPane);
+          // This fixture characterizes the legacy multi-request fallback only.
+          // Atomic persistence has a separate lifecycle suite.
+          window.MINDEX_WORSHIP_ATOMIC_PROTOCOL=0;
           requireClient=()=>true;
           ensureWorshipServiceRowsLoadedForPersistence=async()=>{};
           worshipElementTypedStateColumns=async()=>({inputMode:true,contentState:true});

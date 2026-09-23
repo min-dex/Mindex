@@ -40,6 +40,8 @@
       "mindex.db-refresh.js",
       "mindex.constants.js",
       "mindex.design-tokens.js",
+      "mindex.worship-model.js",
+      "mindex.worship-persistence.js",
       "mindex.presenter.js",
       "mindex.worship-input.js",
       "mindex.presenter-ui.js",
