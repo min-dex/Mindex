@@ -31085,7 +31085,7 @@ function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options 
 }
 
 function renderPresenterCitationComposer(subgroup, serviceId) {
-  const slide = subgroup.slides.find(({ slide }) => slide?.liveScriptureControl || (slide?.autoTrailingBlank && slide?.citationQuickInsert))?.slide;
+  const slide = subgroup.slides.find(({ slide }) => slide?.liveScriptureControl)?.slide;
   if (!slide?.elementId) return "";
   return `
     <div class="svc-citation-composer" role="group" aria-label="실시간 말씀 입력">

@@ -22,6 +22,8 @@ def main():
               document.body.append(host);
               const slide={id:'fixture',type:'blank',elementId:'citation',sectionKey:'sermon',liveScriptureControl:true,hiddenInPresentation:true};
               const subgroup={slides:[{slide,slideIndex:0},{slide:{...slide,id:'second'},slideIndex:1}]};
+              const trailingBlank={id:'normal-trailing-blank',type:'blank',elementId:'normal',autoTrailingBlank:true,citationQuickInsert:true};
+              if(renderPresenterCitationComposer({slides:[{slide:trailingBlank,slideIndex:0}]},'fixture')) throw Error('composer attached to normal trailing blank');
               const section=document.createElement('div');
               section.innerHTML=renderPresenterBoardSubgroup(subgroup,-1,'fixture');
               if(!section.querySelector('.svc-board-grid + .svc-citation-composer')) throw Error('composer not below element slides');
