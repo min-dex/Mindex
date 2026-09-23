@@ -31753,10 +31753,13 @@ function prepareNextServiceFromPresenter(serviceId = state.selectedServiceId, op
   const nextServiceId = typeof options === "string" ? options : options.nextServiceId;
   const next = state.services.find((service) => service.id === nextServiceId) || nextPreparationService(current);
   if (!next) return;
-  const shouldSwitchPresenter = state.presenter.serviceId === serviceId;
+  // Preparing a later service must never replace an active output. The selected
+  // view moves forward while the return-to-live control keeps the live service reachable.
+  const shouldSwitchPresenter = !isPresenterOutputWindowOpen() && state.presenter.serviceId === serviceId;
   state.selectedServiceId = next.id;
   state.selectedServiceTypeId = next.type_id;
   state.selectedServiceItemIndex = null;
+  state.presenter.viewServiceId = next.id;
   state.presenter.jumpDraft = "";
   if (shouldSwitchPresenter) {
     preparePresenterService(next.id);

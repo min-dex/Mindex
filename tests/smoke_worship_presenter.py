@@ -9525,6 +9525,18 @@ def main() -> int:
                           presenterIndex: state.presenter.index,
                           nextFromYouth: nextPreparationService(state.services.find((service) => service.id === '__smoke_next_youth__'))?.id || '',
                         };
+                        state.selectedServiceId = '__smoke_next_first__';
+                        state.selectedServiceTypeId = 'sunday-first';
+                        preparePresenterService('__smoke_next_first__');
+                        state.presenter.outputWindow = { closed: false };
+                        renderPresenterDetail();
+                        document.querySelector('[data-presenter-action="prepare-next-service"]')?.click();
+                        const liveAfter = {
+                          selectedServiceId: state.selectedServiceId,
+                          viewServiceId: state.presenter.viewServiceId,
+                          presenterServiceId: state.presenter.serviceId,
+                          outputStillOpen: isPresenterOutputWindowOpen(),
+                        };
                         state.selectedServiceId = '__smoke_next_third__';
                         state.selectedServiceTypeId = 'sunday-main';
                         preparePresenterService('__smoke_next_third__');
@@ -9546,7 +9558,7 @@ def main() -> int:
                           thirdDisplay: serviceDisplayTypeName(state.services.find((service) => service.id === '__smoke_next_legacy_third__')),
                           afternoonDisplay: serviceDisplayTypeName(state.services.find((service) => service.id === '__smoke_next_legacy_afternoon__')),
                         };
-                        return { before, after, third, legacy };
+                        return { before, after, liveAfter, third, legacy };
                       } finally {
                         state.services = previous.services;
                         state.serviceItems = previous.serviceItems;
@@ -9571,6 +9583,10 @@ def main() -> int:
                     and next_prep_state["after"]["presenterServiceId"] == "__smoke_next_youth__"
                     and next_prep_state["after"]["presenterIndex"] == 0
                     and next_prep_state["after"]["nextFromYouth"] == "__smoke_next_young__"
+                    and next_prep_state["liveAfter"]["selectedServiceId"] == "__smoke_next_youth__"
+                    and next_prep_state["liveAfter"]["viewServiceId"] == "__smoke_next_youth__"
+                    and next_prep_state["liveAfter"]["presenterServiceId"] == "__smoke_next_first__"
+                    and next_prep_state["liveAfter"]["outputStillOpen"]
                     and next_prep_state["third"]["text"] == "다음 예배 준비 주일오후예배"
                     and next_prep_state["third"]["nextServiceId"] == "__smoke_next_afternoon__"
                     and next_prep_state["legacy"]["nextFromThird"] == "__smoke_next_legacy_afternoon__"
