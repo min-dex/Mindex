@@ -4085,24 +4085,32 @@ function nurseryWorshipAutoGenerationEnabled() {
 }
 
 function autoUpcomingPublicServiceTargets(baseDate = new Date()) {
+  const now = serviceBaseDateTime(baseDate);
   const today = upcomingServiceBaseDate(baseDate);
-  if (Number.isNaN(today.getTime())) return [];
+  if (Number.isNaN(now.getTime()) || Number.isNaN(today.getTime())) return [];
 
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay());
 
-  const nextDateForWeekday = (weekday) => {
+  const nextDateForWeekday = (weekday, serviceTypeId = "") => {
     const date = new Date(weekStart);
     const offset = weekday === 0 && today.getDay() !== 0 ? 7 : weekday;
     date.setDate(weekStart.getDate() + offset);
     if (date < today) date.setDate(date.getDate() + 7);
+    const range = SERVICE_TIME_WINDOWS[serviceTypeId];
+    const isToday = toLocalDateStr(date) === toLocalDateStr(now);
+    const nowTime = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const serviceHasEnded = isToday
+      && range?.end
+      && timeStringToMinutes(nowTime) >= timeStringToMinutes(range.end);
+    if (serviceHasEnded) date.setDate(date.getDate() + 7);
     return toLocalDateStr(date);
   };
 
-  const wednesday = nextDateForWeekday(3);
-  const friday = nextDateForWeekday(5);
+  const wednesday = nextDateForWeekday(3, "wednesday");
+  const friday = nextDateForWeekday(5, "friday");
   const fridayTarget = autoFridayServiceTarget(friday);
-  const sunday = nextDateForWeekday(0);
+  const sunday = nextDateForWeekday(0, "sunday-main");
   const integratedSunday = isAllGenerationsWorshipDate(sunday);
   const skippedSundayServiceTypes = calendarSkippedServiceTypesForDate(sunday);
   const sundayMainVariant = sundayMainWorshipServiceVariantForDate(sunday);

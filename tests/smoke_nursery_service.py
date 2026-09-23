@@ -28,7 +28,16 @@ try:
               check(JSON.stringify(nurseryTemplate)===JSON.stringify(childrenTemplate),'template differs');
               const targets=autoUpcomingPublicServiceTargets(new Date('2026-09-19T12:00:00'));
               check(targets.some(target=>target.typeId==='nursery'),'configured schedule missing');
-              return 'PASS nursery keeps its name and shares children behavior';
+              const targetKeys=(date)=>autoUpcomingPublicServiceTargets(new Date(date)).map(target=>`${target.typeId}:${target.date}`);
+              const wednesdayBeforeEnd=targetKeys('2099-08-19T20:29:00');
+              const wednesdayAfterEnd=targetKeys('2099-08-19T20:30:00');
+              const fridayAfterEnd=targetKeys('2099-08-21T22:00:00');
+              check(wednesdayBeforeEnd.includes('wednesday:2099-08-19'),'current Wednesday rolled too early');
+              check(wednesdayAfterEnd.includes('wednesday:2099-08-26'),'next Wednesday target missing');
+              check(!wednesdayAfterEnd.includes('wednesday:2099-08-19'),'expired Wednesday target remained');
+              check(fridayAfterEnd.includes('friday:2099-08-28'),'next Friday target missing');
+              check(!fridayAfterEnd.includes('friday:2099-08-21'),'expired Friday target remained');
+              return 'PASS nursery behavior and expired service target rollover';
             }'''), flush=True)
             browser.close()
 finally:
