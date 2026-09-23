@@ -352,6 +352,13 @@ Small visual polish that does not alter behavior does not need an entry.
 
 ### Scripture Input And Reading
 
+- The scripture-reading opening title keeps its reference in the navy lower
+  bar. When the reading item has an explicitly entered assignee, show that name
+  in a separate white tab attached to the bar's top-right edge, mirroring the
+  left scripture-address tab. Empty assignees produce no tab. Do not infer the
+  reader from the preacher or praise leader. Verse-body slides and sermon/citation
+  address tabs retain their existing layout (2026-09-23).
+
 - `성경봉독` and `설교 본문` are separate visible service elements in chromakey
   services, but their scripture references may be shared when one side is
   intentionally empty.

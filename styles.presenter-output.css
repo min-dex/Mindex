@@ -716,6 +716,17 @@
 .presenter-slide--citation-tab > .presenter-slide-text {
   white-space: pre-wrap;
 }
+.presenter-assignee-tab {
+  left: auto;
+  right: 0;
+  max-width: 50%;
+  border-radius: calc(28 * var(--presenter-stage-unit)) 0 0 0;
+  font-family: var(--presenter-font-family);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .presenter-song-note {
   display: inline-block;
   font-family: var(--presenter-font-family);

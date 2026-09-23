@@ -100,6 +100,7 @@ function presenterScriptureReadingTitleSlide(item = {}, section = {}, index = 0,
     label: title,
     title,
     assignee,
+    scriptureReadingAssignee: cleanPresenterAssignee(item.assignee),
     marker: "",
     text: cleanList([title, assignee]).join("\n"),
     sort: index - 0.002,
@@ -1732,6 +1733,7 @@ function presenterElementSlideFromMemoCore(item, section, index, memo, displayTe
       id: `${item.id || index}:title-assignee`,
       ...section,
       sectionAssignee: scriptureReading ? "" : section.sectionAssignee,
+      scriptureReadingAssignee: scriptureReading ? cleanPresenterAssignee(item.assignee) : "",
       elementLabel: safeLabel || section.elementLabel || serviceElementTypeLabel(elementType),
       elementTitle: slideTitle,
       elementType: PRESENTER_ELEMENT_TYPES.TITLE_ASSIGNEE,
@@ -4878,7 +4880,9 @@ function renderPresenterSlideBody(slide, options = {}) {
   if (layout === PRESENTER_SLIDE_LAYOUTS.FILE) return renderPresenterFileSlide(slide);
   if (layout !== PRESENTER_SLIDE_LAYOUTS.BLANK && elementType === PRESENTER_ELEMENT_TYPES.SCRIPTURE_TEXT && presenterScriptureContextUsesAddressTab(slide?.scriptureContext)) return renderPresenterCitationTabSlide(slide);
   if (elementType === PRESENTER_ELEMENT_TYPES.SCRIPTURE_TEXT && presenterScriptureContextUsesReadingForm(slide?.scriptureContext)) return renderPresenterScriptureReadingSlide(slide);
-  if (layout === PRESENTER_SLIDE_LAYOUTS.LOWER_BAR_TEXT && elementType === PRESENTER_ELEMENT_TYPES.TITLE_ASSIGNEE) return renderPresenterTitleAssigneeSlide(slide);
+  if (layout === PRESENTER_SLIDE_LAYOUTS.LOWER_BAR_TEXT && elementType === PRESENTER_ELEMENT_TYPES.TITLE_ASSIGNEE) {
+    return renderPresenterReadingAssigneeTab(slide) + renderPresenterTitleAssigneeSlide(slide);
+  }
   if (layout === PRESENTER_SLIDE_LAYOUTS.LOWER_BAR_TEXT && slide?.type === "song-title" && slide.sectionHeading) return renderPresenterSectionSongTitleSlide(slide);
   if (layout === PRESENTER_SLIDE_LAYOUTS.BLANK) return "";
   if (slide?.type === "liturgical-body") return renderPresenterLiturgicalBodySlide(slide);
@@ -5043,6 +5047,15 @@ function presenterOrderDisplayLabel(value = "") {
   // Hide sequence numbers only in output headings, never in stored labels/content.
   return label.replace(/^([가-힣A-Za-z][가-힣A-Za-z ]*?)\s*(?:\d+|[①-⑳㉑-㉟㊱-㊿])(?:\s*[·–~-]\s*(?:\d+|[①-⑳㉑-㉟㊱-㊿]))*\s*$/u,
     (_, name) => name.trim());
+}
+
+function renderPresenterReadingAssigneeTab(slide) {
+  const assignee = isPresenterScriptureReadingSource(slide)
+    ? cleanPresenterAssignee(slide.scriptureReadingAssignee)
+    : "";
+  return assignee
+    ? `<div class="presenter-citation-tab presenter-assignee-tab">${escapeHtml(assignee)}</div>`
+    : "";
 }
 
 function renderPresenterTitleAssigneeSlide(slide) {
