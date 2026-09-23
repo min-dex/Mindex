@@ -62,3 +62,9 @@ for (const person of ['', '   ']) {
   assert.equal(source.order[0].person,'','Empty individual assignee must not inherit section metadata');
 }
 console.log('PASS section assignees are never inherited');
+
+const split=c.window.MindexBulletin.resolveSource({service:{id:'copy',service_date:'2026-09-20'},sections:[{id:'ann',section_key:'announcements'}],elements:[{id:'ann1',section_id:'ann',element_type:'body',body:'오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 셀 모임입니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시)에 참여 바랍니다.\n3. 검단우리교회는 신천지 출입을 금지합니다.'}]});
+assert.equal(split.news,'1. 오늘 셀 모임입니다.');
+assert.match(split.notices,/기도 모임/);assert.match(split.notices,/신천지/);
+assert.match(split.welcome,/환영/);
+console.log('PASS reference layout announcement regions preserve source copy');

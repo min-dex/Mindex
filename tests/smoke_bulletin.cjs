@@ -81,6 +81,9 @@ const server=http.createServer((req,res)=>{
     assert.equal(await input.inputValue(),'12.5');
     await page.locator('[data-bulletin-undo]').click();assert.equal(await input.inputValue(),'10');
     await page.locator('[data-bulletin-redo]').click();assert.equal(await input.inputValue(),'12.5');
+    await page.locator('[data-bulletin-reset-layout]').click();assert.equal(await input.inputValue(),'10');
+    await page.locator('[data-bulletin-undo]').click();assert.equal(await input.inputValue(),'12.5');
+
     await page.locator('[data-bulletin-mode="content"]').click();
     await page.locator('[data-bulletin-field="news"]').fill('넘침 검사 문구 '.repeat(200));
     assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
@@ -156,8 +159,8 @@ const server=http.createServer((req,res)=>{
       }
     }
     if(process.env.BULLETIN_SMOKE_IMAGE){
-      console.log('IMAGE:'+ (await page.screenshot()).toString('base64'));
-      console.log('IMAGE:'+ (await page.locator('.bulletin-sheet').nth(1).screenshot()).toString('base64'));
+      console.log('IMAGE:'+ (await page.screenshot({type:'jpeg',quality:80})).toString('base64'));
+      console.log('IMAGE:'+ (await page.locator('.bulletin-sheet').nth(1).screenshot({type:'jpeg',quality:80})).toString('base64'));
     }
     console.log('PASS app entry, committed DB binding, prayer precedence, preserved Presenter draft, refresh, local draft restoration, grid, undo/redo, overflow, load failure and two-page PDF');
   }finally{await browser.close();server.close();}

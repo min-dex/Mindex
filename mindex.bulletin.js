@@ -9,9 +9,9 @@
   const artworkPath=key=>`assets/worship-backgrounds/${themeArtwork[key]}`;
   const logoPath="assets/bulletin/ria-mark.webp";
   const assets = [logoPath,...Object.keys(themeArtwork).map(artworkPath)];
-  const fields = {issue:"호수", church:"교회명", news:"청년부 소식", notices:"상시 안내", staff:"섬김이 명단",
+  const fields = {eventsText:"교회 일정 (주보용)",issue:"호수", church:"교회명", news:"청년부 소식", welcome:"환영 문구", notices:"상시 안내", staff:"섬김이 명단",
     motto:"공동체 표어", verse:"표어 성구", website:"웹사이트", address:"주소", meeting:"예배 시간·장소", outline:"설교 요점"};
-  const frameLabels={eventsTitle:"교회 일정 제목",events:"교회 일정",newsTitle:"청년부 소식 제목",liturgical:"교회력 명칭",
+  const frameLabels={eventsMonth:"일정 월",prayersMonth:"위원표 월",insideChurch:"안쪽 교회명",insideBrand:"안쪽 공동체명",eventsTitle:"교회 일정 제목",events:"교회 일정",newsTitle:"청년부 소식 제목",liturgical:"교회력 명칭",
     orderTitle:"예배 순서 제목",order:"예배 순서",leader:"인도자",prayersTitle:"예배 위원 제목",prayers:"예배 위원",
     sermon:"설교 제목·본문",notesTitle:"설교 노트 제목",notes:"노트 줄"};
   const frameLabel=id=>fields[id]||frameLabels[id]||id;
@@ -33,11 +33,12 @@
     const hour=date>="2026-05-31"?"오후 3시":date>="2025-09-14"?"오전 11시":"오전 10시";
     return {church:"기독교대한성결교회 검단우리교회",website:"gdwoori.org",
       address:`인천광역시 ${date>="2026-07-05"?"검단구":"서구"} 완정로 178번안길 1`,
+      welcome:"오늘도 청년부 예배에 오신 여러분을\n환영하고 축복합니다 :)",
       meeting:"주일 오후 1:10 · 1층 베데스다홀",
       motto:modern?"말씀으로 인도받는 RIA 청년 공동체":"하나님의 주 되심을 인정하는 청년들",
       verse:modern?'이는 그들을 긍휼히 여기는 이가 그들을 이끌되 샘물 근원으로 인도할 것임이라\n— 이사야 49:10b':'여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되며\n여호와께서 성을 지키지 아니하시면 파수꾼의 깨어 있음이 헛되도다 — 시편 127:1',
       notices:["검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",date>="2025-04-13"?`기도 모임: 매주 토요일 ${hour} · 1층 청년부실`:"예배 시작 10분 전에 모여 함께 기도로 준비해 주세요."].join("\n"),
-      staff:date>="2025-12-07"?"위임목사 김남영 · 담당 교역자 김석범\n회장 김음파 · 총무 이재희\n서기 박지훈 · 회계 서영윤":""};
+      staff:date>="2025-12-07"?"위임목사 김남영 목사 · 담당 교역자 김석범 목사\n회장 김음파 청년 · 총무 이재희 청년\n서기 박지훈 청년 · 회계 서영윤 청년":""};
   }
   function monthlyView(calendar,date,settings={},services=[]) {
     const eventsMonth=validMonth(settings.eventsMonth)?settings.eventsMonth:date.slice(0,7);
@@ -102,6 +103,14 @@
       if (last && last.label===label && last.person===person && content) last.content=[last.content,content].filter(Boolean).join("\n");
       else source.order.push({id:el.id,label,content,person});
     }
+    const copy={news:[],notices:[],welcome:[]};
+    for(const line of source.news.split("\n")) {
+      const plain=line.replace(/^\s*(?:\d+[.)]|[①-⑳◈◆])\s*/,"");
+      if(/^오늘도.*환영|^청년부 예배에.*환영/.test(plain))copy.welcome.push(plain);
+      else if(/^(?:검단우리교회는.*신천지|청년부 기도 모임|기도 모임[:(])/.test(plain))copy.notices.push(plain);
+      else copy.news.push(line);
+    }
+    source.news=copy.news.join("\n").trim();source.notices=copy.notices.join("\n");source.welcome=copy.welcome.join("\n");
     Object.assign(source,monthlyView(calendar,date,settings,services));
     return source;
   }
@@ -109,29 +118,34 @@
   function defaultFrames() {
     const frames=[];
     const text=(id,page,x,y,w,h,size,binding,align="left",weight=500)=>frames.push({id,page,x,y,w,h,size,binding,align,weight,type:"text"});
-    text("eventsTitle",0,10,20,128.5,10,17.5,"label:교회 일정","left",700);
-    text("events",0,10,35,128.5,45,12.5,"source:events");
-    text("newsTitle",0,10,90,128.5,10,17.5,"label:청년부 소식","left",700);
-    text("news",0,10,105,128.5,50,12.5,"field:news");
-    text("notices",0,10,157.5,128.5,15,10,"field:notices");
-    text("staff",0,10,175,128.5,20,10,"field:staff");
+    text("eventsTitle",0,10,20,90,10,17.5,"label:교회 일정","left",700);
+    text("eventsMonth",0,108.5,20,30,12.5,10,"month:eventsMonth","right");
+    frames.push({id:"events",page:0,x:10,y:35,w:128.5,h:45,size:12.5,type:"events",binding:"field:eventsText"});
+    text("newsTitle",0,10,87.5,65,10,17.5,"label:청년부 소식","left",700);
+    text("welcome",0,88.5,87.5,50,12.5,10,"field:welcome","right");
+    frames.push({id:"news",page:0,x:10,y:102.5,w:128.5,h:37.5,size:12.5,type:"list",binding:"field:news"});
+    frames.push({id:"notices",page:0,x:10,y:145,w:128.5,h:17.5,size:12.5,type:"list",binding:"field:notices"});
+    frames.push({id:"staff",page:0,x:10,y:170,w:128.5,h:25,size:10,type:"staff",binding:"field:staff"});
     text("church",0,158.5,20,128.5,12.5,20,"field:church","center",700);
-    text("liturgical",0,158.5,35,128.5,15,15,"source:liturgical","center",700);
-    text("motto",0,158.5,172.5,128.5,10,17.5,"field:motto","center",700);
-    text("verse",0,158.5,182.5,128.5,15,10,"field:verse","center");
-    text("website",0,10,2.5,128.5,5,7.5,"field:website");
-    text("issue",0,158.5,2.5,128.5,5,7.5,"issue","right");
-    text("address",0,10,202.5,128.5,5,7.5,"field:address");
-    text("meeting",0,158.5,202.5,128.5,5,7.5,"field:meeting","right");
+    text("liturgical",0,158.5,30,128.5,15,15,"source:liturgical","center",700);
+    text("motto",0,158.5,170,128.5,10,20,"field:motto","center",700);
+    text("verse",0,158.5,180,128.5,15,12.5,"field:verse","center");
+    text("website",0,10,2.5,128.5,5,10,"field:website");
+    text("issue",0,158.5,2.5,128.5,5,10,"issue","right");
+    text("address",0,10,202.5,128.5,5,10,"field:address");
+    text("meeting",0,158.5,202.5,128.5,5,10,"field:meeting","right");
     text("orderTitle",1,10,20,75,10,17.5,"label:예배 순서","left",700);
     text("leader",1,108.5,20,30,12.5,10,"leader","right");
-    frames.push({id:"order",page:1,x:10,y:37.5,w:128.5,h:157.5,size:12.5,type:"order",binding:"source:order"});
-    text("prayersTitle",1,158.5,20,128.5,10,17.5,"label:예배 위원","left",700);
+    frames.push({id:"order",page:1,x:10,y:37.5,w:128.5,h:150,size:12.5,type:"order",binding:"source:order"});
+    text("prayersTitle",1,158.5,20,90,10,17.5,"label:예배 위원","left",700);
+    text("prayersMonth",1,257,20,30,12.5,10,"month:rosterMonth","right");
     frames.push({id:"prayers",page:1,x:158.5,y:35,w:128.5,h:35,size:12.5,type:"prayers",binding:"source:prayers"});
-    text("sermon",1,158.5,80,128.5,17.5,12.5,"sermon","right",700);
-    text("outline",1,158.5,105,128.5,30,12.5,"field:outline");
+    text("sermon",1,158.5,85,128.5,17.5,12.5,"sermon","right",700);
+    frames.push({id:"outline",page:1,x:158.5,y:100,w:128.5,h:35,size:12.5,type:"list",binding:"field:outline"});
     text("notesTitle",1,158.5,142.5,128.5,10,17.5,"label:설교 노트","left",700);
-    frames.push({id:"notes",page:1,x:158.5,y:160,w:128.5,h:30,size:10,type:"rules",binding:""});
+    frames.push({id:"notes",page:1,x:158.5,y:157.5,w:128.5,h:30,size:10,type:"rules",binding:""});
+    text("insideChurch",1,10,2.5,128.5,5,10,"label:검단우리교회");
+    text("insideBrand",1,158.5,202.5,128.5,5,10,"label:RIA 청년부","right");
     return frames;
   }
 
@@ -193,15 +207,19 @@
   function fieldValue(doc,key) {
     if(Object.hasOwn(doc.fields,key))return doc.fields[key];
     if(key==="news")return doc.source?.news||"";
+    if(key==="eventsText")return doc.source?.events||"";
+    if(key==="welcome"&&doc.source?.welcome)return doc.source.welcome.replace(/\s*(환영하고)/,"\n$1");
     if(key==="issue")return archiveIssues[doc.source?.date]||"";
     const value=doc.profile?.[key]??profileForDate(doc.source?.date)[key]??"";
     if(key!=="notices")return value;
+    if(doc.source?.notices)return doc.source.notices;
     // The saved announcement may already include these standard notices.
     return value.split("\n").filter(line=>!["신천지","기도 모임"].some(term=>line.includes(term)&&doc.source?.news?.includes(term))).join("\n");
   }
   function boundText(doc,frame) {
     const [kind,key]=frame.binding.split(":");
-    if(kind==="label")return key+(["eventsTitle","prayersTitle"].includes(frame.id)?` · ${(doc.source?.[frame.id==="eventsTitle"?"eventsMonth":"rosterMonth"]||"").replace("-",".")}`:"");
+    if(kind==="label")return key;
+    if(kind==="month"){const [y,m]=(doc.source?.[key]||"").split("-");return y&&m?`${y}년\n${Number(m)}월`:"";}
     if(kind==="field")return fieldValue(doc,key);
     if(kind==="source")return doc.source?.[key]||"";
     if(kind==="leader")return doc.source?.leader?`인도자\n${doc.source.leader}`:"";
@@ -222,27 +240,60 @@
         const group=svg("g",{"data-frame-id":f.id});
         if(f.type==="rules") {
           for(let y=0;y<=f.h;y+=7.5)group.append(svg("line",{x1:f.x,y1:f.y+y,x2:f.x+f.w,y2:f.y+y,stroke:"#555","stroke-width":.15}));
-        } else if(f.type==="order") {
-          let y=f.y;
-          for(const row of doc.source?.order||[]) {
-            const inner=f.w-60;
-            if(inner<10){issues.add(f.id);break;}
-            const label=wrap(row.label,30,f.size),body=wrap(row.content,inner,f.size,700),person=wrap(row.person,30,f.size);
-            const count=Math.max(label.length,body.length,person.length);
-            const h=(count*snap(f.size*1.4)+10)/MM;
-            const base={...f,y,h:h-2.5/MM};
-            writeText(group,row.label,{...base,w:30},issues,f.id);
-            writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},issues,f.id);
-            writeText(group,row.person,{...base,x:f.x+f.w-30,w:30,align:"right"},issues,f.id);
-            y+=h;
+        } else if(f.type==="list") {
+          let y=f.y,index=0;
+          for(const line of String(boundText(doc,f)).split("\n").filter(l=>l.trim())) {
+            const content=line.replace(/^\s*(?:\d+[.)]|[①-⑳◈◆])\s*/,"");
+            const mark=f.id==="notices"?"◈":String.fromCodePoint(0x2460+Math.min(index++,19));
+            writeText(group,mark,{...f,y,w:7.5,h:10},issues,f.id);
+            const h=writeText(group,content,{...f,x:f.x+7.5,y,w:f.w-7.5,h:f.y+f.h-y},issues,f.id);
+            y+=Math.max(f.id==="news"?10:7.5,h+2.5);
           }
+        } else if(f.type==="staff") {
+          const value=boundText(doc,f),pairs=value.split(/\n|\s*·\s*/).filter(Boolean);
+          const parsed=pairs.map(t=>t.match(/^(위임목사|담당 교역자|회장|총무|서기|회계)\s+(.+)$/));
+          if(parsed.every(Boolean)&&parsed.length===6)parsed.forEach((row,i)=>{
+            const col=(f.w-7.5)/2,x=f.x+(i%2)*(col+7.5),y=f.y+Math.floor(i/2)*7.5;
+            writeText(group,row[1],{...f,x,y,w:col,h:7.5},issues,f.id);
+            writeText(group,row[2],{...f,x,y,w:col,h:7.5,align:"right"},issues,f.id);
+          });else writeText(group,value,f,issues,f.id);
+        } else if(f.type==="events") {
+          let y=f.y;
+          for(const line of String(boundText(doc,f)).split("\n").filter(Boolean)) {
+            const parts=line.match(/^(\d+월 \d+일)\s+(.+)$/);
+            if(!parts){y+=writeText(group,line,{...f,y,h:f.y+f.h-y},issues,f.id)+2.5;continue;}
+            const body=parts[2],h=Math.max(7.5,wrap(body,f.w-35,f.size).length*snap(f.size*1.4)/MM+2.5);
+            writeText(group,parts[1],{...f,y,w:30,h},issues,f.id);
+            writeText(group,body,{...f,x:f.x+35,y,w:f.w-35,h,align:"right"},issues,f.id);y+=h;
+            if(y>f.y+f.h+.01)issues.add(f.id);
+          }
+        } else if(f.type==="order") {
+          const list=doc.source?.order||[],inner=f.w-60;
+          if(inner<10){issues.add(f.id);root.append(group);continue;}
+          const leading=snap(f.size*1.4)/MM;
+          const counts=list.map(row=>Math.max(wrap(row.label,30,f.size).length,wrap(row.content,inner,f.size,700).length,wrap(row.person,30,f.size).length));
+          const used=counts.reduce((sum,n)=>sum+n*leading,0),gap=list.length>1?Math.max(2.5,(f.h-used)/(list.length-1)):0;
+          let y=f.y;
+          list.forEach((row,i)=>{
+            const height=counts[i]*leading,base={...f,y,h:height+1};
+            const centered=y+Math.max(0,(counts[i]-1)*leading/2);
+            const printLabel=row.label==="봉헌찬양"?"봉헌":row.label;
+            const letters=printLabel.replace(/\s/g,"");
+            if(letters.length>1&&letters.length<=5) [...letters].forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+j*27.5/(letters.length-1),w:6},issues,f.id));
+            else writeText(group,row.label,{...base,y:centered,w:30},issues,f.id);
+            writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},issues,f.id);
+            writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},issues,f.id);
+            y+=height+(i<list.length-1?gap:0);
+          });
           if(y>f.y+f.h+.01)issues.add(f.id);
         } else if(f.type==="prayers") {
-          const list=doc.source?.prayers||[],rows=Math.ceil(list.length/2),col=(f.w-5)/2;
+          const list=doc.source?.prayers||[],left=Math.floor(list.length/2),col=(f.w-5)/2;
           list.forEach((r,i)=>{
-            const x=f.x+(i>=rows?col+5:0),y=f.y+(i%rows)*10;
-            const text=`${shortDate(r.date)}  ${r.next?"NEXT · ":""}${r.person}`;
-            writeText(group,text,{...f,x,y,w:col,h:10,size:f.size},issues,f.id);
+            const x=f.x+(i>=left?col+5:0),y=f.y+(i>=left?i-left:i)*10;
+            writeText(group,shortDate(r.date),{...f,x,y,w:27.5,h:10},issues,f.id);
+            if(r.next){group.append(svg("rect",{x:x+29,y:y+2,width:9,height:4,rx:2,fill:"white",stroke:"#555","stroke-width":.2}));
+              writeText(group,"NEXT",{...f,x:x+29,y:y+1,w:9,h:7.5,size:7.5,align:"center"},issues,f.id);}
+            writeText(group,r.person,{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},issues,f.id);
             if(y+10>f.y+f.h+.01)issues.add(f.id);
           });
         } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&!["paper","palm","pentecost"].includes(theme)?"#fff":"#231f20"},issues,f.id);
@@ -341,7 +392,7 @@
             `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`).join("");
       } else {
         const f=doc.frames.find(f=>f.id===selected)||doc.frames[0];selected=f.id;
-        p.innerHTML=`<label>배경<select data-bulletin-setting="theme">${Object.entries(themes).map(([v,t])=>`<option value="${v}" ${(doc.settings.theme||"water")===v?"selected":""}>${t}</option>`).join("")}</select></label><p class="bulletin-help">MINDEX의 기존 예배 배경을 함께 사용합니다. 날짜별 자동 전환은 하지 않습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
+        p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme">${Object.entries(themes).map(([v,t])=>`<option value="${v}" ${(doc.settings.theme||"water")===v?"selected":""}>${t}</option>`).join("")}</select></label><p class="bulletin-help">MINDEX의 기존 예배 배경을 함께 사용합니다. 날짜별 자동 전환은 하지 않습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
           <label><input type="checkbox" data-bulletin-hidden ${f.hidden?"":"checked"}> 출력에 표시</label><p class="bulletin-help">${escape(frameLabel(f.id))}<br>이동·크기 2.5mm · 글자 2.5pt 단계</p><div class="bulletin-number-grid">`+
           [["x","가로 위치"],["y","세로 위치"],["w","너비"],["h","높이"]].map(([key,label])=>`<label>${label} (mm)<input type="number" step="2.5" data-bulletin-dimension="${key}" value="${f[key]}"></label>`).join("")+`</div>
           <label>글자 크기 (pt)<select data-bulletin-dimension="size">${TOKENS.fontSizes.map(n=>`<option ${f.size===n?"selected":""}>${n}</option>`).join("")}</select></label>
@@ -391,6 +442,7 @@
     });
     on(root,"click",event=>{
       const b=event.target.closest("button");if(!b)return;
+      if(b.hasAttribute("data-bulletin-reset-layout")){remember();doc.frames=defaultFrames();persist();properties();preview();return;}
       if(b.hasAttribute("data-bulletin-profile")){
         if(!doc.source?.date)return;
         try {

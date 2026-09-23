@@ -233,4 +233,3 @@ dated announcements / published issue snapshot이다. 별도 DB 스키마는 Dat
 - [청년부 주보 260906 (제24호).pdf](</Users/parkjihun/Library/CloudStorage/OneDrive-Personal/02_Church/12_주보/04_청년부 주보/청년부 주보 2026/청년부 주보 260906 (제24호).pdf>)
 - [청년부 주보 260913 (제25호).pdf](</Users/parkjihun/Library/CloudStorage/OneDrive-Personal/02_Church/12_주보/04_청년부 주보/청년부 주보 2026/청년부 주보 260913 (제25호).pdf>)
 - [청년부 주보 260920 (제26호).pdf](</Users/parkjihun/Library/CloudStorage/OneDrive-Personal/02_Church/12_주보/04_청년부 주보/청년부 주보 2026/청년부 주보 260920 (제26호).pdf>)
-
