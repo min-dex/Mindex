@@ -31360,7 +31360,7 @@ function presenterLabelDuplicatesSlideText(label, slide) {
 }
 
 function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, formLabel = "") {
-  if (slide.controllerEditorOnly || slide.liveScriptureControl) return "";
+  if (slide.controllerEditorOnly) return "";
   const active = slideIndex === activeIndex;
   const hidden = Boolean(slide?.hiddenInPresentation || slide?.hidden_in_presentation || slide?.hidden);
   const elementKey = presenterSlideElementGroupKey(slide) || `slide:${slideIndex}`;
@@ -32777,7 +32777,7 @@ function presenterSlideIsHidden(slide = {}) {
 }
 
 function presenterSlideIsNavigable(slide = {}) {
-  return !presenterSlideIsHidden(slide) && !slide.liveScriptureControl;
+  return !presenterSlideIsHidden(slide);
 }
 
 function firstPresenterNavigableIndex(slides = []) {

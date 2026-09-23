@@ -27,7 +27,7 @@ def main():
               const section=document.createElement('div');
               section.innerHTML=renderPresenterBoardSubgroup(subgroup,-1,'fixture');
               if(!section.querySelector('.svc-board-grid + .svc-citation-composer')) throw Error('composer not below element slides');
-              if(section.querySelector('.svc-slide-thumb')) throw Error('internal citation placeholder was visible');
+              if(section.querySelectorAll('.svc-slide-thumb').length!==2) throw Error('empty citation blank slide was not visible');
               if(section.querySelector('.svc-element-hidden-badge')) throw Error('citation control hid the element');
               if(renderPresenterSlideThumb(slide,0,-1,'fixture').includes('data-presenter-citation-reference-input')) throw Error('input still on thumbnail');
               const widths=[280,480,800];
@@ -69,7 +69,7 @@ def main():
               const outlineButton=document.createElement('button');
               outlineButton.dataset.serviceOutlineService='fixture';outlineButton.dataset.serviceOutlineItemIndex='0';outlineButton.dataset.serviceOutlineItemId='citation';
               handleServiceOutlineSlideClick(outlineButton);
-              if(openedEditors!==1 || selectedSlides!==0 || state.selectedServiceItemIndex!==0) throw Error('empty citation did not open its editor anchor');
+              if(openedEditors!==0 || selectedSlides!==1 || state.selectedServiceItemIndex!==0) throw Error('empty citation blank slide was not selected');
               refreshIcons(host);
               return widths;
             }''')
