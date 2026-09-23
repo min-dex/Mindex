@@ -45,6 +45,7 @@
       "mindex.presenter-ui.js",
       "mindex.setlist-links.js",
       "mindex.manuals.js",
+      "mindex.bulletin.js",
       "mindex.worship-atomic-client.mjs",
       "mindex.worship-store.mjs",
       "styles*.css",

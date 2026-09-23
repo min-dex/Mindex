@@ -26,9 +26,8 @@ stale document in the same change.
 
 - `electron-packaging-plan.md`: packaging and auto-update plan.
 - `admin-access-security.md`: admin and access-control planning.
-- `young-adult-bulletin.md`: deferred young-adult bulletin plan. Do not expose
-  bulletin UI or store arbitrary bulletin payloads until the feature is
-  explicitly resumed.
+- `young-adult-bulletin.md`: bulletin editor, saved DB reads, local drafts and printing.
+- `young-adult-bulletin-archive-review.md`: historical source comparison and remaining requirements.
 - `solid-refactor-notes.md`: refactor notes only. Do not treat as a required
   migration plan unless the user asks to resume it.
 
