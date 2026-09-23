@@ -18,16 +18,17 @@ def main():
                 memo:serializeServiceItemMemo({elementType:'scripture_body',inputMode:'scripture',scriptureReferences:[reference],scriptureReferencePayloads:[{reference,scriptureTranslationId:translationId}]}),
               });
               const collapsed=collapseLegacyPresenterCitationItems([
-                citation('citation-1','sermon.citation.1','마태복음 5:7','translation-a'),
-                citation('citation-2','sermon.citation.2','요한복음 3:16','translation-b'),
+                citation('citation-1','sermon.citation','마태복음 5:7','translation-a'),
+                citation('citation-2','sermon.citation','요한복음 3:16','translation-b'),
               ]);
+              if(normalizeWorshipSlotKey('sermon.citation.1')!=='') throw Error('numbered citation slot is still accepted');
               if(collapsed.length!==1) throw Error('duplicate citations remain: '+collapsed.length);
               const item=collapsed[0], memo=parseServiceItemMemo(item.memo);
               const refs=serviceItemScriptureReferences(item,memo);
-              if(item._worshipSlotKey!=='sermon.citation.1' || refs.join('|')!=='마태복음 5:7|요한복음 3:16' || memo.scriptureReferencePayloads.length!==2) throw Error('citation merge lost state: '+JSON.stringify({item,memo,refs}));
+              if(item._worshipSlotKey!=='sermon.citation' || refs.join('|')!=='마태복음 5:7|요한복음 3:16' || memo.scriptureReferencePayloads.length!==2) throw Error('citation merge lost state: '+JSON.stringify({item,memo,refs}));
               return {count:collapsed.length,slot:item._worshipSlotKey,references:refs};
             }""")
-            if result != {"count": 1, "slot": "sermon.citation.1", "references": ["마태복음 5:7", "요한복음 3:16"]}:
+            if result != {"count": 1, "slot": "sermon.citation", "references": ["마태복음 5:7", "요한복음 3:16"]}:
                 raise RuntimeError(result)
             print("PASS citation canonicalization", result)
             browser.close()

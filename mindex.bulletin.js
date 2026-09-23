@@ -79,7 +79,7 @@
       const type=config.elementType||config.element_type||el.element_type;
       const slot=clean(ref.slotKey||config.slotKey);
       let label=clean(ref.label||section.title);
-      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation\./.test(slot)
+      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || slot === "sermon.citation"
         || /^(ready|preparation|closing|fellowship)$/.test(section.section_key)
         || /^(준비|폐회|실시간 성구 송출)$/.test(label)))
         || ["blank","image","video","audio","file","ppt","pdf","live_scripture"].includes(type)
@@ -92,7 +92,7 @@
       if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&settings.compactOrder)continue;}
       if (reference && /scripture|성경|본문/.test([type,slot,label].join(" "))) {
         content=reference;
-        if (!source.scripture&&!/^sermon\.citation\./.test(slot)) source.scripture=reference;
+        if (!source.scripture && slot !== "sermon.citation") source.scripture=reference;
         if(settings.compactOrder)label="성경봉독";
       }
       if (slot==="sermon.title" || label==="설교") {source.sermon=content;label="설교";}

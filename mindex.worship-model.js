@@ -55,6 +55,7 @@ const WORSHIP_SLOT_KEYS = new Set([
   "special.song",
   "sermon.title",
   "sermon.scripture",
+  "sermon.citation",
   "sermon.media",
   "sermon.live_scripture",
   "response.song",
@@ -83,7 +84,7 @@ function normalizeWorshipSlotKey(value = "") {
   const text = String(value || "").trim();
   if (!text) return "";
   if (/^praise\.song\.[1-9]\d*$/.test(text)) return text;
-  if (/^sermon\.citation(?:\.[1-9]\d*)?$/.test(text)) return text;
+  if (text === "sermon.citation") return text;
   if (/^prayer\.corporate\.[1-9]\d*$/.test(text)) return text;
   if (/^prayer\.meeting\.song\.[1-9]\d*$/.test(text)) return text;
   return WORSHIP_SLOT_KEYS.has(text) ? text : "";

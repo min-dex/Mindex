@@ -113,14 +113,14 @@ def main():
                   await persistSundayEditSync(job,{elementTypedStateColumns:typed});check(writes.length===0,'replacement overwritten');
                   reset();
                   const citation=(service)=>normalizeServiceItem({id:service.id,service_id:service.id,label:'인용 구절',
-                    raw_title:'요한복음 3:16',_worshipSectionKey:'sermon',_worshipSectionTitle:'설교',_worshipSlotKey:'sermon.citation.1',
+                    raw_title:'요한복음 3:16',_worshipSectionKey:'sermon',_worshipSectionTitle:'설교',_worshipSlotKey:'sermon.citation',
                     memo:serializeServiceItemMemo({elementType:'scripture_body',scriptureReferences:['요한복음 3:16']})});
                   const beforeCitation=citation(source),emptyCitation=citation(source);
                   emptyCitation.raw_title='';emptyCitation.memo=serializeServiceItemMemo({elementType:'scripture_body'});
                   db=clone(buildWorshipPersistenceRows(target,[citation(target)],{}, {},{elementTypedStateColumns:typed}));
                   db.elements[0].source_ref.scriptureReferences=['요한복음 3:16'];
                   db.elements[0].source_ref.customNote='keep';
-                  await persistSundayEditSync({sourceServiceId:sid,targetId:tid,key:'sermon-citation:1',previous:beforeCitation,item:emptyCitation},{elementTypedStateColumns:typed});
+                  await persistSundayEditSync({sourceServiceId:sid,targetId:tid,key:'sermon-citation',previous:beforeCitation,item:emptyCitation},{elementTypedStateColumns:typed});
                   const restoredCitation=groupWorshipElements(db.sections,db.elements)[tid][0];
                   check(serviceItemScriptureReferences(restoredCitation).length===0,'linked citation deletion resurrected');
                   check(db.elements[0].source_ref.customNote==='keep','unrelated linked metadata lost');

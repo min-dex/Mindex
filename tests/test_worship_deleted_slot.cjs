@@ -9,10 +9,10 @@ for (const name of ['worshipElementPersistenceSlotKey','worshipElementHasPersist
  vm.runInContext(source.slice(start, source.indexOf('\n}\n',start)+2), context);
 }
 const sections = [{id:'sermon'}];
-const old = {id:'stored',section_id:'sermon',title:'히브리서 7:20–28',source_ref:{slotKey:'sermon.citation.1'}};
+const old = {id:'stored',section_id:'sermon',title:'히브리서 7:20–28',source_ref:{slotKey:'sermon.citation'}};
 const other = {id:'other',section_id:'sermon',title:'설교',source_ref:{slotKey:'sermon.title'}};
 for (const flag of ['templateSuppressed','template_suppressed']) {
- const marker={id:'projected-deletion',section_id:'sermon',source_ref:{slotKey:'sermon.citation.1'},config:{[flag]:true}};
+ const marker={id:'projected-deletion',section_id:'sermon',source_ref:{slotKey:'sermon.citation'},config:{[flag]:true}};
  const rows={sections:[...sections],elements:[marker]};
  context.preserveExistingWorshipContentRows(rows,sections,[old,other]);
  assert.deepEqual(rows.elements.map(e=>e.id),['projected-deletion','other']);
