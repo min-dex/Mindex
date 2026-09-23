@@ -25,6 +25,7 @@ const worshipPresenterSlideLoadPromises = new Map();
 const worshipScripturePreloadPromises = new Map();
 const serviceItemScripturePreloadPromises = new Map();
 const scheduledPresenterRefreshes = new Map();
+const deferredServiceScriptureReferenceDrafts = new Map();
 const presenterSlideBuildCache = new Map();
 const explicitlyRequestedWorshipServiceIds = new Set();
 let hymnScoreManifestLoadPromise = null;
@@ -9735,6 +9736,7 @@ function handleDetailInput(event) {
         return;
       }
       if (isDeferredServiceScriptureReferenceInput(serviceField)) {
+        updateDeferredServiceScriptureReferenceDraft(serviceField);
         scheduleDeferredServiceScriptureReferenceCommit(serviceField);
       } else {
         scheduleDeferredServiceTextPreview(serviceField);
@@ -10540,6 +10542,33 @@ function deferredServiceTextPreviewKey(field) {
   return `${field.dataset.serviceId || state.selectedServiceId}:${field.dataset.serviceItemIndex || ""}:${field.dataset.serviceItemField || ""}`;
 }
 
+function deferredServiceScriptureReferenceDraftValue(serviceId, index) {
+  const key = `${serviceId || state.selectedServiceId}:${index}:raw_title`;
+  return deferredServiceScriptureReferenceDrafts.has(key)
+    ? deferredServiceScriptureReferenceDrafts.get(key)
+    : null;
+}
+
+function updateDeferredServiceScriptureReferenceDraft(field) {
+  const serviceId = field.dataset.serviceId || state.selectedServiceId;
+  const key = deferredServiceTextPreviewKey(field);
+  const value = String(field.value || "");
+  if (deferredServiceScriptureReferenceDrafts.get(key) === value) return;
+  deferredServiceScriptureReferenceDrafts.set(key, value);
+  schedulePresenterRefreshForService(serviceId, { publish: false });
+}
+
+function clearDeferredServiceScriptureReferenceDraft(field) {
+  const key = deferredServiceTextPreviewKey(field);
+  deferredServiceScriptureReferenceDrafts.delete(key);
+}
+
+function findDeferredServiceTextInput(serviceId, index, fieldKey) {
+  const selector = `[data-service-item-field="${CSS.escape(fieldKey)}"][data-service-item-index="${CSS.escape(String(index))}"]`;
+  return [...document.querySelectorAll(selector)]
+    .find((candidate) => (candidate.dataset.serviceId || state.selectedServiceId) === serviceId) || null;
+}
+
 function clearDeferredServiceTextPreview(field) {
   if (!field) return;
   const key = deferredServiceTextPreviewKey(field);
@@ -10575,8 +10604,11 @@ function scheduleDeferredServiceScriptureReferenceCommit(field) {
 
   const commit = () => {
     deferredServiceScriptureReferenceTimers.delete(key);
-    if (!field.isConnected) return;
-    commitDeferredServiceTextInput(field, { save: true });
+    const currentField = field.isConnected
+      ? field
+      : findDeferredServiceTextInput(serviceId, index, field.dataset.serviceItemField);
+    if (!currentField) return;
+    commitDeferredServiceTextInput(currentField, { save: true });
   };
   if (!String(field.value || "").trim()) {
     commit();
@@ -10590,6 +10622,7 @@ function commitDeferredServiceTextInput(field, options = {}) {
   const initialValue = String(field.dataset.initialValue ?? field.value);
   if (field.value === initialValue) return false;
   const serviceId = field.dataset.serviceId || state.selectedServiceId;
+  if (isDeferredServiceScriptureReferenceInput(field)) clearDeferredServiceScriptureReferenceDraft(field);
   updateServiceItemField(field, { deferPresenterRefresh: true });
   field.dataset.initialValue = field.value;
   if (options.save) {
@@ -28686,7 +28719,7 @@ function presenterServiceInputControls(item, index, service, options = {}) {
     return renderPresenterServicePraiseInput(item, index, model);
   }
   if (mode === "scripture") {
-    return renderPresenterServiceScriptureInput(item, index, memo);
+    return renderPresenterServiceScriptureInput(item, index, memo, service);
   }
   if (mode === "asset") {
     return renderPresenterServiceAssetInput(item, index, memo, options);
@@ -28771,11 +28804,17 @@ function renderPresenterServicePraiseInput(item, index, model) {
       </label>` : ""}`;
 }
 
-function renderPresenterServiceScriptureInput(item, index, memo) {
-  const references = serviceItemScriptureReferences(item, memo);
-  const value = references.length
+function renderPresenterServiceScriptureInput(item, index, memo, service = null) {
+  const serviceId = service?.id || item?.service_id || state.selectedServiceId;
+  const draftValue = deferredServiceScriptureReferenceDraftValue(serviceId, index);
+  const references = draftValue === null
+    ? serviceItemScriptureReferences(item, memo, service)
+    : normalizeServiceScriptureReferenceList(draftValue);
+  const value = draftValue === null && references.length
     ? formatServiceScriptureReferenceList(references)
-    : normalizeServiceItemReferenceSpacing(memo.scriptureReference || item.raw_title || "");
+    : draftValue === null
+      ? normalizeServiceItemReferenceSpacing(memo.scriptureReference || item.raw_title || "")
+      : draftValue;
   const citation = isPresenterCitationScriptureItem(item);
   const selectedTranslationId = serviceItemBibleTranslation(item, memo)?.id || "";
   const perReferencePayloads = normalizeServiceScriptureReferencePayloads(memo.scriptureReferencePayloads, references);
@@ -29326,6 +29365,10 @@ function presenterControlBoardKey(service, slides = [], active = false, chromake
     slide?.audioSrc || "",
     presenterSlideRenderKeyText(slide),
   ].join(":")).join("|");
+  const scriptureDraftKey = [...deferredServiceScriptureReferenceDrafts.entries()]
+    .filter(([key]) => key.startsWith(`${service?.id || ""}:`))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("|");
   // Escape control characters before round-tripping this key through HTML attributes.
   return JSON.stringify([
     service?.id || "",
@@ -29334,6 +29377,7 @@ function presenterControlBoardKey(service, slides = [], active = false, chromake
     active ? "active" : "preview",
     slides.length,
     slideKey,
+    scriptureDraftKey,
   ]);
 }
 
