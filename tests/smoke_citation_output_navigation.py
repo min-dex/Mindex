@@ -37,6 +37,10 @@ def main():
                 scriptureReferences:['마 5:45-48'],manualScripture:{reference:'마 5:45-48',verses:[45,46,47,48].map(number=>({number,text:'본문'}))}
               })},{sectionKey:'sermon',elementId:'generated'},0);
               assert(generated.length===4,'generated fixture');
+              const citationControl=buildPresenterSlidesForServiceItem({id:'citation-control',label:'인용 구절',raw_title:'마 5:45-48',memo:JSON.stringify({
+                elementType:'scripture_body',scriptureReferences:['마 5:45-48'],manualScripture:{reference:'마 5:45-48',verses:[45,46,47,48].map(number=>({number,text:'본문'}))}
+              })},{id:'citation-control-service',type_id:'fixture'},0,{allowHydration:false});
+              assert(citationControl.length===5 && citationControl.at(-1).liveScriptureControl,'citation control blank missing');
               assert(generated.findIndex(s=>presenterSlideMatchesScriptureReference(s,parseBibleReference('마 5:47')))===2,'range metadata hid individual verse');
               assert(generated.filter(s=>presenterSlideMatchesScriptureReference(s,parseBibleReference('마 5:47'))).length===1,'multiple verses matched');
               const serviceId='citation-fixture',elementId='citation-element';

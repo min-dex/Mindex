@@ -33820,9 +33820,20 @@ function buildPresenterSlidesForServiceItem(item, service, index, options = {}) 
   const monthlyCorporatePrayerSlides = presenterMonthlyCorporatePrayerSlides(item, section, index, memo);
   if (monthlyCorporatePrayerSlides.length) return monthlyCorporatePrayerSlides;
   if (contentState.state === "loading") return withIntroAndSpecialTitle([presenterMissingContentSlide(item, section, index, contentState, service)]);
-  if (isOptionalCitationScriptureServiceItem(item)
-    && !serviceItemScriptureReferences(item, memo, service).length
-    && !serviceScriptureTextPayload(item, memo, service).verses.length) {
+  if (isOptionalCitationScriptureServiceItem(item)) {
+    const scriptureTextSlides = buildPresenterScriptureTextSlides(item, section, index, service);
+    if (scriptureTextSlides.length) {
+      return [...scriptureTextSlides, presenterOptionalCitationLiveControlSlide(item, section, index)];
+    }
+    // Keep one reachable blank slide while a referenced citation is loading.
+    // It is also the permanent entry point for live citations.
+    if (service?.id && options.allowHydration !== false) {
+      const sourceIndex = getServiceItems(service.id).findIndex((candidate) => String(candidate?.id || "") === String(item?.id || ""));
+      scheduleServiceScriptureBodyResolveWithOptions(service.id, sourceIndex >= 0 ? sourceIndex : index, {
+        markDirty: false,
+        renderControls: false,
+      });
+    }
     return [presenterOptionalCitationLiveControlSlide(item, section, index)];
   }
   if (!confessionPrayer && !contentState.hasOutputContent) {

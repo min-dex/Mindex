@@ -2118,7 +2118,7 @@ function normalizePresenterCustomMarker(value) {
 }
 
 function buildPresenterScriptureTextSlides(item, section, index, service = null) {
-  if (!isScriptureBodyServiceItem(item)) return [];
+  if (!isScriptureBodyServiceItem(item) && !isOptionalCitationScriptureServiceItem(item)) return [];
   const payload = serviceScriptureTextPayload(item, undefined, service);
   if (!payload.verses.length) return [];
   const context = presenterScriptureBodyContext(item, section, service);
