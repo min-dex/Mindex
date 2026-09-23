@@ -31005,16 +31005,16 @@ function renderPresenterCitationComposer(subgroup, serviceId) {
     <div class="svc-citation-composer" role="group" aria-label="실시간 말씀 입력">
       <div class="svc-citation-composer-heading">
         <span><i data-lucide="radio"></i>실시간 말씀</span>
-        <label class="svc-slide-citation-auto-output">
-          <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
-          <span>추가 즉시 송출</span>
-        </label>
       </div>
       <div class="svc-citation-composer-entry">
         <input class="svc-slide-citation-reference-input" type="text"
           data-presenter-citation-reference-input data-service-id="${escapeAttr(serviceId)}"
           data-presenter-citation-element-id="${escapeAttr(slide.elementId)}"
           placeholder="성경 구절 · 예: 롬 5:7–8; 요 15:9" aria-label="실시간 인용 구절" autocomplete="off" />
+        <label class="svc-slide-citation-auto-output">
+          <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
+          <span>추가 즉시 송출</span>
+        </label>
         <button class="icon-btn" type="button" data-presenter-citation-add aria-label="인용 구절 추가" title="인용 구절 추가">
           <i data-lucide="corner-down-left"></i>
         </button>

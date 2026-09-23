@@ -7865,7 +7865,7 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
 .svc-citation-composer-heading svg { width: 14px; height: 14px; }
 .svc-citation-composer-entry {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px;
+  grid-template-columns: minmax(0, 1fr) auto 34px;
   align-items: center;
   gap: 8px;
 }
