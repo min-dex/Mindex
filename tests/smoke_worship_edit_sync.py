@@ -23,6 +23,7 @@ def main():
                   const previous=make(source,'Original'),edited=make(source,'Edited');
                   edited._worshipSharedContentDirty=true;
                   const originalPersist=persistSundayEditSync;
+                  const originalAtomic=worshipAtomicClient;
                   let jobs=[];
                   persistSundayEditSync=async job=>{jobs.push(clone(job))};
                   state.services=[source,target,{id:'third-date',date:'2026-09-13',type_id:'sunday-main'}];
@@ -49,6 +50,7 @@ def main():
                   check(replaced.includes('설교 제목: Edited'),'source block not changed');
                   check(!Object.hasOwn(parseServiceSourceText(raw)[0],'startLine'),'parser default contract changed');
                   persistSundayEditSync=originalPersist;
+                  worshipAtomicClient=async()=>null;
                   const typed={inputMode:true,contentState:true};
                   let db,serviceRow,writes,mode;
                   const reset=()=>{
@@ -128,6 +130,7 @@ def main():
                   persistSundayEditSync=async()=>{};
                   await syncSharedSundayContentAfterSave(source,[edited],{previousItems:[edited]});
                   check(pendingSundayEditSync.size===0,'retry failed');
+                  worshipAtomicClient=originalAtomic;
                   return 'PASS read isolation, editable blanks, scoped edit sync, explicit clear, exceptions, local drafts, CAS, no inserts, failure retry';
                 }'''))
                 browser.close()

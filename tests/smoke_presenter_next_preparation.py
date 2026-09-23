@@ -27,6 +27,7 @@ try:
               try {
                 state.services = [...previous.services, first, youth];
                 state.serviceItems = { ...previous.serviceItems, [first.id]: [], [youth.id]: [] };
+                state.loadedWorshipServiceIds.add(youth.id);
                 state.module = 'presenter';
                 state.selectedServiceId = first.id;
                 state.selectedServiceTypeId = first.type_id;

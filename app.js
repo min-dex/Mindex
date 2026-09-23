@@ -7414,18 +7414,31 @@ function sundayEditSyncHasLocalDraft(serviceId) {
 function sundayEditSyncSourceText(document, item, next, service) {
   const source = String(document.sourceText || "").replace(/\r\n?/g, "\n");
   const records = parseServiceSourceText(source, { includeRanges: true });
-  const matches = records.filter((record) => compactSearchValue(record.label) === compactSearchValue(item.label));
+  const matches = records.filter((record) => serviceSourceLabelsMatch(record.label, item.label));
   const scoped = matches.filter((record) => record.sectionTitle === serviceSourceSectionTitle(item));
   const candidates = scoped.length ? scoped : matches;
-  const replacement = serviceSourceItemLines(next, service).join("\n");
-  if (!candidates.length) return `${source.trimEnd()}\n\n[${serviceSourceSectionTitle(item)}]\n${replacement}`.trim();
+  const replacementLines = serviceSourceItemLines(next, service);
+  if (!candidates.length) return `${source.trimEnd()}\n\n[${serviceSourceSectionTitle(item)}]\n${replacementLines.join("\n")}`.trim();
   if (candidates.length !== 1) throw new Error("연결 예배 원문의 항목 위치가 중복되어 반영하지 않았습니다.");
   const record = candidates[0];
+  // Preserve the user's source label (for example, `설교 제목`) while updating its content.
+  const firstSeparator = replacementLines[0]?.indexOf(":") ?? -1;
+  if (firstSeparator >= 0) replacementLines[0] = `${record.label}:${replacementLines[0].slice(firstSeparator + 1)}`;
+  const replacement = replacementLines.join("\n");
   const lines = source.split("\n");
   const trailing = lines.slice(record.startLine, record.endLine).reverse().findIndex((line) => line.trim());
   const keepBlankLines = trailing < 0 ? 0 : trailing;
   return [...lines.slice(0, record.startLine), replacement,
     ...Array(keepBlankLines).fill(""), ...lines.slice(record.endLine)].join("\n");
+}
+
+function serviceSourceLabelsMatch(left = "", right = "") {
+  const normalize = (value) => {
+    const key = compactSearchValue(value);
+    if (["설교", "설교제목"].includes(key)) return "설교";
+    return key;
+  };
+  return normalize(left) === normalize(right);
 }
 
 async function persistSundayEditSync(job, options = {}) {
@@ -26181,15 +26194,14 @@ function applyServiceSourceText(serviceId = state.selectedServiceId, options = {
 }
 
 function serviceSourceFindTarget(record = {}, candidates = [], usedIndexes = new Set()) {
-  const labelKey = compactSearchValue(record.label);
   const sectionKey = compactSearchValue(record.sectionTitle);
   return candidates.find(({ item, index }) =>
     !usedIndexes.has(index)
-    && compactSearchValue(item.label || "") === labelKey
+    && serviceSourceLabelsMatch(item.label, record.label)
     && (!sectionKey || compactSearchValue(serviceSourceSectionTitle(item)) === sectionKey))
     || candidates.find(({ item, index }) =>
       !usedIndexes.has(index)
-      && compactSearchValue(item.label || "") === labelKey);
+      && serviceSourceLabelsMatch(item.label, record.label));
 }
 
 function ensurePortableSourceItems(service, records = []) {
