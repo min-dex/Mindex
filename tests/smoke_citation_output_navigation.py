@@ -54,6 +54,10 @@ def main():
               resolveServiceScriptureBodyReference=async()=>{resolverCalls++};
               await resolveServiceScriptureBeforeSave(serviceId,0);
               assert(resolverCalls===1,'citation skipped scripture resolver');
+              const projectedCitationId='citation-projected';
+              getServiceOutlineItems=()=>[{id:projectedCitationId,_serviceItemIndex:0,label:'인용 구절'}];
+              const projectedTarget=resolvePresenterCitationTarget(serviceId,projectedCitationId,'sermon.citation.1');
+              assert(projectedTarget.item?.id===elementId && projectedTarget.index===0,'citation projection did not resolve source item');
               const input=document.createElement('input');
               input.dataset.serviceId=serviceId;input.dataset.presenterCitationElementId=elementId;
               input.dataset.presenterCitationReferenceInput='';

@@ -29867,18 +29867,38 @@ function updateLiveScriptureDraft(value) {
 const pendingPresenterCitationRequests = new Set();
 let presenterCitationAutoOutput = true;
 
+function resolvePresenterCitationTarget(serviceId, elementId, slotKey = "") {
+  const service = state.services.find((candidate) => candidate.id === serviceId) || null;
+  const items = getServiceItems(serviceId);
+  let index = items.findIndex((item) => String(item?.id || "").trim() === elementId);
+
+  if (index < 0 && service) {
+    const outlineItem = getServiceOutlineItems(service)
+      .find((item) => String(item?.id || "").trim() === elementId);
+    const sourceIndex = Number(outlineItem?._serviceItemIndex);
+    if (Number.isInteger(sourceIndex) && items[sourceIndex]) index = sourceIndex;
+  }
+
+  if (index < 0 && slotKey) {
+    const matches = items
+      .map((item, candidateIndex) => ({ item, candidateIndex }))
+      .filter(({ item }) => serviceItemSlotKey(item) === slotKey && isOptionalCitationScriptureServiceItem(item));
+    if (matches.length === 1) index = matches[0].candidateIndex;
+  }
+
+  return { service, items, index, item: items[index] || null };
+}
+
 async function appendPresenterCitationReference(input) {
   const serviceId = String(input?.dataset?.serviceId || state.selectedServiceId || "").trim();
   const elementId = String(input?.dataset?.presenterCitationElementId || "").trim();
+  const slotKey = String(input?.dataset?.presenterCitationSlotKey || "").trim();
   const rawValue = String(input?.value || "").trim();
   if (!serviceId || !elementId || !rawValue) return;
-  const requestKey = `${serviceId}:${elementId}`;
+  const requestKey = `${serviceId}:${elementId}:${slotKey}`;
   if (pendingPresenterCitationRequests.has(requestKey)) return;
 
-  const service = state.services.find((candidate) => candidate.id === serviceId);
-  const items = getServiceItems(serviceId);
-  const index = items.findIndex((item) => String(item?.id || "").trim() === elementId);
-  const item = items[index];
+  const { service, items, index, item } = resolvePresenterCitationTarget(serviceId, elementId, slotKey);
   if (!service || !item || !isOptionalCitationScriptureServiceItem(item)) {
     showToast("인용 구절 항목을 찾지 못했습니다.", "error");
     return;
@@ -29916,8 +29936,9 @@ async function appendPresenterCitationReference(input) {
   try {
     await resolveServiceScriptureBeforeSave(serviceId, index);
     const targetReference = parseBibleReference(addedReferences[0]);
+    const targetElementId = String(item.id || elementId).trim();
     const targetIndex = presenterSlidesForService(serviceId).findIndex((slide) => (
-      String(slide?.elementId || "") === elementId
+      String(slide?.elementId || "") === targetElementId
       && slide?.type === "scripture"
       && presenterSlideMatchesScriptureReference(slide, targetReference)
     ));
@@ -31057,6 +31078,7 @@ function renderPresenterCitationComposer(subgroup, serviceId) {
         <input class="svc-slide-citation-reference-input" type="text"
           data-presenter-citation-reference-input data-service-id="${escapeAttr(serviceId)}"
           data-presenter-citation-element-id="${escapeAttr(slide.elementId)}"
+          data-presenter-citation-slot-key="${escapeAttr(slide.slotKey || "")}"
           placeholder="성경 구절 · 예: 롬 5:7–8; 요 15:9" aria-label="실시간 인용 구절" autocomplete="off" />
         <label class="svc-slide-citation-auto-output">
           <input type="checkbox" data-presenter-citation-auto-output ${presenterCitationAutoOutput ? "checked" : ""} />
@@ -33698,6 +33720,7 @@ function presenterOptionalCitationLiveControlSlide(item = {}, section = {}, inde
   return {
     id: `${item.id || index}:live-scripture-control`,
     ...section,
+    slotKey: serviceItemSlotKey(item),
     elementLabel: label,
     elementTitle: label,
     elementType: PRESENTER_ELEMENT_TYPES.BLANK,
