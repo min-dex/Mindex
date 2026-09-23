@@ -31,6 +31,5 @@ create policy bulletin_shared_update on public.mindex_bulletins for update to an
   exists(select 1 from public.mindex_worship_services s where s.id=service_id)
 );
 grant select,insert,update on public.mindex_bulletins to anon,authenticated;
-comment on table public.mindex_bulletins is '주보 내용과 양식. 예배 원본은 기존 예배 테이블을 참조한다.';
 notify pgrst, 'reload schema';
 commit;
