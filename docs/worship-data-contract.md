@@ -902,3 +902,17 @@ service-role/database connection. Use:
 ```text
 scripts/migrations/prune-unused-bible-translations-2026-08-02.sql
 ```
+
+## Assignee ownership (2026-09-23)
+
+- Persist individual order assignees in `mindex_worship_elements.person`.
+  The service editor, presenter-row adapter and bulletin must not fall back to
+  `mindex_worship_sections.person`. New section payloads omit `person`.
+- A read-only production check found all 1,050 section `person` values empty.
+  Migration `migrations/2026-09-23-remove-section-person.sql` removes the
+  column, view projection and atomic patch permission together. User applied it
+  on 2026-09-23; REST postchecks confirmed both columns absent and section,
+  presenter-view and element-person reads successful. Authenticated write
+  round-trip was not exercised by this read-only verification.
+- Presenter `sectionAssignee` is slide metadata derived from the individual
+  item assignee; its name does not make it the database section's `person`.

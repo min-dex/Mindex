@@ -4853,7 +4853,7 @@ function groupWorshipElements(sections = [], elements = []) {
       service_id: serviceId,
       sort_order: (Number(section.sort_order) || 0) * 1000 + (Number(element.sort_order) || 0),
       label: sourceRef.label || section.title || "",
-      assignee: element.person || section.person || "",
+      assignee: element.person || "",
       raw_title: worshipElementDisplayTitle(element, section, sourceRef, config),
       song_id: element.song_id || null,
       song_version_id: element.song_version_id || null,
@@ -5019,7 +5019,7 @@ function normalizeWorshipPresenterSlide(row = {}, index = 0, options = {}) {
       : (row.slide_title || row.element_title || row.section_title || "");
   const assignee = scriptureReading
     ? cleanPresenterAssignee(row.element_title || row.slide_body || "")
-    : cleanPresenterAssignee(row.element_person || row.section_person || "");
+    : cleanPresenterAssignee(row.element_person || "");
   const text = row.slide_body || row.slide_title || row.element_title || "";
   const marker = row.slide_marker || inferWorshipSlideMarker(row, elementType);
   const hasTitleContent = presenterElementTypeSupportsTitleContent(elementType)
@@ -7947,7 +7947,6 @@ function buildWorshipPersistenceRows(service, items, existingSectionById = {}, e
         sort_order: sectionSort.get(sectionId),
         section_key: sectionModified ? (existingSection?.section_key || item._worshipSectionKey || "") : (item._worshipSectionKey || existingSection?.section_key || ""),
         title: sectionLabel,
-        person: existingSection?.person || "",
         template_id: existingSection?.template_id || null,
         template_modified: sectionModified,
         source_kind: existingSection?.source_kind || "mindex",
@@ -14312,7 +14311,6 @@ function buildWorshipServiceScaffold(serviceId, typeId, options = {}) {
       sort_order: index + 1,
       section_key: sectionKey,
       title: label,
-      person: "",
       source_kind: "mindex",
       source_ref: { label, template: true, placeholder: true, ...(templateVersion ? { template_version: templateVersion } : {}) },
       config: ready ? { presenterRole: readyRole } : {},

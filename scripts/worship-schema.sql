@@ -177,7 +177,6 @@ create table if not exists public.mindex_worship_sections (
   sort_order int not null default 0,
   section_key text not null default '',
   title text not null,
-  person text not null default '',
   template_id uuid references public.mindex_worship_templates(id) on delete set null,
   template_modified boolean not null default false,
   source_kind text not null default 'mindex'
@@ -414,7 +413,6 @@ select
   sec.sort_order as section_order,
   sec.section_key,
   sec.title as section_title,
-  sec.person as section_person,
   el.id as element_id,
   el.sort_order as element_order,
   el.element_type,
