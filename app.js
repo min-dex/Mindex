@@ -31028,7 +31028,8 @@ function renderPresenterNextPreparationButton(serviceId, nextTarget = null) {
 
 function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options = {}) {
   const active = subgroup.slides.some(({ slideIndex }) => slideIndex >= 0 && slideIndex === activeIndex);
-  const firstIndex = subgroup.slides.find(({ slideIndex }) => slideIndex >= 0)?.slideIndex ?? -1;
+  const firstIndex = subgroup.slides.find(({ slideIndex, slide }) =>
+    slideIndex >= 0 && !presenterSlideIsHidden(slide))?.slideIndex ?? -1;
   const slides = options.slides || annotatePresenterFormStarts(subgroup.slides).entries;
   const display = presenterBoardSubgroupDisplay(serviceId, subgroup);
   const rawLabel = Object.prototype.hasOwnProperty.call(display, "label")
@@ -31402,7 +31403,7 @@ function presenterLabelDuplicatesSlideText(label, slide) {
 }
 
 function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, formLabel = "") {
-  if (slide.controllerEditorOnly) return "";
+  if (slide.controllerEditorOnly || slide.liveScriptureControl) return "";
   const active = slideIndex === activeIndex;
   const hidden = Boolean(slide?.hiddenInPresentation || slide?.hidden_in_presentation || slide?.hidden);
   const elementKey = presenterSlideElementGroupKey(slide) || `slide:${slideIndex}`;
@@ -33741,6 +33742,7 @@ function presenterOptionalCitationLiveControlSlide(item = {}, section = {}, inde
     title: "빈 화면",
     marker: "",
     text: "",
+    hiddenInPresentation: true,
     liveScriptureControl: true,
     citationQuickInsert: true,
     skipTrailingBlank: true,
