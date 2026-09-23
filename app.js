@@ -31776,6 +31776,7 @@ function prepareNextServiceFromPresenter(serviceId = state.selectedServiceId, op
   }
   renderServiceList();
   renderPresenterDetail();
+  renderPageTabTitle();
   renderPresenterControlState(next.id);
   scrollPresenterBoardToTop(next.id);
   scrollPresenterOutlineToActive(next.id);

@@ -18,22 +18,28 @@ try:
                 selectedServiceId: state.selectedServiceId,
                 selectedServiceTypeId: state.selectedServiceTypeId,
                 presenter: { ...state.presenter },
+                module: state.module,
+                pageTabs: state.pageTabs.map(tab => ({ ...tab })),
+                pageTabIndex: state.pageTabIndex,
               };
               const first = { id: '__next-prep-first__', type_id: 'sunday-first', date: '2099-07-05', title: '' };
               const youth = { id: '__next-prep-youth__', type_id: 'youth', date: '2099-07-05', title: '' };
               try {
                 state.services = [...previous.services, first, youth];
                 state.serviceItems = { ...previous.serviceItems, [first.id]: [], [youth.id]: [] };
+                state.module = 'presenter';
                 state.selectedServiceId = first.id;
                 state.selectedServiceTypeId = first.type_id;
                 state.presenter = { ...state.presenter, serviceId: first.id, viewServiceId: first.id, outputWindow: null, outputConnectedAt: 0 };
                 preparePresenterService(first.id);
                 const button = renderPresenterNextPreparationButton(first.id, nextPreparationTarget(first));
                 check(button.includes(`data-next-service-id=\"${youth.id}\"`), 'button payload missing target');
-                runPresenterAction('prepare-next-service', first.id, { nextServiceId: youth.id });
+                refs.detailPane.innerHTML = button;
+                refs.detailPane.querySelector('[data-presenter-action="prepare-next-service"]')?.click();
                 check(state.selectedServiceId === youth.id, 'idle selection did not move');
                 check(state.presenter.viewServiceId === youth.id, 'idle view did not move');
                 check(state.presenter.serviceId === youth.id, 'idle presenter did not prepare target');
+                check(state.pageTabs[state.pageTabIndex]?.label === serviceDisplayTypeName(youth), 'page tab label did not update');
 
                 state.selectedServiceId = first.id;
                 state.selectedServiceTypeId = first.type_id;
@@ -51,6 +57,9 @@ try:
                 state.selectedServiceId = previous.selectedServiceId;
                 state.selectedServiceTypeId = previous.selectedServiceTypeId;
                 state.presenter = previous.presenter;
+                state.module = previous.module;
+                state.pageTabs = previous.pageTabs;
+                state.pageTabIndex = previous.pageTabIndex;
               }
             }"""), flush=True)
             browser.close()
