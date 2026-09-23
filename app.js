@@ -8747,6 +8747,70 @@ function handleSidebarPresenterActionClick(event) {
   return true;
 }
 
+function handleDetailServiceWorkspaceClick(event) {
+  const serviceSourceCopyBtn = event.target.closest("[data-service-source-copy]");
+  if (serviceSourceCopyBtn) {
+    const service = state.services.find((candidate) => candidate.id === serviceSourceCopyBtn.dataset.serviceSourceCopy);
+    if (service) void copyText(serviceSourceTextForEditor(service));
+    return true;
+  }
+  const serviceSourceApplyBtn = event.target.closest("[data-service-source-apply]");
+  if (serviceSourceApplyBtn) {
+    applyServiceSourceText(serviceSourceApplyBtn.dataset.serviceSourceApply || state.selectedServiceId);
+    return true;
+  }
+  const serviceSourceHistoryBtn = event.target.closest("[data-service-source-history]");
+  if (serviceSourceHistoryBtn) {
+    restoreServiceSourceHistory(serviceSourceHistoryBtn.dataset.serviceSourceHistory || state.selectedServiceId, Number(serviceSourceHistoryBtn.dataset.serviceSourceHistoryIndex));
+    return true;
+  }
+  const serviceSourceRecoveryBtn = event.target.closest("[data-service-source-recovery]");
+  if (serviceSourceRecoveryBtn) {
+    restoreServiceSourceRecovery(serviceSourceRecoveryBtn.dataset.serviceSourceRecovery || state.selectedServiceId);
+    return true;
+  }
+  const serviceItemCommit = event.target.closest("[data-service-item-commit]");
+  if (serviceItemCommit) {
+    void commitServiceItemInputs(serviceItemCommit.dataset.serviceId || state.selectedServiceId, Number(serviceItemCommit.dataset.serviceItemIndex));
+    return true;
+  }
+  const serviceItemAction = event.target.closest("[data-service-item-action]");
+  if (serviceItemAction) {
+    runServiceItemAction(serviceItemAction.dataset.serviceItemAction, Number(serviceItemAction.dataset.serviceItemIndex), serviceItemAction.dataset.serviceItemLabel || "", serviceItemAction.dataset.serviceItemTitle || "");
+    return true;
+  }
+  const serviceMusicAction = event.target.closest("[data-service-music-action]");
+  if (serviceMusicAction) {
+    runServiceMusicAction(serviceMusicAction.dataset.serviceMusicAction, serviceMusicAction.closest("[data-service-music-source]")?.dataset);
+    return true;
+  }
+  const liveScriptureAction = event.target.closest("[data-live-scripture-action]");
+  if (liveScriptureAction) {
+    void runLiveScriptureAction(liveScriptureAction.dataset.liveScriptureAction, liveScriptureAction.dataset.serviceId);
+    return true;
+  }
+  const presenterJumpButton = event.target.closest("[data-presenter-jump-button]");
+  if (presenterJumpButton) {
+    jumpPresenterToSlideInput(presenterJumpButton.closest(".svc-slide-counter")?.querySelector("[data-presenter-jump-input]"));
+    return true;
+  }
+  return false;
+}
+
+function handleDetailSearchResultClick(event) {
+  const globalSongItem = event.target.closest("[data-global-song-id]");
+  if (globalSongItem) { void openGlobalSongResult(globalSongItem.dataset.globalSongId); return true; }
+  const globalBookItem = event.target.closest("[data-global-book-code]");
+  if (globalBookItem) {
+    void openGlobalBookResult(globalBookItem.dataset.globalBookCode, { chapter: globalBookItem.dataset.globalChapter, verse: globalBookItem.dataset.globalVerse, verseEnd: globalBookItem.dataset.globalVerseEnd });
+    return true;
+  }
+  if (event.target.closest("[data-global-bible-text]")) { void openGlobalBibleTextResult(); return true; }
+  const globalServiceItem = event.target.closest("[data-global-service-id]");
+  if (globalServiceItem) { void openGlobalServiceResult(globalServiceItem.dataset.globalServiceId); return true; }
+  return false;
+}
+
 function handleDetailClick(event) {
   if (event.target.closest("button:disabled")) return;
   const citationAdd = event.target.closest("[data-presenter-citation-add]");
@@ -8795,33 +8859,7 @@ function handleDetailClick(event) {
     return;
   }
 
-  const globalSongItem = event.target.closest("[data-global-song-id]");
-  if (globalSongItem) {
-    void openGlobalSongResult(globalSongItem.dataset.globalSongId);
-    return;
-  }
-
-  const globalBookItem = event.target.closest("[data-global-book-code]");
-  if (globalBookItem) {
-    void openGlobalBookResult(globalBookItem.dataset.globalBookCode, {
-      chapter: globalBookItem.dataset.globalChapter,
-      verse: globalBookItem.dataset.globalVerse,
-      verseEnd: globalBookItem.dataset.globalVerseEnd,
-    });
-    return;
-  }
-
-  const globalBibleTextItem = event.target.closest("[data-global-bible-text]");
-  if (globalBibleTextItem) {
-    void openGlobalBibleTextResult();
-    return;
-  }
-
-  const globalServiceItem = event.target.closest("[data-global-service-id]");
-  if (globalServiceItem) {
-    void openGlobalServiceResult(globalServiceItem.dataset.globalServiceId);
-    return;
-  }
+  if (handleDetailSearchResultClick(event)) return;
 
   const presenterServiceItem = event.target.closest("[data-open-presenter-service]");
   if (presenterServiceItem) {
@@ -8951,34 +8989,6 @@ function handleDetailClick(event) {
     return;
   }
 
-  const serviceSourceCopyBtn = event.target.closest("[data-service-source-copy]");
-  if (serviceSourceCopyBtn) {
-    const service = state.services.find((candidate) => candidate.id === serviceSourceCopyBtn.dataset.serviceSourceCopy);
-    if (service) void copyText(serviceSourceTextForEditor(service));
-    return;
-  }
-
-  const serviceSourceApplyBtn = event.target.closest("[data-service-source-apply]");
-  if (serviceSourceApplyBtn) {
-    applyServiceSourceText(serviceSourceApplyBtn.dataset.serviceSourceApply || state.selectedServiceId);
-    return;
-  }
-
-  const serviceSourceHistoryBtn = event.target.closest("[data-service-source-history]");
-  if (serviceSourceHistoryBtn) {
-    restoreServiceSourceHistory(
-      serviceSourceHistoryBtn.dataset.serviceSourceHistory || state.selectedServiceId,
-      Number(serviceSourceHistoryBtn.dataset.serviceSourceHistoryIndex),
-    );
-    return;
-  }
-
-  const serviceSourceRecoveryBtn = event.target.closest("[data-service-source-recovery]");
-  if (serviceSourceRecoveryBtn) {
-    restoreServiceSourceRecovery(serviceSourceRecoveryBtn.dataset.serviceSourceRecovery || state.selectedServiceId);
-    return;
-  }
-
   const deleteServiceBtn = event.target.closest("[data-delete-service]");
   if (deleteServiceBtn) {
     deleteService(deleteServiceBtn.dataset.deleteService);
@@ -9004,25 +9014,7 @@ function handleDetailClick(event) {
     return;
   }
 
-  const serviceItemCommit = event.target.closest("[data-service-item-commit]");
-  if (serviceItemCommit) {
-    void commitServiceItemInputs(
-      serviceItemCommit.dataset.serviceId || state.selectedServiceId,
-      Number(serviceItemCommit.dataset.serviceItemIndex),
-    );
-    return;
-  }
-
-  const serviceItemAction = event.target.closest("[data-service-item-action]");
-  if (serviceItemAction) {
-    runServiceItemAction(
-      serviceItemAction.dataset.serviceItemAction,
-      Number(serviceItemAction.dataset.serviceItemIndex),
-      serviceItemAction.dataset.serviceItemLabel || "",
-      serviceItemAction.dataset.serviceItemTitle || "",
-    );
-    return;
-  }
+  if (handleDetailServiceWorkspaceClick(event)) return;
 
   const serviceSongCreate = event.target.closest("[data-service-song-create]");
   if (serviceSongCreate) {
@@ -9065,25 +9057,6 @@ function handleDetailClick(event) {
   }
 
   if (handlePresenterDetailClick(event)) return;
-
-  const serviceMusicAction = event.target.closest("[data-service-music-action]");
-  if (serviceMusicAction) {
-    runServiceMusicAction(serviceMusicAction.dataset.serviceMusicAction, serviceMusicAction.closest("[data-service-music-source]")?.dataset);
-    return;
-  }
-
-  const liveScriptureAction = event.target.closest("[data-live-scripture-action]");
-  if (liveScriptureAction) {
-    void runLiveScriptureAction(liveScriptureAction.dataset.liveScriptureAction, liveScriptureAction.dataset.serviceId);
-    return;
-  }
-
-  const presenterJumpButton = event.target.closest("[data-presenter-jump-button]");
-  if (presenterJumpButton) {
-    const input = presenterJumpButton.closest(".svc-slide-counter")?.querySelector("[data-presenter-jump-input]");
-    jumpPresenterToSlideInput(input);
-    return;
-  }
 
   const referenceAction = event.target.closest("[data-reference-action]");
   if (referenceAction) {
