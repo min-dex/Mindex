@@ -25843,9 +25843,19 @@ function serviceSourceItemLines(item = {}, service = null, memo = parseServiceIt
   if (elementType) lines.push(`- 유형: ${elementType}`);
   const inputMode = serviceMemoInputMode(memo, item);
   if (inputMode) lines.push(`- 입력: ${inputMode}`);
+  const outputMode = normalizeServiceOutputMode(memo.outputMode || memo.output_mode);
+  if (outputMode) lines.push(`- 출력: ${outputMode}`);
   if (memo.formHint) lines.push(`- 송폼: ${memo.formHint}`);
+  const song = serviceItemLinkedSong(item);
+  if (song?.title) lines.push(`- 곡: ${song.title}`);
+  if (item.song_id) lines.push(`- 곡 ID: ${item.song_id}`);
+  if (item.version_id || item.song_version_id) lines.push(`- 버전 ID: ${item.version_id || item.song_version_id}`);
   const assignee = serviceItemEditableAssigneeValue(item, service);
   if (assignee) lines.push(`- 담당: ${assignee}`);
+  const translationId = String(memo.scriptureTranslationId || memo.scripture_translation_id || "").trim();
+  const translation = serviceBibleTranslationById(translationId);
+  if (translation) lines.push(`- 역본: ${serviceBibleTranslationDisplayLabel(translation)}`);
+  if (translationId) lines.push(`- 역본 ID: ${translationId}`);
   const lyrics = servicePraiseInputMode(item, memo, service) === "manual_praise"
     ? formatServiceManualPraiseLyricsInput(item.memo)
     : "";
@@ -25853,10 +25863,26 @@ function serviceSourceItemLines(item = {}, service = null, memo = parseServiceIt
     lines.push("- 가사: |");
     lines.push(...lyrics.split(/\r?\n/).map((line) => `  ${line}`));
   }
+  if (!lyrics && Array.isArray(memo.slides) && memo.slides.length) {
+    lines.push("- 슬라이드: |");
+    lines.push(...memo.slides.join("\n---\n").split(/\r?\n/).map((line) => `  ${line}`));
+  }
+  const manualScripture = formatServiceManualScriptureInput(memo.manualScripture);
+  if (manualScripture) {
+    const manualTranslation = normalizeServiceManualScripture(memo.manualScripture)?.translationLabel || "";
+    if (manualTranslation) lines.push(`- 수동 역본: ${manualTranslation}`);
+    lines.push("- 수동 본문: |");
+    lines.push(...manualScripture.split(/\r?\n/).map((line) => `  ${line}`));
+  }
   const asset = normalizeServiceAsset(memo.asset);
   if (asset.name || asset.url) {
     lines.push(`- 파일: ${asset.name || asset.url}`);
     if (asset.name && asset.url) lines.push(`- 링크: ${asset.url}`);
+  }
+  const audio = normalizeServiceAudioAsset(memo.audioAsset || memo.audio_asset);
+  if (audio.name || audio.url) {
+    lines.push(`- 음원 파일: ${audio.name || audio.url}`);
+    if (audio.name && audio.url) lines.push(`- 음원 링크: ${audio.url}`);
   }
   return lines;
 }
@@ -25988,11 +26014,21 @@ function parsePortableServiceSourceText(value = "", options = {}) {
       else if (key === "담당") { current.assignee = fieldValue; current.hasAssignee = true; }
       else if (key === "유형") current.elementType = fieldValue;
       else if (key === "입력") current.inputMode = fieldValue;
+      else if (key === "출력") current.outputMode = fieldValue;
       else if (key === "송폼") current.formHint = fieldValue;
+      else if (key === "곡") current.songTitle = fieldValue;
+      else if (key === "곡id") current.songId = fieldValue;
+      else if (key === "버전id") current.versionId = fieldValue;
+      else if (key === "역본") current.translationLabel = fieldValue;
+      else if (key === "역본id") current.translationId = fieldValue;
       else if (key === "파일") { current.assetName = fieldValue; current.hasAssetName = true; }
       else if (key === "링크") { current.assetUrl = fieldValue; current.hasAssetUrl = true; }
       else if (key === "가사") { current.hasLyrics = true; if (fieldValue !== "|") current.lyrics = fieldValue; else blockKey = "lyrics"; }
       else if (key === "슬라이드") { current.hasSlides = true; if (fieldValue !== "|") current.slides = fieldValue; else blockKey = "slides"; }
+      else if (key === "수동본문") { current.hasManualScripture = true; if (fieldValue !== "|") current.manualScripture = fieldValue; else blockKey = "manualScripture"; }
+      else if (key === "수동역본") current.manualTranslationLabel = fieldValue;
+      else if (key === "음원파일") { current.audioName = fieldValue; current.hasAudioName = true; }
+      else if (key === "음원링크") { current.audioUrl = fieldValue; current.hasAudioUrl = true; }
       return;
     }
     if (blockKey && /^\s{2}/.test(rawLine)) current._blockLines.push(rawLine.replace(/^\s{2}/, ""));
@@ -26172,7 +26208,7 @@ function serviceSourceVirtualField(serviceId, index, key, value) {
 }
 
 function applyServiceSourceRecord(serviceId, index, record = {}) {
-  const item = getServiceItems(serviceId)[index];
+  let item = getServiceItems(serviceId)[index];
   if (!item) return false;
   const memo = parseServiceItemMemo(item.memo);
   const asset = normalizeServiceAsset(memo.asset);
@@ -26199,6 +26235,51 @@ function applyServiceSourceRecord(serviceId, index, record = {}) {
   if (record.hasSlides) {
     updateServiceItemField(serviceSourceVirtualField(serviceId, index, "slide_overrides", record.slides || ""), { deferPresenterRefresh: true });
   }
+  if (record.translationId) {
+    updateServiceItemField(serviceSourceVirtualField(serviceId, index, "scripture_translation_id", record.translationId), { deferPresenterRefresh: true });
+  }
+  // Field updates normalize the service list, so continue with its current item
+  // rather than writing portable metadata onto a stale pre-normalization object.
+  item = getServiceItems(serviceId)[index];
+  if (!item) return false;
+  if (record.outputMode) {
+    const nextMemo = parseServiceItemMemo(item.memo);
+    nextMemo.outputMode = normalizeServiceOutputMode(record.outputMode);
+    item.memo = serializeServiceItemMemo(nextMemo);
+  }
+  if (record.songId) {
+    const song = songById(record.songId);
+    if (song) {
+      item.song_id = song.id;
+      const versions = serviceSelectableSongVersions(song, item, state.services.find((candidate) => candidate.id === serviceId) || selectedServiceForEditor());
+      item.version_id = versions.some((version) => version.id === record.versionId) ? record.versionId : null;
+      item.song_version_id = item.version_id;
+    } else {
+      console.warn("Portable worship source references a song that is unavailable locally.", record.songId);
+    }
+  }
+  if (record.hasManualScripture) {
+    const nextMemo = parseServiceItemMemo(item.memo);
+    nextMemo.manualScripture = parseServiceManualScriptureInput(
+      record.manualScripture || "",
+      item.raw_title || record.value || "",
+      record.manualTranslationLabel || record.translationLabel || "",
+    );
+    item.memo = serializeServiceItemMemo(nextMemo);
+  }
+  if (record.hasAudioName || record.hasAudioUrl) {
+    const nextMemo = parseServiceItemMemo(item.memo);
+    const audio = normalizeServiceAudioAsset(nextMemo.audioAsset);
+    if (record.hasAudioName) audio.name = record.audioName;
+    if (record.hasAudioUrl) audio.url = record.audioUrl;
+    nextMemo.audioAsset = audio;
+    item.memo = serializeServiceItemMemo(nextMemo);
+  }
+  item._worshipElementTemplateModified = true;
+  item._worshipTemplatePlaceholder = false;
+  markServiceItemSharedContentDirty(item, state.services.find((candidate) => candidate.id === serviceId) || null);
+  markServiceElementDirty(serviceId, item);
+  state.dirty.service = true;
   return true;
 }
 
