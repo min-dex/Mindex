@@ -30,6 +30,8 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(root,'mindex.worship-input.js'),'utf8'), context);
+assert.equal(context.presenterPreparationHasEnteredValues('찬양1:\n성경봉독:'), false);
+assert.equal(context.presenterPreparationHasEnteredValues('찬양1: 새 곡\n성경봉독:'), true);
 context.presenterPreparationTargetLabel = label => label;
 context.findPresenterPreparationProjectedItem = (_, label) => {
   const key = label.replace(/\s/g,'');
