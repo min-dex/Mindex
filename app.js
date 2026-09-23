@@ -268,8 +268,11 @@ const PRESENTER_OUTPUT_IMAGE_PRELOAD_LIMIT = 360;
 const PRESENTER_OUTPUT_WARMUP_EAGER_COUNT = 24;
 const PRESENTER_OUTPUT_WARMUP_BATCH_SIZE = 2;
 const PRESENTER_OUTPUT_WARMUP_IDLE_TIMEOUT_MS = 900;
+const PRESENTER_OUTPUT_VIDEO_WARMUP_LOOKAHEAD = 12;
+const PRESENTER_OUTPUT_VIDEO_WARMUP_LIMIT = 2;
 const PRESENTER_CONTROLLER_RESTORE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 const presenterOutputImagePreloadCache = new Map();
+const presenterOutputVideoWarmupCache = new Map();
 const presenterOutputRenderState = {
   token: 0,
   commitToken: 0,

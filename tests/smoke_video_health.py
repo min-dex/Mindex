@@ -98,6 +98,17 @@ def run(browser, url, engine):
       state.presenter.index=1;syncPresenterVideoHealthControl();
       if(document.querySelector('[data-presenter-video-health]').textContent)throw Error('stale status');
     }''')
+    output.evaluate('''() => {
+      presenterOutputVideoWarmupCache.clear();
+      const slides=[
+        {id:'current',type:'text',elementType:'title-content',layout:'text'},
+        {id:'next-video',type:'video',elementType:'video',layout:'media',videoSrc:'next-video.mp4'},
+        {id:'later-video',type:'video',elementType:'video',layout:'media',videoSrc:'later-video.mp4'},
+      ];
+      warmPresenterOutputNextVideo({slides,index:0},slides[0]);
+      if(!presenterOutputVideoWarmupCache.has('next-video.mp4'))throw Error('next video metadata was not warmed');
+      if(presenterOutputVideoWarmupCache.has('later-video.mp4'))throw Error('more than one future video was warmed');
+    }''')
     print('PASS', engine, 'failure reporting, explicit retry, dual-channel dedup, healthy reuse, stale guard, resume, autoplay recovery, status stability')
     context.close()
 

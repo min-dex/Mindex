@@ -3789,6 +3789,7 @@ function renderPresenterOutput(payload, options = {}) {
   const frameState = presenterOutputFrameStateForSlide(slide, payload);
   const activeImageSource = presenterSlideImageSource(slide);
   preloadPresenterOutputImages(payload, slide);
+  warmPresenterOutputNextVideo(payload, slide);
   if (activeImageSource && !presenterOutputImageIsReady(activeImageSource)) {
     const token = ++presenterOutputRenderState.token;
     presenterOutputRenderState.pendingImageSource = activeImageSource;
@@ -4610,6 +4611,55 @@ function warmPresenterOutputImages(payload = {}, activeSlide = null) {
   sources.slice(0, eagerCount).forEach((source) => preloadPresenterOutputImage(source));
   presenterOutputImageWarmupState.index = eagerCount;
   schedulePresenterOutputImageWarmup();
+}
+
+function warmPresenterOutputNextVideo(payload = {}, activeSlide = null) {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection?.saveData || /(^|-)2g$/.test(String(connection?.effectiveType || ""))) return;
+  const slides = Array.isArray(payload?.slides) ? payload.slides : [];
+  if (!slides.length) return;
+  const activeIndex = clampPresenterIndex(payload?.index, slides.length);
+  const end = Math.min(slides.length, activeIndex + PRESENTER_OUTPUT_VIDEO_WARMUP_LOOKAHEAD + 1);
+  const source = slides.slice(activeIndex + 1, end)
+    .map(presenterOutputVideoSource)
+    .find(Boolean);
+  if (source) warmPresenterOutputVideoMetadata(source);
+}
+
+function presenterOutputVideoSource(slide = null) {
+  if (!slide || presenterSlideIsHidden(slide)) return "";
+  if (presenterSlideLayout(slide) !== PRESENTER_SLIDE_LAYOUTS.MEDIA
+    || presenterSlideElementType(slide) !== PRESENTER_ELEMENT_TYPES.VIDEO) return "";
+  return normalizePresenterMediaSource(slide.videoSrc || slide.text);
+}
+
+function warmPresenterOutputVideoMetadata(source = "") {
+  const normalized = normalizePresenterMediaSource(source);
+  if (!normalized) return null;
+  const cached = presenterOutputVideoWarmupCache.get(normalized);
+  if (cached) {
+    cached.lastUsed = Date.now();
+    return cached.video;
+  }
+  const video = document.createElement("video");
+  video.preload = "metadata";
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.src = normalized;
+  const record = { video, lastUsed: Date.now() };
+  presenterOutputVideoWarmupCache.set(normalized, record);
+  while (presenterOutputVideoWarmupCache.size > PRESENTER_OUTPUT_VIDEO_WARMUP_LIMIT) {
+    const oldest = [...presenterOutputVideoWarmupCache.entries()]
+      .sort((left, right) => left[1].lastUsed - right[1].lastUsed)[0];
+    if (!oldest) break;
+    oldest[1].video.removeAttribute("src");
+    oldest[1].video.load?.();
+    presenterOutputVideoWarmupCache.delete(oldest[0]);
+  }
+  try { video.load(); } catch { /* Metadata warmup is optional. */ }
+  return video;
 }
 
 function presenterOutputWarmupSummary() {
