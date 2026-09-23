@@ -7489,6 +7489,17 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   grid-row: 1;
 }
 .svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-presenter-input-field--scripture-parts {
+  /* Let the summary occupy the input row while its expanded controls use the
+     full row below. Keeping the native details element preserves its toggle
+     behavior without a second state source. */
+  display: contents;
+}
+.svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-presenter-input-field--scripture-parts > summary {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+.svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-presenter-input-field--scripture-parts > .svc-presenter-scripture-parts {
   grid-column: 1 / -1;
   grid-row: 2;
   width: 100%;
