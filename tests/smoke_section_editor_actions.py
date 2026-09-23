@@ -21,6 +21,8 @@ def main():
                   if(!target) throw Error('No praise fixture');
                   state.presenterSectionEditor={serviceId:service.id,itemId:target.id,sectionKey:''};
                   state.module='presenter';
+                  const confirmations=[];
+                  window.confirm=message=>{confirmations.push(message);return true};
                   const clickAction=action=>{
                     refs.detailPane.innerHTML=renderPresenterSectionEditorLayer(service);
                     const current=servicePrepEditorItems(service.id).find(item=>item.id===target.id);
@@ -35,15 +37,23 @@ def main():
                   clickAction('up');
                   if(JSON.stringify(order())!==JSON.stringify(before)) throw Error('Move up failed');
                   clickAction('toggle-visibility');
-                  const hidden=getServiceItems(service.id).find(item=>item.id===target.id);
+                  const hidden=servicePrepEditorItems(service.id).find(item=>item.id===target.id);
                   if(!parseServiceItemMemo(hidden.memo).hiddenInPresentation) throw Error('Visibility lost');
+                  refs.detailPane.innerHTML=renderPresenterSectionEditorLayer(service);
+                  const visibilityButton=refs.detailPane.querySelector(`[data-presenter-section-item-action="toggle-visibility"][data-service-item-index="${hidden._origIndex}"]`);
+                  if(visibilityButton?.getAttribute('aria-pressed')!=='true') throw Error('Visibility state unclear');
+                  window.confirm=message=>{confirmations.push(message);return false};
+                  clickAction('delete');
+                  if(!getServiceItems(service.id).some(item=>item.id===target.id)) throw Error('Cancelled deletion removed item');
+                  window.confirm=message=>{confirmations.push(message);return true};
                   clickAction('delete');
                   for(let i=0;i<3;i++) {
                     if(getServiceItems(service.id).some(item=>item.id===target.id)) throw Error('Deleted item returned');
                   }
                   const suppression=state.templateElementSuppressions.get(target.id);
                   if(!suppression || !isTemplateSuppressedServiceItem(suppression)) throw Error('Missing suppression');
-                  return {moved:true,hidden:true,deleted:true,suppression:true};
+                  if(!confirmations.at(-1)?.includes('기본 예배 양식과 찬양·성경 DB는 바뀌지 않습니다.')) throw Error('Missing delete scope');
+                  return {moved:true,hidden:true,deleted:true,suppression:true,confirmation:true,cancelled:true};
                 }''')
                 print('PASS section editor', engine, result)
                 browser.close()

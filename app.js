@@ -13355,6 +13355,7 @@ function runPresenterSectionItemAction(action, index) {
   }
   if (action === "delete" && position >= 0) {
     const item = items[index];
+    if (!confirmPresenterSectionItemDeletion(item, service)) return;
     if (item?.id && TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service.type_id))) {
       state.templateElementSuppressions.set(item.id, {
         ...item,
@@ -13408,6 +13409,16 @@ function runPresenterSectionItemAction(action, index) {
   renderCurrentServiceModuleDetail();
   renderServiceList();
   updateSaveState();
+}
+
+function confirmPresenterSectionItemDeletion(item = {}, service = null) {
+  const name = String(item.raw_title || item.label || "이 엘리멘트").trim();
+  const templateBacked = Boolean(item?._worshipTemplateProjected)
+    || TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service?.type_id));
+  const scope = templateBacked
+    ? "이 예배에서만 제외됩니다. 기본 예배 양식과 찬양·성경 DB는 바뀌지 않습니다."
+    : "현재 예배에서만 삭제됩니다. 찬양·성경 DB는 바뀌지 않습니다.";
+  return window.confirm(`${name} 엘리멘트를 삭제할까요?\n\n${scope}\n저장하면 확정됩니다.`);
 }
 
 function presenterReferenceMediaSectionLabel(sectionKey = "") {
@@ -26215,7 +26226,7 @@ function renderPresenterSectionEditorLayer(service) {
             <span class="svc-prep-editor-kicker">Section</span>
             <h3>${escapeHtml(context.sectionTitle)}</h3>
           </div>
-          <button class="icon-btn" type="button" data-presenter-section-editor-close aria-label="편집기 닫기">
+          <button class="icon-btn" type="button" data-presenter-section-editor-close aria-label="편집기 닫기" title="편집기 닫기">
             <i data-lucide="x"></i>
           </button>
         </header>
@@ -26259,10 +26270,10 @@ function renderPresenterSectionEditorItem(item, localIndex, context) {
         ${renderServiceElementTypeOptions(serviceMemoElementType(model.parsed))}
       </select>
       <div class="svc-edit-actions">
-        <button class="icon-btn" type="button" data-presenter-section-item-action="toggle-visibility" data-service-item-index="${origIndex}" aria-label="${hidden ? "송출에 표시" : "송출에서 숨기기"}" title="${hidden ? "송출에 표시" : "송출에서 숨기기"}"><i data-lucide="${hidden ? "eye-off" : "eye"}"></i></button>
-        <button class="icon-btn" type="button" data-presenter-section-item-action="up" data-service-item-index="${origIndex}" ${first ? "disabled" : ""} aria-label="엘리멘트 위로 이동"><i data-lucide="arrow-up"></i></button>
-        <button class="icon-btn" type="button" data-presenter-section-item-action="down" data-service-item-index="${origIndex}" ${last ? "disabled" : ""} aria-label="엘리멘트 아래로 이동"><i data-lucide="arrow-down"></i></button>
-        <button class="icon-btn danger" type="button" data-presenter-section-item-action="delete" data-service-item-index="${origIndex}" aria-label="엘리멘트 삭제"><i data-lucide="trash-2"></i></button>
+        <button class="icon-btn" type="button" data-presenter-section-item-action="toggle-visibility" data-service-item-index="${origIndex}" aria-pressed="${hidden}" aria-label="${hidden ? "송출에 표시" : "송출에서 숨기기"}" title="${hidden ? "송출에 표시" : "송출에서 숨기기"}"><i data-lucide="${hidden ? "eye-off" : "eye"}"></i></button>
+        <button class="icon-btn" type="button" data-presenter-section-item-action="up" data-service-item-index="${origIndex}" ${first ? "disabled" : ""} aria-label="엘리멘트 위로 이동" title="위로 이동"><i data-lucide="arrow-up"></i></button>
+        <button class="icon-btn" type="button" data-presenter-section-item-action="down" data-service-item-index="${origIndex}" ${last ? "disabled" : ""} aria-label="엘리멘트 아래로 이동" title="아래로 이동"><i data-lucide="arrow-down"></i></button>
+        <button class="icon-btn danger" type="button" data-presenter-section-item-action="delete" data-service-item-index="${origIndex}" aria-label="엘리멘트 삭제" title="엘리멘트 삭제"><i data-lucide="trash-2"></i></button>
       </div>
     </article>`;
 }

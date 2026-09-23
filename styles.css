@@ -8352,6 +8352,11 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .presenter-section-editor-item:focus-within {
   background: color-mix(in srgb, var(--panel-2) 32%, transparent);
 }
+.presenter-section-editor .svc-edit-actions { opacity: 1; }
+.presenter-section-editor [data-presenter-section-item-action="toggle-visibility"][aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 .presenter-section-editor-item > .svc-edit-title-wrap {
   grid-column: 2 / -1;
 }
