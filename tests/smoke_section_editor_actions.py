@@ -53,7 +53,13 @@ def main():
                   const suppression=state.templateElementSuppressions.get(target.id);
                   if(!suppression || !isTemplateSuppressedServiceItem(suppression)) throw Error('Missing suppression');
                   if(!confirmations.at(-1)?.includes('기본 예배 양식과 찬양·성경 DB는 바뀌지 않습니다.')) throw Error('Missing delete scope');
-                  return {moved:true,hidden:true,deleted:true,suppression:true,confirmation:true,cancelled:true};
+                  const restored=restoreSourceMentionedTemplateItems(service,[{
+                    label:target.label,
+                    sectionTitle:serviceSourceSectionTitle(target),
+                  }]);
+                  if(restored!==1 || state.templateElementSuppressions.has(target.id)) throw Error('Source restore failed');
+                  if(!getServiceItems(service.id).some(item=>item.id===target.id)) throw Error('Restored item missing');
+                  return {moved:true,hidden:true,deleted:true,suppression:true,confirmation:true,cancelled:true,sourceRestore:true};
                 }''')
                 print('PASS section editor', engine, result)
                 browser.close()
