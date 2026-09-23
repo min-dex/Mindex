@@ -25879,6 +25879,10 @@ function serviceSourceItemLines(item = {}, service = null, memo = parseServiceIt
   const translation = serviceBibleTranslationById(translationId);
   if (translation) lines.push(`- 역본: ${serviceBibleTranslationDisplayLabel(translation)}`);
   if (translationId) lines.push(`- 역본 ID: ${translationId}`);
+  if (isPresenterPreparationSermonTitleItem(item)) {
+    const references = serviceScriptureReadingReferencesForService(service);
+    if (references.length) lines.push(`- 성경 본문: ${formatServiceScriptureReferenceList(references)}`);
+  }
   const lyrics = servicePraiseInputMode(item, memo, service) === "manual_praise"
     ? formatServiceManualPraiseLyricsInput(item.memo)
     : "";
@@ -25993,6 +25997,12 @@ function parseServiceSourceText(value = "", options = {}) {
         readingLyrics = true;
         continue;
       }
+      if (["성경본문", "성경봉독본문", "설교본문", "말씀본문"].includes(key)) {
+        current.linkedScriptureValue = metaValue;
+        current.hasLinkedScripture = true;
+        readingLyrics = false;
+        continue;
+      }
     }
     if (readingLyrics) {
       current.lyricLines.push(line.replace(/^\s{4}/, "").replace(/^\s{2}/, ""));
@@ -26052,6 +26062,10 @@ function parsePortableServiceSourceText(value = "", options = {}) {
       else if (key === "수동역본") current.manualTranslationLabel = fieldValue;
       else if (key === "음원파일") { current.audioName = fieldValue; current.hasAudioName = true; }
       else if (key === "음원링크") { current.audioUrl = fieldValue; current.hasAudioUrl = true; }
+      else if (["성경본문", "성경봉독본문", "설교본문", "말씀본문"].includes(key)) {
+        current.linkedScriptureValue = fieldValue;
+        current.hasLinkedScripture = true;
+      }
       return;
     }
     if (blockKey && /^\s{2}/.test(rawLine)) current._blockLines.push(rawLine.replace(/^\s{2}/, ""));
@@ -26303,6 +26317,16 @@ function applyServiceSourceRecord(serviceId, index, record = {}) {
   markServiceItemSharedContentDirty(item, state.services.find((candidate) => candidate.id === serviceId) || null);
   markServiceElementDirty(serviceId, item);
   state.dirty.service = true;
+  if (record.hasLinkedScripture && isPresenterPreparationSermonTitleItem(item)) {
+    const references = normalizeServiceScriptureReferenceList(record.linkedScriptureValue);
+    const readingIndex = getServiceItems(serviceId).findIndex((candidate) => isSharedScriptureReadingServiceItem(candidate));
+    if (references.length && readingIndex >= 0) {
+      updateServiceItemField(
+        serviceSourceVirtualField(serviceId, readingIndex, "raw_title", formatServiceScriptureReferenceList(references)),
+        { deferPresenterRefresh: true },
+      );
+    }
+  }
   return true;
 }
 
