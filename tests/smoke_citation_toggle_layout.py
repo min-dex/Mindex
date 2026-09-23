@@ -20,7 +20,7 @@ def main():
               const host = document.createElement('div');
               host.style.cssText='position:fixed;inset:0;background:#171715;padding:24px;overflow:auto;z-index:99999';
               document.body.append(host);
-              const slide={id:'fixture',type:'blank',elementId:'citation',sectionKey:'sermon',liveScriptureControl:true,hiddenInPresentation:true};
+              const slide={id:'fixture',type:'blank',elementId:'citation',sectionKey:'sermon',liveScriptureControl:true};
               const subgroup={slides:[{slide,slideIndex:0},{slide:{...slide,id:'second'},slideIndex:1}]};
               const trailingBlank={id:'normal-trailing-blank',type:'blank',elementId:'normal',autoTrailingBlank:true,citationQuickInsert:true};
               if(renderPresenterCitationComposer({slides:[{slide:trailingBlank,slideIndex:0}]},'fixture')) throw Error('composer attached to normal trailing blank');
@@ -28,6 +28,7 @@ def main():
               section.innerHTML=renderPresenterBoardSubgroup(subgroup,-1,'fixture');
               if(!section.querySelector('.svc-board-grid + .svc-citation-composer')) throw Error('composer not below element slides');
               if(section.querySelector('.svc-slide-thumb')) throw Error('internal citation placeholder was visible');
+              if(section.querySelector('.svc-element-hidden-badge')) throw Error('citation control hid the element');
               if(renderPresenterSlideThumb(slide,0,-1,'fixture').includes('data-presenter-citation-reference-input')) throw Error('input still on thumbnail');
               const widths=[280,480,800];
               for(const width of widths) {

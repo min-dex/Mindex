@@ -31032,7 +31032,7 @@ function renderPresenterNextPreparationButton(serviceId, nextTarget = null) {
 function renderPresenterBoardSubgroup(subgroup, activeIndex, serviceId, options = {}) {
   const active = subgroup.slides.some(({ slideIndex }) => slideIndex >= 0 && slideIndex === activeIndex);
   const firstIndex = subgroup.slides.find(({ slideIndex, slide }) =>
-    slideIndex >= 0 && !presenterSlideIsHidden(slide))?.slideIndex ?? -1;
+    slideIndex >= 0 && presenterSlideIsNavigable(slide))?.slideIndex ?? -1;
   const slides = options.slides || annotatePresenterFormStarts(subgroup.slides).entries;
   const display = presenterBoardSubgroupDisplay(serviceId, subgroup);
   const rawLabel = Object.prototype.hasOwnProperty.call(display, "label")
@@ -32814,7 +32814,7 @@ function movePresenterSlide(delta) {
   if (!count) return;
   const step = delta < 0 ? -1 : 1;
   let index = state.presenter.index + step;
-  while (index >= 0 && index < count && presenterSlideIsHidden(state.presenter.slides[index])) index += step;
+  while (index >= 0 && index < count && !presenterSlideIsNavigable(state.presenter.slides[index])) index += step;
   if (index >= 0 && index < count) state.presenter.index = index;
 }
 
@@ -32822,14 +32822,18 @@ function presenterSlideIsHidden(slide = {}) {
   return Boolean(slide.hiddenInPresentation || slide.hidden_in_presentation || slide.hidden);
 }
 
+function presenterSlideIsNavigable(slide = {}) {
+  return !presenterSlideIsHidden(slide) && !slide.liveScriptureControl;
+}
+
 function firstPresenterNavigableIndex(slides = []) {
-  const index = slides.findIndex((slide) => !presenterSlideIsHidden(slide));
+  const index = slides.findIndex((slide) => presenterSlideIsNavigable(slide));
   return index >= 0 ? index : 0;
 }
 
 function lastPresenterNavigableIndex(slides = []) {
   for (let index = slides.length - 1; index >= 0; index -= 1) {
-    if (!presenterSlideIsHidden(slides[index])) return index;
+    if (presenterSlideIsNavigable(slides[index])) return index;
   }
   return Math.max(slides.length - 1, 0);
 }
@@ -33745,7 +33749,6 @@ function presenterOptionalCitationLiveControlSlide(item = {}, section = {}, inde
     title: "빈 화면",
     marker: "",
     text: "",
-    hiddenInPresentation: true,
     liveScriptureControl: true,
     citationQuickInsert: true,
     skipTrailingBlank: true,
