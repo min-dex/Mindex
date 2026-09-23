@@ -7841,10 +7841,16 @@ function shouldPreserveExistingWorshipElement(element = {}) {
 
 function preserveExistingWorshipContentRows(rows = {}, existingSections = [], existingElements = []) {
   const nextElementIds = new Set((rows.elements || []).map((element) => element.id).filter(Boolean));
+  const suppressedSlotKeys = new Set((rows.elements || [])
+    .filter((element) => element.config?.templateSuppressed || element.config?.template_suppressed)
+    .map(worshipElementPersistenceSlotKey).filter(Boolean));
   const nextSectionIds = new Set((rows.sections || []).map((section) => section.id).filter(Boolean));
   const existingSectionById = Object.fromEntries(existingSections.map((section) => [section.id, section]));
   existingElements.forEach((element) => {
     if (nextElementIds.has(element.id) || !shouldPreserveExistingWorshipElement(element)) return;
+    // Projected deletion markers can have a different ID from the stored row.
+    // The explicit deletion belongs to the slot, not just that transient ID.
+    if (suppressedSlotKeys.has(worshipElementPersistenceSlotKey(element))) return;
     const section = existingSectionById[element.section_id];
     if (section && !nextSectionIds.has(section.id)) {
       rows.sections.push(section);
