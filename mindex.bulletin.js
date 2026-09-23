@@ -341,16 +341,17 @@
     const documents=new Map();
     const on=(target,event,fn)=>target.addEventListener(event,fn,{signal});
     host.innerHTML=`<section class="bulletin-workbench" aria-label="주보 편집">
-      <header class="bulletin-toolbar"><button class="bulletin-back" type="button" data-bulletin-close title="예배로 돌아가기">← <span>예배</span></button>
+      <header class="bulletin-toolbar"><button class="bulletin-back" type="button" data-bulletin-close title="예배로 돌아가기" aria-label="예배로 돌아가기"><i data-lucide="arrow-left"></i></button>
       <h2>주보</h2><select aria-label="주보 예배" data-bulletin-service>${options.services.map(s=>`<option value="${escape(s.id)}">${escape(s.label)}</option>`).join("")}</select>
       <span class="bulletin-spacer"></span><div class="bulletin-history" role="group" aria-label="편집 기록">
-      <button type="button" data-bulletin-undo aria-label="주보 실행 취소" title="실행 취소">↶</button><button type="button" data-bulletin-redo aria-label="주보 다시 실행" title="다시 실행">↷</button></div>
-      <button class="bulletin-primary" type="button" data-bulletin-print disabled>인쇄 / PDF</button></header>
-      <div class="bulletin-meta"><div class="bulletin-status" role="status"></div><button type="button" data-bulletin-refresh title="저장된 예배 자료 다시 불러오기">자료 새로고침</button></div>
+      <button type="button" data-bulletin-undo aria-label="주보 실행 취소" title="실행 취소"><i data-lucide="undo-2"></i></button><button type="button" data-bulletin-redo aria-label="주보 다시 실행" title="다시 실행"><i data-lucide="redo-2"></i></button></div>
+      <button class="bulletin-primary" type="button" data-bulletin-print disabled><i data-lucide="printer"></i><span>인쇄 / PDF</span></button></header>
+      <div class="bulletin-meta"><div class="bulletin-status" role="status"></div><button type="button" data-bulletin-refresh title="저장된 예배 자료 다시 불러오기"><i data-lucide="refresh-cw"></i><span>새로고침</span></button></div>
       <div class="bulletin-body"><aside class="bulletin-inspector" aria-label="주보 편집 도구">
       <div class="bulletin-modes"><button type="button" data-bulletin-mode="content">내용</button><button type="button" data-bulletin-mode="layout">양식</button></div>
       <div class="bulletin-properties"></div></aside><section class="bulletin-preview" aria-label="인쇄 미리보기"><div class="bulletin-preview-head"><strong>미리보기</strong><span>A4 가로 · 2쪽</span></div><div class="bulletin-canvas" tabindex="0" aria-label="주보 페이지"></div></section></div></section>`;
     const root=host.firstElementChild,q=selector=>root.querySelector(selector);
+    window.lucide?.createIcons({root});
     function loadProfile(date) {
       let versions=[];try{versions=JSON.parse(localStorage.getItem(`mindex.bulletin.profiles:${options.scope}`)||"[]");}catch{}
       const profile=profileForDate(date);
