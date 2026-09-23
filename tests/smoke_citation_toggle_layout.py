@@ -59,6 +59,17 @@ def main():
               host.addEventListener('click',handleDetailClick);
               host.querySelector('[data-presenter-citation-add]').click();
               if(submissions!==1) throw Error('submit button');
+              const outlineCitation={id:'citation',_worshipSectionKey:'sermon',label:'인용 구절'};
+              state.services=[{id:'fixture'}];state.serviceItems.fixture=[outlineCitation];
+              getServiceOutlineItems=()=>[outlineCitation];presenterSlidesForService=()=>[slide];
+              let selectedSlides=0,openedEditors=0;
+              selectPresenterBoardSlide=()=>{selectedSlides++};
+              openPresenterSectionEditor=()=>{openedEditors++};renderServiceList=()=>{};
+              scrollPresenterBoardToServiceItem=()=>true;
+              const outlineButton=document.createElement('button');
+              outlineButton.dataset.serviceOutlineService='fixture';outlineButton.dataset.serviceOutlineItemIndex='0';outlineButton.dataset.serviceOutlineItemId='citation';
+              handleServiceOutlineSlideClick(outlineButton);
+              if(openedEditors!==1 || selectedSlides!==0 || state.selectedServiceItemIndex!==0) throw Error('empty citation did not open its editor anchor');
               refreshIcons(host);
               return widths;
             }''')

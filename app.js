@@ -1753,25 +1753,32 @@ function serviceOutlineItemIndex(item, fallbackIndex = 0) {
 }
 
 function handleServiceOutlineSlideClick(serviceOutlineItem) {
-  const target = serviceOutlineSlideTarget(serviceOutlineItem);
-  if (!target) {
-    const serviceId = serviceOutlineItem?.dataset?.serviceOutlineService || state.selectedServiceId;
-    const resolved = resolveServiceOutlineItem(
-      serviceId,
-      Number(serviceOutlineItem?.dataset?.serviceOutlineItemIndex),
-      serviceOutlineItem?.dataset?.serviceOutlineItemId || "",
-    );
-    const item = resolved?.item || null;
-    const itemIndex = resolved?.index ?? -1;
-    if (!serviceId || !item) return;
+  const serviceId = serviceOutlineItem?.dataset?.serviceOutlineService || state.selectedServiceId;
+  const resolved = resolveServiceOutlineItem(
+    serviceId,
+    Number(serviceOutlineItem?.dataset?.serviceOutlineItemIndex),
+    serviceOutlineItem?.dataset?.serviceOutlineItemId || "",
+  );
+  const item = resolved?.item || null;
+  const itemIndex = resolved?.index ?? -1;
+  if (!serviceId || !item) return;
 
-    // A missing slide means this item needs preparation, not that it cannot be selected.
+  const target = serviceOutlineSlideTarget(serviceOutlineItem);
+  const targetSlide = target ? presenterSlidesForService(serviceId)[target.slideIndex] : null;
+  if (!target || !presenterSlideIsNavigable(targetSlide)) {
+    // Empty optional items still have an editor anchor, even though they do not
+    // contribute a slide to output navigation.
     state.selectedServiceItemIndex = itemIndex;
     openPresenterSectionEditor(serviceId, {
       itemId: item.id,
       sectionKey: item._worshipSectionKey || "",
     });
     renderServiceList();
+    void scrollPresenterBoardToServiceItem(serviceId, itemIndex, {
+      force: true,
+      behavior: "auto",
+      block: "start",
+    });
     return;
   }
   const selectionChanged = Number.isFinite(target.itemIndex)
