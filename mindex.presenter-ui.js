@@ -129,12 +129,13 @@ function renderPresenterServiceInputRail(service) {
   const draft = presenterPreparationDisplayTextForService(service);
   const examples = presenterPreparationPlaceholderForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
+  const hasDraft = Boolean(String(draft || "").trim());
   const placeholder = examples || "입력할 항목이 없습니다";
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
         <span>예배 일괄 입력</span>
-        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="입력창이 비어 있을 때 항목 양식을 넣습니다">
+        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="${hasDraft ? "입력 내용을 비운 뒤 양식을 넣을 수 있습니다" : "입력 양식 넣기"}" ${hasDraft ? "disabled" : ""}>
             <i data-lucide="list-plus"></i>
             <span>양식</span>
           </button>
@@ -146,7 +147,7 @@ function renderPresenterServiceInputRail(service) {
         </div>
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}"
-            aria-label="${applying ? "예배 입력 반영 중" : "예배 입력 반영"}" title="${applying ? "반영 중" : "입력창에서 Enter 두 번 또는 ⌘/Ctrl+Enter"}" ${applying ? "disabled" : ""}>
+            aria-label="${applying ? "예배 입력 반영 중" : "예배 입력 반영"}" title="${applying ? "반영 중" : hasDraft ? "입력 반영" : "반영할 입력이 없습니다"}" ${applying || !hasDraft ? "disabled" : ""}>
             <i data-lucide="wand-sparkles"></i>
             <span>${applying ? "반영 중" : "반영"}</span>
           </button>

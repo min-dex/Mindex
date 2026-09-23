@@ -5552,14 +5552,24 @@ body[data-theme="dark"] .service-week-card:hover {
   padding: 0 8px;
   white-space: nowrap;
 }
-.svc-presenter-preparation-form:hover,
+.svc-presenter-preparation-form:not(:disabled):hover,
 .svc-presenter-preparation-form:focus-visible {
   background: color-mix(in srgb, var(--panel-2) 66%, transparent);
   color: var(--ink);
 }
+.svc-presenter-preparation-form:disabled,
+.svc-presenter-preparation-apply:disabled {
+  cursor: default;
+  opacity: .44;
+}
+.svc-presenter-preparation-form:disabled:hover,
+.svc-presenter-preparation-apply:disabled:hover {
+  background: transparent;
+  color: inherit;
+}
 .svc-presenter-preparation-form i { width: 14px; height: 14px; stroke-width: 1.75; }
 .service-sidebar-head .svc-presenter-preparation-form { color: var(--sidebar-label); }
-.service-sidebar-head .svc-presenter-preparation-form:hover,
+.service-sidebar-head .svc-presenter-preparation-form:not(:disabled):hover,
 .service-sidebar-head .svc-presenter-preparation-form:focus-visible { background: var(--sidebar-hover-bg); color: var(--sidebar-ink); }
 .svc-preparation-ghost-typed { visibility: hidden; }
 .svc-presenter-preparation-apply {
@@ -5579,7 +5589,7 @@ body[data-theme="dark"] .service-week-card:hover {
   font-weight: 700;
   padding: 0 12px;
 }
-.svc-presenter-preparation-apply:hover {
+.svc-presenter-preparation-apply:not(:disabled):hover {
   background: color-mix(in srgb, var(--panel-2) 66%, transparent);
   color: var(--ink);
 }
