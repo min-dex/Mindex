@@ -7469,15 +7469,23 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   grid-column: 1 / -1;
 }
 .svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) {
-  grid-template-columns: minmax(0, 1fr);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  width: 100%;
 }
 .svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > label {
   grid-column: 1;
   grid-row: 1;
 }
-.svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-board-subgroup-flow {
+.svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-presenter-input-field--scripture-parts {
   grid-column: 1 / -1;
-  grid-row: auto;
+  grid-row: 2;
+  width: 100%;
+}
+.svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) > .svc-board-subgroup-flow {
+  grid-column: 2;
+  grid-row: 1;
 }
 .svc-board-subgroup-control-item:has(> .svc-presenter-input-field--scripture-parts) .svc-presenter-input-control {
   min-width: 0;
