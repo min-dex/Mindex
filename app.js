@@ -6888,9 +6888,11 @@ async function saveWorshipServiceInstance(service) {
   const praiseLeader = serviceUsesPraiseLeader(service.type_id)
     ? cleanServiceAssignee(service.praiseLeader || service.leader)
     : "";
-  const items = ensureUniqueServiceItemPersistenceIds(normalizeServiceItemsForTemplateHierarchy(
-    service,
-    normalizeServiceItemsInCurrentOrder(getServiceItems(serviceId)),
+  const items = ensureUniqueServiceItemPersistenceIds(collapseLegacyPresenterCitationItems(
+    normalizeServiceItemsForTemplateHierarchy(
+      service,
+      normalizeServiceItemsInCurrentOrder(getServiceItems(serviceId)),
+    ),
   )).filter((item) => !isUnmodifiedTemplatePlaceholder(item));
   let sourceRef = withServiceDocumentSnapshot(service, items);
   const servicePayload = {
@@ -21968,34 +21970,57 @@ function collapseLegacyScriptureReadingItems(items = []) {
 function collapseLegacyPresenterCitationItems(items = []) {
   const groups = new Map();
   items.forEach((item, index) => {
-    if (!/^인용구절\d*$/.test(compactSearchValue(item.label || ""))) return;
-    const sectionKey = String(item._worshipSectionId || item._worshipSectionKey || "").trim();
-    if (!sectionKey) return;
-    const group = groups.get(sectionKey) || [];
+    if (!isOptionalCitationScriptureServiceItem(item)) return;
+    const slotKey = serviceItemSlotKey(item) || "sermon.citation.1";
+    if (!slotKey.startsWith("sermon.citation")) return;
+    const group = groups.get(slotKey) || [];
     group.push({ item, index });
-    groups.set(sectionKey, group);
+    groups.set(slotKey, group);
   });
 
   const replacements = new Map();
   const removed = new Set();
-  groups.forEach((group) => {
+  groups.forEach((group, slotKey) => {
     const references = uniqueList(group.flatMap(({ item }) => serviceItemScriptureReferences(item)));
-    const first = group[0];
-    if (!first) return;
-    const parsed = parseServiceItemMemo(first.item.memo);
+    const winner = group.slice().sort((a, b) => {
+      const explicitDiff = Number(!b.item._worshipTemplateProjected) - Number(!a.item._worshipTemplateProjected);
+      if (explicitDiff) return explicitDiff;
+      const specificity = serviceItemProjectionSpecificity(b.item) - serviceItemProjectionSpecificity(a.item);
+      return specificity || a.index - b.index;
+    })[0];
+    if (!winner) return;
+    const parsed = parseServiceItemMemo(winner.item.memo);
+    const payloadByReference = new Map();
+    group.forEach(({ item }) => {
+      const itemReferences = serviceItemScriptureReferences(item);
+      const itemPayloads = normalizeServiceScriptureReferencePayloads(
+        parseServiceItemMemo(item.memo).scriptureReferencePayloads,
+        itemReferences,
+      );
+      itemPayloads.forEach((payload) => {
+        const key = normalizeServiceScriptureReferenceKey(payload.reference);
+        if (!key || payloadByReference.has(key)) return;
+        payloadByReference.set(key, payload);
+      });
+    });
     parsed.elementType = "scripture_body";
     parsed.componentType = "scripture_body";
     parsed.inputMode = "scripture";
     parsed.scriptureReference = references[0] || "";
     parsed.scriptureReferences = references;
+    parsed.scriptureReferencePayloads = references.map((reference) =>
+      payloadByReference.get(normalizeServiceScriptureReferenceKey(reference)) || { reference });
     parsed.slides = [];
-    replacements.set(first.index, {
-      ...first.item,
+    replacements.set(winner.index, {
+      ...winner.item,
       label: "인용 구절",
       raw_title: formatServiceScriptureReferenceList(references),
       memo: serializeServiceItemMemo(parsed),
+      _worshipSlotKey: slotKey,
     });
-    group.slice(1).forEach(({ index }) => removed.add(index));
+    group.forEach(({ index }) => {
+      if (index !== winner.index) removed.add(index);
+    });
   });
 
   return items.flatMap((item, index) => {
