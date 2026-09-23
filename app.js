@@ -26023,38 +26023,6 @@ function suppressOmittedEmptySourcePraiseItems(service, candidates, usedIndexes)
   return removedIds.size;
 }
 
-function restoreSourceMentionedTemplateItems(service, records = []) {
-  const serviceId = String(service?.id || "").trim();
-  if (!serviceId || !TEMPLATE_PROJECTED_SERVICE_TYPES.has(worshipAppServiceTypeId(service?.type_id))) return 0;
-  const sourceItems = [...(state.serviceItems[serviceId] || [])];
-  const existingIds = new Set(sourceItems.map((item) => item?.id).filter(Boolean));
-  let restored = 0;
-
-  state.templateElementSuppressions.forEach((item, itemId) => {
-    if (item?.service_id !== serviceId || !item?.id || existingIds.has(item.id)) return;
-    const label = compactSearchValue(item.label || "");
-    const section = compactSearchValue(serviceSourceSectionTitle(item));
-    const mentioned = records.some((record) =>
-      compactSearchValue(record.label) === label
-      && (!record.sectionTitle || compactSearchValue(record.sectionTitle) === section));
-    if (!mentioned) return;
-
-    const memo = parseServiceItemMemo(item.memo);
-    delete memo.templateSuppressed;
-    sourceItems.push({
-      ...item,
-      memo: serializeServiceItemMemo(memo),
-      _worshipElementTemplateModified: true,
-    });
-    existingIds.add(item.id);
-    state.templateElementSuppressions.delete(itemId);
-    restored += 1;
-  });
-
-  if (restored) state.serviceItems[serviceId] = normalizeServiceItemsInCurrentOrder(sourceItems);
-  return restored;
-}
-
 function applyServiceSourceText(serviceId = state.selectedServiceId, options = {}) {
   const id = String(serviceId || "").trim();
   const service = state.services.find((candidate) => candidate.id === id);
@@ -26062,7 +26030,6 @@ function applyServiceSourceText(serviceId = state.selectedServiceId, options = {
   const textarea = serviceSourceTextareaForService(id);
   if (!textarea) return false;
   const records = parseServiceSourceText(textarea.value);
-  restoreSourceMentionedTemplateItems(service, records);
   const realItems = getServiceItems(id);
   const candidates = getServiceOutputItems(id)
     .map((item) => ({ item, index: realItems.findIndex((candidate) => candidate.id === item.id) }))
