@@ -341,14 +341,15 @@
     const documents=new Map();
     const on=(target,event,fn)=>target.addEventListener(event,fn,{signal});
     host.innerHTML=`<section class="bulletin-workbench" aria-label="주보 편집">
-      <header class="bulletin-toolbar"><button type="button" data-bulletin-close>예배로</button>
+      <header class="bulletin-toolbar"><button class="bulletin-back" type="button" data-bulletin-close title="예배로 돌아가기">← <span>예배</span></button>
       <h2>주보</h2><select aria-label="주보 예배" data-bulletin-service>${options.services.map(s=>`<option value="${escape(s.id)}">${escape(s.label)}</option>`).join("")}</select>
-      <button type="button" data-bulletin-refresh>DB 새로고침</button><span class="bulletin-spacer"></span>
-      <button type="button" data-bulletin-undo aria-label="주보 실행 취소">↶</button><button type="button" data-bulletin-redo aria-label="주보 다시 실행">↷</button>
-      <button type="button" data-bulletin-print disabled>인쇄 / PDF</button></header>
-      <div class="bulletin-status" role="status"></div><div class="bulletin-body"><aside class="bulletin-inspector">
+      <span class="bulletin-spacer"></span><div class="bulletin-history" role="group" aria-label="편집 기록">
+      <button type="button" data-bulletin-undo aria-label="주보 실행 취소" title="실행 취소">↶</button><button type="button" data-bulletin-redo aria-label="주보 다시 실행" title="다시 실행">↷</button></div>
+      <button class="bulletin-primary" type="button" data-bulletin-print disabled>인쇄 / PDF</button></header>
+      <div class="bulletin-meta"><div class="bulletin-status" role="status"></div><button type="button" data-bulletin-refresh title="저장된 예배 자료 다시 불러오기">자료 새로고침</button></div>
+      <div class="bulletin-body"><aside class="bulletin-inspector" aria-label="주보 편집 도구">
       <div class="bulletin-modes"><button type="button" data-bulletin-mode="content">내용</button><button type="button" data-bulletin-mode="layout">양식</button></div>
-      <div class="bulletin-properties"></div></aside><div class="bulletin-canvas" tabindex="0" aria-label="주보 페이지"></div></div></section>`;
+      <div class="bulletin-properties"></div></aside><section class="bulletin-preview" aria-label="인쇄 미리보기"><div class="bulletin-preview-head"><strong>미리보기</strong><span>A4 가로 · 2쪽</span></div><div class="bulletin-canvas" tabindex="0" aria-label="주보 페이지"></div></section></div></section>`;
     const root=host.firstElementChild,q=selector=>root.querySelector(selector);
     function loadProfile(date) {
       let versions=[];try{versions=JSON.parse(localStorage.getItem(`mindex.bulletin.profiles:${options.scope}`)||"[]");}catch{}
@@ -365,8 +366,9 @@
     on(root,"mindex-bulletin-save",()=>{persist();status();});
     function status(){
       const text=error||saveError||(loading?"저장된 예배 자료를 불러오는 중…":!assetLoaded?"글꼴과 이미지를 준비하는 중…":
-        `예배 자료: DB에서 불러옴 · 주보 문구·양식: 이 기기 초안${issues.size?` · 영역 넘침: ${[...issues].map(frameLabel).join(", ")}`:""}`);
+        `이 기기에 자동 저장 · 예배 자료 연결됨${issues.size?` · 영역 넘침: ${[...issues].map(frameLabel).join(", ")}`:""}`);
       q(".bulletin-status").textContent=text;
+      q(".bulletin-status").dataset.state=error||saveError||issues.size?"warning":loading||!assetLoaded?"loading":"saved";
       q("[data-bulletin-print]").disabled=loading||!assetLoaded||!!error||!doc?.source?.order.length||issues.size>0;
       q("[data-bulletin-undo]").disabled=!doc?.history.length;
       q("[data-bulletin-redo]").disabled=!doc?.future.length;
@@ -382,14 +384,17 @@
       const p=q(".bulletin-properties");
       if(!doc){p.replaceChildren();return;}
       if(mode==="content") {
-        p.innerHTML=`<p class="bulletin-help">예배 자료는 DB, 공통 문구는 날짜별 설정에서 불러옵니다. 편집 내용은 이 기기에 저장됩니다.</p>
-          <label>교회 일정 월<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
-          <label>위원표 월<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label>
-          <button type="button" data-bulletin-profile>현재 공통 문구를 이 날짜부터 재사용</button>
-          <p class="bulletin-help">교회 정보·표어·섬김이·상시 안내만 재사용합니다. 기존 주보의 직접 수정값은 유지됩니다.</p>`+
-          Object.entries(fields).map(([key,label])=>`<label>${escape(label)}${["issue","church","website"].includes(key)?
-            `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
-            `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`).join("");
+        const field=key=>`<label>${escape(fields[key])}${["issue","church","website"].includes(key)?
+          `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
+          `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`;
+        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3>${["issue","news","eventsText","outline","welcome"].map(field).join("")}</section>
+          <section class="bulletin-property-section"><h3>일정과 위원표</h3><div class="bulletin-number-grid">
+          <label>교회 일정<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
+          <label>예배 위원<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label></div></section>
+          <section class="bulletin-property-section"><h3>공통 정보</h3>${profileKeys.map(field).join("")}
+          <button class="bulletin-reuse" type="button" data-bulletin-profile>이 날짜부터 공통 정보 재사용</button>
+          <p class="bulletin-help">다음 주보에도 적용됩니다. 기존 주보에서 직접 수정한 내용은 유지해요.</p></section>`;
+
       } else {
         const f=doc.frames.find(f=>f.id===selected)||doc.frames[0];selected=f.id;
         p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme">${Object.entries(themes).map(([v,t])=>`<option value="${v}" ${(doc.settings.theme||"water")===v?"selected":""}>${t}</option>`).join("")}</select></label><p class="bulletin-help">MINDEX의 기존 예배 배경을 함께 사용합니다. 날짜별 자동 전환은 하지 않습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
