@@ -49,6 +49,11 @@ def main():
                 state.services=[{id:serviceId,type_id:'fixture'}];
                 state.serviceItems[serviceId]=[{id:elementId,service_id:serviceId,label:'인용 구절',memo:''}];
               };
+              setup();
+              let resolverCalls=0;
+              resolveServiceScriptureBodyReference=async()=>{resolverCalls++};
+              await resolveServiceScriptureBeforeSave(serviceId,0);
+              assert(resolverCalls===1,'citation skipped scripture resolver');
               const input=document.createElement('input');
               input.dataset.serviceId=serviceId;input.dataset.presenterCitationElementId=elementId;
               input.dataset.presenterCitationReferenceInput='';

@@ -12652,11 +12652,15 @@ function scheduleServiceScriptureBodyResolve(serviceId = state.selectedServiceId
   scheduleServiceScriptureBodyResolveWithOptions(serviceId, index, { renderDetail: !quiet, ...options });
 }
 
+function serviceItemSupportsScriptureResolution(item = {}) {
+  return isScriptureBodyServiceItem(item) || isOptionalCitationScriptureServiceItem(item);
+}
+
 function scheduleServiceScriptureBodyResolveWithOptions(serviceId = state.selectedServiceId, index = -1, options = {}) {
   if (!serviceId || !Number.isFinite(index)) return;
   const items = getServiceItems(serviceId);
   const item = items[index];
-  if (!item || !isScriptureBodyServiceItem(item)) return;
+  if (!item || !serviceItemSupportsScriptureResolution(item)) return;
   if (parseServiceItemMemo(item.memo).manualScripture) return;
   const references = serviceItemScriptureReferences(item);
   if (!references.length || !state.client) return;
@@ -12675,7 +12679,7 @@ function serviceItemScriptureResolveShouldStayInPlace(item = {}) {
 
 async function resolveServiceScriptureBeforeSave(serviceId = state.selectedServiceId, index = -1) {
   const item = getServiceItems(serviceId)[index];
-  if (!item || !isScriptureBodyServiceItem(item)) return;
+  if (!item || !serviceItemSupportsScriptureResolution(item)) return;
   clearScheduledServiceScriptureResolve(serviceId, index);
   await resolveServiceScriptureBodyReference(serviceId, index, { itemId: item.id });
 }
@@ -12686,7 +12690,7 @@ async function resolveServiceScriptureBodyReference(serviceId, index, options = 
   const targetIndex = targetId ? items.findIndex((candidate) => String(candidate.id || "").trim() === targetId) : -1;
   const safeIndex = targetIndex >= 0 ? targetIndex : index;
   const item = items[safeIndex];
-  if (!item || !isScriptureBodyServiceItem(item)) return;
+  if (!item || !serviceItemSupportsScriptureResolution(item)) return;
   if (parseServiceItemMemo(item.memo).manualScripture) return;
   const memo = parseServiceItemMemo(item.memo);
   const references = serviceItemScriptureReferences(item, memo);
@@ -12881,7 +12885,7 @@ async function preloadServiceItemScriptureReferences(serviceId = state.selectedS
     const requests = [];
     const seen = new Set();
     items.forEach((item) => {
-      if (!isScriptureBodyServiceItem(item)) return;
+      if (!serviceItemSupportsScriptureResolution(item)) return;
       const memo = parseServiceItemMemo(item.memo);
       if (memo.manualScripture) return;
       serviceItemScriptureReferences(item, memo, service).forEach((referenceText) => {
@@ -32705,7 +32709,7 @@ function schedulePendingServiceScriptureResolves(serviceId) {
   const service = state.services.find((entry) => entry.id === serviceId) || null;
   const items = getServiceItems(serviceId);
   items.forEach((item, index) => {
-    if (!isScriptureBodyServiceItem(item)) return;
+    if (!serviceItemSupportsScriptureResolution(item)) return;
     const memo = parseServiceItemMemo(item.memo);
     if (!serviceItemScriptureReferences(item, memo, service).length) return;
     if (serviceScriptureTextPayload(item, memo, service).verses.length) return;
@@ -32888,7 +32892,7 @@ function presenterServiceScriptureCacheSignature(service, items) {
   if (!items.length) return state.bibleVerseCacheVersion || 0;
   const keys = new Set();
   items.forEach((item) => {
-    if (!isScriptureBodyServiceItem(item)) return;
+    if (!serviceItemSupportsScriptureResolution(item)) return;
     const memo = parseServiceItemMemo(item.memo);
     if (memo.manualScripture) return;
     serviceItemScriptureReferences(item, memo, service).forEach((text) => {
