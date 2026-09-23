@@ -22047,16 +22047,15 @@ function collapseLegacyPresenterCitationItems(items = []) {
   const groups = new Map();
   items.forEach((item, index) => {
     if (!isOptionalCitationScriptureServiceItem(item)) return;
-    const slotKey = serviceItemSlotKey(item) || "sermon.citation.1";
-    if (!slotKey.startsWith("sermon.citation")) return;
-    const group = groups.get(slotKey) || [];
+    const sectionKey = String(item._worshipSectionId || item._worshipSectionKey || "sermon").trim();
+    const group = groups.get(sectionKey) || [];
     group.push({ item, index });
-    groups.set(slotKey, group);
+    groups.set(sectionKey, group);
   });
 
   const replacements = new Map();
   const removed = new Set();
-  groups.forEach((group, slotKey) => {
+  groups.forEach((group) => {
     const references = uniqueList(group.flatMap(({ item }) => serviceItemScriptureReferences(item)));
     const winner = group.slice().sort((a, b) => {
       const explicitDiff = Number(!b.item._worshipTemplateProjected) - Number(!a.item._worshipTemplateProjected);
@@ -22092,7 +22091,7 @@ function collapseLegacyPresenterCitationItems(items = []) {
       label: "인용 구절",
       raw_title: formatServiceScriptureReferenceList(references),
       memo: serializeServiceItemMemo(parsed),
-      _worshipSlotKey: slotKey,
+      _worshipSlotKey: "sermon.citation.1",
     });
     group.forEach(({ index }) => {
       if (index !== winner.index) removed.add(index);
