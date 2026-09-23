@@ -15,7 +15,7 @@ body:has(.bulletin-workbench) .right-sidebar{display:none}
 .bulletin-history button{width:35px;min-height:35px;padding:0;border:0;background:transparent;font-size:var(--ui-body-size)}
 .bulletin-toolbar .bulletin-primary{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-size:var(--ui-label-size);font-weight:700;white-space:nowrap}
 .bulletin-toolbar .bulletin-primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 20%,var(--panel))}
-.bulletin-meta{display:flex;align-items:center;gap:15px;min-height:35px;padding:0 0 10px}
+.bulletin-meta{display:flex;flex-wrap:wrap;align-items:center;gap:15px;min-height:35px;padding:0 0 10px}
 .bulletin-status,.bulletin-help{font-size:var(--ui-meta-size);line-height:1.6;color:var(--ink-3,#70756d)}
 .bulletin-status{flex:1;min-width:0}
 .bulletin-status::before{content:"";display:inline-block;width:5px;height:5px;margin:0 7.5px 2px 0;border-radius:50%;background:var(--ink-4,#90958d)}

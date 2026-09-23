@@ -6160,8 +6160,9 @@ function handleSaveShortcut(event) {
 async function saveAll() {
   const bulletin = refs.detailPane?.querySelector(".bulletin-workbench");
   if (bulletin) {
-    bulletin.dispatchEvent(new Event("mindex-bulletin-save"));
-    return true;
+    const detail={};
+    bulletin.dispatchEvent(new CustomEvent("mindex-bulletin-save",{detail}));
+    return detail.result ? await detail.result : false;
   }
   if (state.module === "home") return;
   const saveState = currentSaveButtonState();
@@ -15227,6 +15228,23 @@ async function loadServiceBulletinSource(serviceId, settings = {}) {
       .map(s => ({date: s.date, noGathering: serviceIsNoGathering(s), label: s.alias || s.title || "집회 없음"}))});
 }
 
+async function loadBulletinDraft(serviceId) {
+  const {data,error}=await state.client.from("mindex_bulletins").select("service_id,content,layout,revision").eq("service_id",serviceId).maybeSingle();
+  if(error)throw new Error(`주보 DB를 불러오지 못했습니다: ${error.message}`);
+  return data;
+}
+
+async function saveBulletinDraft(serviceId, value, revision) {
+  const table=state.client.from("mindex_bulletins");
+  const query=revision
+    ? table.update(value).eq("service_id",serviceId).eq("revision",revision)
+    : table.insert({service_id:serviceId,...value});
+  const {data,error}=await query.select("service_id,content,layout,revision").maybeSingle();
+  if(error?.code==="23505"||(!error&&!data))throw new Error("다른 곳에서 주보가 변경되었습니다. DB 다시 불러오기로 확인해 주세요. 현재 수정 내용은 이 브라우저에 남아 있습니다.");
+  if(error)throw new Error(`주보 DB 저장 실패: ${error.message}`);
+  return data;
+}
+
 function mountServiceBulletinWorkbench(service) {
   if (refs.detailPane.querySelector(`[data-bulletin-owner="${service.id}"]`)) return;
   refs.detailPane.innerHTML = `<div data-bulletin-owner="${escapeAttr(service.id)}" style="height:100%;min-height:0"></div>`;
@@ -15236,6 +15254,11 @@ function mountServiceBulletinWorkbench(service) {
     services: state.services.filter(serviceSupportsBulletin).sort((a,b) => b.date.localeCompare(a.date))
       .map(s => ({id:s.id, label:`${formatServiceDate(s)} · ${serviceDisplayTypeName(s)}`})),
     scope: state.client?.supabaseUrl || window.MINDEX_SUPABASE?.url || "local",
+    getBackgrounds: () => worshipBackgroundTargets()
+      .filter(({fileName}) => state.worshipBackgroundRegistry[fileName]?.dataUrl || WORSHIP_BACKGROUND_STATIC_FILES.has(fileName))
+      .map(({fileName,path}) => ({key:fileName,url:state.worshipBackgroundRegistry[fileName]?.dataUrl || path})),
+    loadDraft: loadBulletinDraft,
+    saveDraft: saveBulletinDraft,
     loadSource: loadServiceBulletinSource,
     onClose: () => { state.presenterBulletinServiceId = null; renderCurrentServiceModuleDetail(); },
   });

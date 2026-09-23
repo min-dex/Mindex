@@ -23,6 +23,7 @@ declare
     'mindex_worship_templates',
     'mindex_worship_template_items',
     'mindex_worship_services',
+    'mindex_bulletins',
     'mindex_worship_sections',
     'mindex_worship_elements',
     'mindex_worship_slides',

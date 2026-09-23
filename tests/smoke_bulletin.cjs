@@ -30,6 +30,14 @@ const server=http.createServer((req,res)=>{
       const id='11111111-1111-4111-8111-111111111111';
       window.bulletinTest={id,reads:0,writes:0,fail:false,prayer:'교회력 기도자',sermon:'DB에서 읽은 설교'};
       const b=window.bulletinTest;
+      b.drafts={};b.saves=0;
+      loadBulletinDraft=async sid=>structuredClone(b.drafts[sid]||null);
+      saveBulletinDraft=async(sid,value,revision)=>{
+        if(b.saveFail)throw new Error('DB 저장 실패 테스트');
+        if((b.drafts[sid]?.revision||0)!==revision)throw new Error('다른 곳에서 주보가 변경되었습니다');
+        if(b.delaySave)await new Promise(resolve=>b.releaseSave=resolve);
+        b.saves++;b.drafts[sid]={...structuredClone(value),service_id:sid,revision:revision+1};return structuredClone(b.drafts[sid]);
+      };
       saveService=async()=>{b.writes++;return true;};
       const service={id,service_type_id:'young-adult',service_date:'2026-09-20',title:'청년부',worship_leader:'인도자'};
       window.bulletinSaved={service,sections:[
@@ -69,6 +77,7 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-field="news"]').fill('이번 주 소식\n다음 주 소식');
     await page.locator('[data-bulletin-field="news"]').press('Control+s');
     await page.evaluate(()=>saveAll());
+    await page.waitForFunction(()=>window.bulletinTest.saves>0);
     assert.equal(await page.evaluate(()=>window.bulletinTest.writes),0,'Global Save must not save Presenter while Bulletin is open');
     await page.evaluate(()=>{window.bulletinTest.sermon='갱신된 설교';});
     await page.locator('[data-bulletin-refresh]').click();
@@ -98,8 +107,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
     await page.evaluate(()=>{window.bulletinTest.fail=false;});await page.locator('[data-bulletin-refresh]').click();
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]')?.disabled);
-    await page.locator('[data-bulletin-profile]').click();
-    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('mindex.bulletin.profiles:https://offline-bulletin.test'))[0].fields.church),'샘플 교회');
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].content.fields.church),'샘플 교회');
     await page.locator('[data-bulletin-setting="rosterMonth"]').fill('2026-08');
     await page.locator('[data-bulletin-setting="rosterMonth"]').press('Tab');
     await page.waitForFunction(()=>document.querySelector('.bulletin-canvas').textContent.includes('8월 30일'));
@@ -107,12 +115,14 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-setting="rosterMonth"]').press('Tab');
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     await page.locator('[data-bulletin-mode="layout"]').click();
-    for(const [theme,file] of Object.entries({aurora:'26-A1.png',lent:'26-A2.png',palm:'26-S4.png',pentecost:'26-S6.png',stars:'26-A3.png'})) {
-      await page.locator('[data-bulletin-setting="theme"]').selectOption(theme);
+    for(const file of ['26-A1.png','26-A2.png','26-A4.png','26-B1.png','26-S4.png','26-S6.png','26-A3.png']) {
+      await page.locator('[data-bulletin-setting="theme"]').selectOption(file);
+      await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
       assert.match(await page.locator('.bulletin-sheet').first().locator(':scope > image').first().getAttribute('href'),new RegExp('/'+file.replace('.','\\.')+'$'));
       assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),false);
     }
-    await page.locator('[data-bulletin-setting="theme"]').selectOption('pentecost');
+    await page.locator('[data-bulletin-setting="theme"]').selectOption('26-S6.png');
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     await page.locator('[data-bulletin-frame]').selectOption('notes');
     await page.locator('[data-bulletin-hidden]').uncheck();
     await page.locator('[data-bulletin-mode="content"]').click();
@@ -126,12 +136,54 @@ const server=http.createServer((req,res)=>{
     const bytes=await printing.pdf({preferCSSPageSize:true,printBackground:true});
     const pdf=await PDFDocument.load(bytes);assert.equal(pdf.getPageCount(),2);
     await printing.close();
+    // Failed/conflicting saves preserve recovery copy and never claim DB success.
+    await page.locator('[data-bulletin-mode="content"]').click();
+    await page.locator('[data-bulletin-field="news"]').fill('내가 수정한 원문 ③');
+    await page.evaluate(()=>{window.bulletinTest.saveFail=true;});
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장 실패 테스트'));
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'내가 수정한 원문 ③');
+    await page.evaluate(()=>{const b=window.bulletinTest;b.saveFail=false;b.drafts[b.id].revision++;b.drafts[b.id].content.fields.news='다른 기기에서 저장한 원문';});
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('다른 곳에서'));
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].content.fields.news),'다른 기기에서 저장한 원문');
+    await page.locator('[data-bulletin-reload]').click();
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-field="news"]').value==='다른 기기에서 저장한 원문');
+    await page.locator('[data-bulletin-local]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'내가 수정한 원문 ③');
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장됨'));
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].layout.background),'26-S6.png');
+    // A clean browser-local state still loads the same content and layout from DB.
+    await page.evaluate(()=>localStorage.clear());
+    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'내가 수정한 원문 ③');
+    assert.equal(await page.locator('[data-frame-id="notes"]').count(),0);
+    assert.match(await page.locator('.bulletin-sheet').first().locator(':scope > image').first().getAttribute('href'),/26-S6\.png$/);
+    await page.locator('[data-bulletin-field="news"]').fill('저장 요청 시점');
+    await page.evaluate(()=>window.bulletinTest.delaySave=true);
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>!!window.bulletinTest.releaseSave);
+    await page.locator('[data-bulletin-field="news"]').fill('저장 중에 계속 입력');
+    await page.evaluate(()=>{window.bulletinTest.delaySave=false;window.bulletinTest.releaseSave();});
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-save]').disabled);
+    assert.match(await page.locator('.bulletin-status').textContent(),/수정됨/);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'저장 중에 계속 입력');
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].content.fields.news),'저장 요청 시점');
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장됨'));
+    console.log('PASS DB save, failure recovery, revision conflicts, local recovery, clean-browser reload and edits during save');
+
     await page.evaluate(async()=>{
       const host=document.getElementById('detailPane');host.replaceChildren();
       const source=window.MindexBulletin.resolveSource({...window.bulletinSaved,service:{...window.bulletinSaved.service,id:'next-bulletin',service_date:'2026-10-04'}});
-      window.MindexBulletin.mount(host,{serviceId:source.id,scope:'https://offline-bulletin.test',services:[{id:source.id,label:'다음 주보'}],loadSource:async()=>source,onClose(){}});
+      window.MindexBulletin.mount(host,{serviceId:source.id,scope:'https://offline-bulletin.test',services:[{id:source.id,label:'다음 주보'}],loadSource:async()=>source,loadDraft:async()=>null,saveDraft:saveBulletinDraft,onClose(){}});
     });
-    await page.waitForFunction(()=>document.querySelector('[data-bulletin-field="church"]')?.value==='샘플 교회');
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="church"]').inputValue(),'','No automatic historical common copy');
     assert.equal(await page.locator('[data-bulletin-field="issue"]').inputValue(),'','Unknown future issue must not be guessed');
     assert.deepEqual(errors,[]);
     if(process.env.BULLETIN_LIVE_STDIN) {
@@ -140,7 +192,7 @@ const server=http.createServer((req,res)=>{
         const source=window.MindexBulletin.resolveSource(data);
         const host=document.getElementById('detailPane');host.replaceChildren();
         window.MindexBulletin.mount(host,{serviceId:source.id,scope:'live-read-review',
-          services:[{id:source.id,label:source.date+' · 청년부'}],loadSource:async()=>source,onClose(){}});
+          services:[{id:source.id,label:source.date+' · 청년부'}],loadSource:async()=>source,loadDraft:async()=>null,saveDraft:saveBulletinDraft,onClose(){}});
         await window.MindexBulletin.readyAssets();
         const rendered=window.MindexBulletin.renderPages({source,fields:{},frames:window.MindexBulletin.defaultFrames()},'print',null);
         return {orderRows:source.order.length,prayers:source.prayers.length,issues:[...rendered.issues]};
@@ -151,8 +203,9 @@ const server=http.createServer((req,res)=>{
     }
     if(process.env.BULLETIN_THEME_IMAGE){
       await page.locator('[data-bulletin-mode="layout"]').click();
-      for(const theme of ['palm','pentecost']) {
-        await page.locator('[data-bulletin-setting="theme"]').selectOption(theme);
+      for(const file of ['26-S4.png','26-S6.png']) {
+        await page.locator('[data-bulletin-setting="theme"]').selectOption(file);
+      await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
         await page.locator('[data-bulletin-mode="content"]').click();
         console.log('IMAGE:'+(await page.locator('.bulletin-sheet').first().screenshot({type:'jpeg',quality:80})).toString('base64'));
         await page.locator('[data-bulletin-mode="layout"]').click();

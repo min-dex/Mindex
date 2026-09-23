@@ -8,7 +8,7 @@
   const themeArtwork={water:"26-A5.png",aurora:"26-A1.png",lent:"26-A2.png",palm:"26-S4.png",pentecost:"26-S6.png",stars:"26-A3.png"};
   const artworkPath=key=>`assets/worship-backgrounds/${themeArtwork[key]}`;
   const logoPath="assets/bulletin/ria-mark.webp";
-  const assets = [logoPath,...Object.keys(themeArtwork).map(artworkPath)];
+  const assets = [logoPath];
   const fields = {eventsText:"교회 일정 (주보용)",issue:"호수", church:"교회명", news:"청년부 소식", welcome:"환영 문구", notices:"상시 안내", staff:"섬김이 명단",
     motto:"공동체 표어", verse:"표어 성구", website:"웹사이트", address:"주소", meeting:"예배 시간·장소", outline:"설교 요점"};
   const frameLabels={eventsMonth:"일정 월",prayersMonth:"위원표 월",insideChurch:"안쪽 교회명",insideBrand:"안쪽 공동체명",eventsTitle:"교회 일정 제목",events:"교회 일정",newsTitle:"청년부 소식 제목",liturgical:"교회력 명칭",
@@ -25,7 +25,13 @@
   const profileKeys=["church","notices","staff","motto","verse","website","address","meeting"];
   // Confirmed archive metadata only; never infer a future issue from week numbers.
   const archiveIssues={"2025-01-05":"1","2025-01-12":"2","2025-01-26":"3","2025-02-02":"4","2025-02-09":"5","2025-02-16":"6","2025-02-23":"7","2025-03-09":"8","2025-03-16":"9","2025-03-23":"10","2025-03-30":"11","2025-04-13":"12","2025-04-20":"13","2025-04-27":"14","2025-05-04":"15","2025-05-11":"16","2025-05-18":"17","2025-05-25":"18","2025-06-01":"19","2025-06-15":"20","2025-06-22":"21","2025-06-29":"22","2025-07-20":"23","2025-07-27":"24","2025-08-03":"25","2025-08-10":"26","2025-08-17":"27","2025-08-31":"28","2025-09-07":"29","2025-09-14":"30","2025-09-21":"31","2025-09-28":"32","2025-10-12":"33","2025-10-19":"34","2025-10-26":"35","2025-11-02":"36","2025-11-09":"37","2025-11-16":"38","2025-11-30":"39","2025-12-07":"40","2025-12-14":"41","2025-12-21":"42","2026-01-18":"1","2026-01-25":"2","2026-02-08":"3","2026-02-22":"4","2026-03-08":"5","2026-03-22":"6","2026-03-29":"7","2026-04-12":"8","2026-04-19":"9","2026-04-26":"10","2026-05-10":"11","2026-05-17":"12","2026-05-24":"13","2026-05-31":"14","2026-06-07":"15","2026-06-21":"16","2026-06-28":"17","2026-07-05":"18","2026-07-19":"19","2026-07-26":"20","2026-08-02":"21","2026-08-16":"22","2026-08-23":"23","2026-09-06":"24","2026-09-13":"25","2026-09-20":"26"};
-  const themes={...themeArtwork,paper:"흰 바탕",ink:"짙은 테두리"};
+  // Legacy keys decode saved drafts; current choices come from the shared registry.
+  const backgroundKey=value=>themeArtwork[value]||value||"";
+  function backgroundFor(doc) {
+    const key=backgroundKey(doc.settings?.theme);
+    return (doc.backgrounds||[]).find(item=>item.key===key)
+      || (Object.hasOwn(themeArtwork,doc.settings?.theme||"")?{key,url:artworkPath(doc.settings.theme)}:null);
+  }
   const validMonth=v=>/^\d{4}-(0[1-9]|1[0-2])$/.test(v||"");
   function profileForDate(date) {
     if(!date||date<"2024-11-24")return {};
@@ -73,21 +79,21 @@
       const type=config.elementType||config.element_type||el.element_type;
       const slot=clean(ref.slotKey||config.slotKey);
       let label=clean(ref.label||section.title);
-      if (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation\./.test(slot)
+      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation\./.test(slot)
         || /^(ready|preparation|closing|fellowship)$/.test(section.section_key)
-        || /^(준비|폐회|실시간 성구 송출)$/.test(label)
+        || /^(준비|폐회|실시간 성구 송출)$/.test(label)))
         || ["blank","image","video","audio","file","ppt","pdf","live_scripture"].includes(type)
         || config.templateSuppressed || el.content_state?.status==="suppressed") continue;
-      label=label.replace(/^(찬양|찬송)\s*\d+(?:\s*[–~-]\s*\d+)?$/, "$1");
+      if(settings.compactOrder)label=label.replace(/^(찬양|찬송)\s*\d+(?:\s*[–~-]\s*\d+)?$/, "$1");
       const linked = songById.get(el.song_id);
       const scripture = scriptureById.get(el.scripture_id);
       let content = linked ? [linked.hymn_no,linked.title].filter(Boolean).join(" ") : clean(el.title);
       const reference = clean(el.scripture_reference||config.scriptureReference||config.scripture_reference||scripture?.reference);
-      if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading)continue;}
+      if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&settings.compactOrder)continue;}
       if (reference && /scripture|성경|본문/.test([type,slot,label].join(" "))) {
         content=reference;
-        if (!source.scripture) source.scripture=reference;
-        label="성경봉독";
+        if (!source.scripture&&!/^sermon\.citation\./.test(slot)) source.scripture=reference;
+        if(settings.compactOrder)label="성경봉독";
       }
       if (slot==="sermon.title" || label==="설교") {source.sermon=content;label="설교";}
       if (/announcements/.test(section.section_key) && ["body","plain_text","editable"].includes(type)) {
@@ -98,19 +104,11 @@
       let person=clean(el.person);
       if (label.replace(/\s/g,"")==="대표기도") person=clean(today.young_adult_prayer)||person;
       if (content===label) content="";
-      if(["사도신경","주기도문","공동체 고백"].includes(label))content="";
+      if(settings.compactOrder&&["사도신경","주기도문","공동체 고백"].includes(label))content="";
       const last=source.order[source.order.length-1];
-      if (last && last.label===label && last.person===person && content) last.content=[last.content,content].filter(Boolean).join("\n");
+      if (settings.compactOrder && last && last.label===label && last.person===person && content) last.content=[last.content,content].filter(Boolean).join("\n");
       else source.order.push({id:el.id,label,content,person});
     }
-    const copy={news:[],notices:[],welcome:[]};
-    for(const line of source.news.split("\n")) {
-      const plain=line.replace(/^\s*(?:\d+[.)]|[①-⑳◈◆])\s*/,"");
-      if(/^오늘도.*환영|^청년부 예배에.*환영/.test(plain))copy.welcome.push(plain);
-      else if(/^(?:검단우리교회는.*신천지|청년부 기도 모임|기도 모임[:(])/.test(plain))copy.notices.push(plain);
-      else copy.news.push(line);
-    }
-    source.news=copy.news.join("\n").trim();source.notices=copy.notices.join("\n");source.welcome=copy.welcome.join("\n");
     Object.assign(source,monthlyView(calendar,date,settings,services));
     return source;
   }
@@ -170,6 +168,15 @@
     })().catch(error=>{fontReady=null;throw error;});
     return fontReady;
   }
+  async function readyBackground(doc) {
+    await readyAssets();
+    const background=backgroundFor(doc);
+    if(doc.settings?.theme&&!background&&!["paper","ink"].includes(doc.settings.theme))throw new Error("이 기기에 선택한 배경이 없습니다. 민덱스 배경 목록에 등록해 주세요.");
+    if(background)await new Promise((resolve,reject)=>{
+      const image=new Image();image.onload=resolve;image.onerror=()=>reject(new Error("선택한 배경을 불러오지 못했습니다. 배경 목록을 확인해 주세요."));
+      image.src=new URL(background.url,document.baseURI).href;
+    });
+  }
   function wrap(text,width,size,weight=500) {
     const ctx=wrap.context||(wrap.context=document.createElement("canvas").getContext("2d"));
     ctx.font=`${weight} ${size}px MindexBulletin`; ctx.fontKerning="normal";
@@ -208,14 +215,10 @@
     if(Object.hasOwn(doc.fields,key))return doc.fields[key];
     if(key==="news")return doc.source?.news||"";
     if(key==="eventsText")return doc.source?.events||"";
-    if(key==="welcome"&&doc.source?.welcome)return doc.source.welcome.replace(/\s*(환영하고)/,"\n$1");
     if(key==="issue")return archiveIssues[doc.source?.date]||"";
-    const value=doc.profile?.[key]??profileForDate(doc.source?.date)[key]??"";
-    if(key!=="notices")return value;
-    if(doc.source?.notices)return doc.source.notices;
-    // The saved announcement may already include these standard notices.
-    return value.split("\n").filter(line=>!["신천지","기도 모임"].some(term=>line.includes(term)&&doc.source?.news?.includes(term))).join("\n");
+    return doc.profile?.[key]??"";
   }
+
   function boundText(doc,frame) {
     const [kind,key]=frame.binding.split(":");
     if(kind==="label")return key;
@@ -231,24 +234,17 @@
     const issues=new Set(); const pages=[];
     for(let page=0;page<2;page++) {
       const root=svg("svg",{viewBox:"0 0 297 210",class:"bulletin-sheet",role:"img","aria-label":page?"주보 안쪽":"주보 겉면"});
-      const theme=doc.settings?.theme||"water";
-      if(Object.hasOwn(themeArtwork,theme))root.append(svg("image",{href:new URL(artworkPath(theme),document.baseURI).href,width:297,height:210,preserveAspectRatio:"xMidYMid slice"}));
+      const theme=doc.settings?.theme||"",background=backgroundFor(doc);
+      if(background)root.append(svg("image",{href:new URL(background.url,document.baseURI).href,width:297,height:210,preserveAspectRatio:"xMidYMid slice"}));
       else root.append(svg("rect",{width:297,height:210,fill:theme==="ink"?"#202b35":"#fff"}));
-      for(const x of [5,153.5])root.append(svg("rect",{x,y:10,width:138.5,height:190,fill:"white","fill-opacity":["palm","pentecost"].includes(theme)?.88:1}));
+      for(const x of [5,153.5])root.append(svg("rect",{x,y:10,width:138.5,height:190,fill:"white","fill-opacity":1}));
       if(page===0)root.append(svg("image",{href:new URL(logoPath,document.baseURI).href,x:170,y:67.5,width:105,height:72.5}));
       for(const f of doc.frames.filter(f=>f.page===page&&(!f.hidden||mode==="layout"))) {
         const group=svg("g",{"data-frame-id":f.id});
         if(f.type==="rules") {
           for(let y=0;y<=f.h;y+=7.5)group.append(svg("line",{x1:f.x,y1:f.y+y,x2:f.x+f.w,y2:f.y+y,stroke:"#555","stroke-width":.15}));
         } else if(f.type==="list") {
-          let y=f.y,index=0;
-          for(const line of String(boundText(doc,f)).split("\n").filter(l=>l.trim())) {
-            const content=line.replace(/^\s*(?:\d+[.)]|[①-⑳◈◆])\s*/,"");
-            const mark=f.id==="notices"?"◈":String.fromCodePoint(0x2460+Math.min(index++,19));
-            writeText(group,mark,{...f,y,w:7.5,h:10},issues,f.id);
-            const h=writeText(group,content,{...f,x:f.x+7.5,y,w:f.w-7.5,h:f.y+f.h-y},issues,f.id);
-            y+=Math.max(f.id==="news"?10:7.5,h+2.5);
-          }
+          writeText(group,boundText(doc,f),f,issues,f.id);
         } else if(f.type==="staff") {
           const value=boundText(doc,f),pairs=value.split(/\n|\s*·\s*/).filter(Boolean);
           const parsed=pairs.map(t=>t.match(/^(위임목사|담당 교역자|회장|총무|서기|회계)\s+(.+)$/));
@@ -296,7 +292,7 @@
             writeText(group,r.person,{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},issues,f.id);
             if(y+10>f.y+f.h+.01)issues.add(f.id);
           });
-        } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&!["paper","palm","pentecost"].includes(theme)?"#fff":"#231f20"},issues,f.id);
+        } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&(background||theme==="ink")?"#fff":"#231f20"},issues,f.id);
         if(mode==="layout") {
           group.append(svg("rect",{class:`bulletin-frame-hit${selected===f.id?" is-selected":""}`,x:f.x,y:f.y,width:f.w,height:f.h,
             fill:"transparent",stroke:selected===f.id?"#477953":"#47795380","stroke-width":.25,"data-frame-hit":f.id}));
@@ -314,7 +310,7 @@
     let saved=null;
     try {saved=JSON.parse(localStorage.getItem(key)||"null");}catch{ /* corrupt/blocked storage remains recoverable */ }
     const frames=defaultFrames();
-    if(saved?.version===1)for(const f of frames){
+    if([1,2].includes(saved?.version))for(const f of frames){
       const patch=saved.frames?.find(p=>p.id===f.id);
       if(!patch)continue;
       for(const name of ["x","y","w","h","size"]){
@@ -327,13 +323,37 @@
       f.x=Math.min(f.x,297-f.w);f.y=Math.min(f.y,210-f.h);
     }
     const values={};
-    if(saved?.version===1)for(const key of Object.keys(fields))if(typeof saved.fields?.[key]==="string")values[key]=saved.fields[key];
+    if([1,2].includes(saved?.version))for(const key of Object.keys(fields))if(typeof saved.fields?.[key]==="string")values[key]=saved.fields[key];
     const settings={};
     for(const k of ["eventsMonth","rosterMonth"])if(validMonth(saved?.settings?.[k]))settings[k]=saved.settings[k];
-    if(Object.hasOwn(themes,saved?.settings?.theme||""))settings.theme=saved.settings.theme;
-    return {key,fields:values,settings,frames,source:null,history:[],future:[]};
+    if(typeof saved?.settings?.theme==="string")settings.theme=saved.settings.theme;
+    settings.compactOrder=saved?.settings?.compactOrder===true;
+    if(saved?.version===1&&!Object.hasOwn(settings,"theme"))settings.theme="26-A5.png";
+    return {key,fields:values,settings,frames,hasLocal:!!saved,source:null,history:[],future:[],revision:0,dirty:false,saving:false};
   }
   function snapshot(doc){return {fields:clone(doc.fields),settings:clone(doc.settings||{}),frames:clone(doc.frames)};}
+
+  function storedValue(doc) {
+    const {theme,compactOrder,eventsMonth,rosterMonth}=doc.settings;
+    return {content:{fields:clone(doc.fields),eventsMonth,rosterMonth,compactOrder:compactOrder===true},
+      layout:{background:backgroundKey(theme),frames:clone(doc.frames)}};
+  }
+  function applyStored(doc,row) {
+    if(!row||!Number.isInteger(row.revision)||row.revision<1||!row.content||!row.layout)throw new Error("주보 저장 데이터 형식을 확인해 주세요.");
+    const values={};
+    for(const key of Object.keys(fields))if(typeof row.content.fields?.[key]==="string")values[key]=row.content.fields[key];
+    const settings={compactOrder:row.content.compactOrder===true};
+    for(const key of ["eventsMonth","rosterMonth"])if(validMonth(row.content[key]))settings[key]=row.content[key];
+    if(typeof row.layout.background==="string")settings.theme=row.layout.background;
+    const frames=defaultFrames();
+    for(const f of frames){
+      const patch=row.layout.frames?.find?.(p=>p.id===f.id);if(!patch)continue;
+      for(const key of ["x","y","w","h","size"]){const n=Number(patch[key]);if(Number.isFinite(n)&&n>=0&&n<=297&&(key!=="size"||TOKENS.fontSizes.includes(n)))f[key]=n;}
+      f.w=Math.max(10,Math.min(297,f.w));f.h=Math.max(5,Math.min(210,f.h));f.x=Math.min(f.x,297-f.w);f.y=Math.min(f.y,210-f.h);
+      f.hidden=patch.hidden===true;if(["left","center","right"].includes(patch.align))f.align=patch.align;
+    }
+    Object.assign(doc,{fields:values,settings,frames,revision:row.revision,dirty:false,history:[],future:[]});
+  }
 
   function mount(host,options) {
     const controller=new AbortController(),signal=controller.signal;
@@ -345,8 +365,8 @@
       <h2>주보</h2><select aria-label="주보 예배" data-bulletin-service>${options.services.map(s=>`<option value="${escape(s.id)}">${escape(s.label)}</option>`).join("")}</select>
       <span class="bulletin-spacer"></span><div class="bulletin-history" role="group" aria-label="편집 기록">
       <button type="button" data-bulletin-undo aria-label="주보 실행 취소" title="실행 취소"><i data-lucide="undo-2"></i></button><button type="button" data-bulletin-redo aria-label="주보 다시 실행" title="다시 실행"><i data-lucide="redo-2"></i></button></div>
-      <button class="bulletin-primary" type="button" data-bulletin-print disabled><i data-lucide="printer"></i><span>인쇄 / PDF</span></button></header>
-      <div class="bulletin-meta"><div class="bulletin-status" role="status"></div><button type="button" data-bulletin-refresh title="저장된 예배 자료 다시 불러오기"><i data-lucide="refresh-cw"></i><span>새로고침</span></button></div>
+      <button type="button" data-bulletin-save><i data-lucide="save"></i><span>저장</span></button><button class="bulletin-primary" type="button" data-bulletin-print disabled><i data-lucide="printer"></i><span>인쇄 / PDF</span></button></header>
+      <div class="bulletin-meta"><div class="bulletin-status" role="status"></div><button type="button" data-bulletin-local>브라우저 초안</button><button type="button" data-bulletin-reload>DB 다시 불러오기</button><button type="button" data-bulletin-refresh title="저장된 예배 자료 다시 불러오기"><i data-lucide="refresh-cw"></i><span>새로고침</span></button></div>
       <div class="bulletin-body"><aside class="bulletin-inspector" aria-label="주보 편집 도구">
       <div class="bulletin-modes"><button type="button" data-bulletin-mode="content">내용</button><button type="button" data-bulletin-mode="layout">양식</button></div>
       <div class="bulletin-properties"></div></aside><section class="bulletin-preview" aria-label="인쇄 미리보기"><div class="bulletin-preview-head"><strong>미리보기</strong><span>A4 가로 · 2쪽</span></div><div class="bulletin-canvas" tabindex="0" aria-label="주보 페이지"></div></section></div></section>`;
@@ -354,26 +374,43 @@
     window.lucide?.createIcons({root});
     function loadProfile(date) {
       let versions=[];try{versions=JSON.parse(localStorage.getItem(`mindex.bulletin.profiles:${options.scope}`)||"[]");}catch{}
-      const profile=profileForDate(date);
+      const profile={};
       if(Array.isArray(versions))for(const v of versions.filter(v=>v&&typeof v.date==="string"&&v.date<=date).sort((a,b)=>a.date.localeCompare(b.date)))
         for(const k of profileKeys)if(typeof v.fields?.[k]==="string")profile[k]=v.fields[k];
       return profile;
     }
     function remember(before=snapshot(doc)){doc.history.push(before);if(doc.history.length>50)doc.history.shift();doc.future=[];}
-    function persist(){
-      try{localStorage.setItem(doc.key,JSON.stringify({version:1,...snapshot(doc)}));saveError="";}
-      catch{saveError="기기에 저장하지 못했습니다. 이 화면을 닫기 전에 출력해 주세요.";}
+    function backup(target=doc){
+      try{localStorage.setItem(target.key,JSON.stringify({version:2,...snapshot(target)}));}
+      catch{saveError="브라우저 복구본을 저장하지 못했습니다. DB 저장을 확인해 주세요.";}
     }
-    on(root,"mindex-bulletin-save",()=>{persist();status();});
+    function persist(){doc.dirty=true;saveError="";backup();}
+    async function save(){
+      const target=doc;if(!target||target.saving||loading||error||!target.dbLoaded)return false;
+      if(!target.dirty&&target.revision)return true;
+      const value=storedValue(target),before=JSON.stringify(snapshot(target));target.saving=true;saveError="";status();
+      try{
+        if(!options.saveDraft)throw new Error("주보 DB 저장 연결이 필요합니다.");
+        const row=await options.saveDraft(target.id,value,target.revision);
+        target.revision=row.revision;target.dirty=JSON.stringify(snapshot(target))!==before;
+        backup(target);return !target.dirty;
+      }catch(e){if(doc===target)saveError=e.message;target.dirty=true;return false;}
+      finally{target.saving=false;if(doc===target)status();}
+    }
+    on(root,"mindex-bulletin-save",event=>{const result=save();if(event.detail)event.detail.result=result;});
     function status(){
       const text=error||saveError||(loading?"저장된 예배 자료를 불러오는 중…":!assetLoaded?"글꼴과 이미지를 준비하는 중…":
-        `이 기기에 자동 저장 · 예배 자료 연결됨${issues.size?` · 영역 넘침: ${[...issues].map(frameLabel).join(", ")}`:""}`);
+        `주보 ${doc?.saving?"DB 저장 중…":doc?.dirty?"수정됨 · DB 저장 전":doc?.revision?"DB 저장됨":"새 주보 · DB 저장 전"}${issues.size?` · 영역 넘침: ${[...issues].map(frameLabel).join(", ")}`:""}`);
       q(".bulletin-status").textContent=text;
       q(".bulletin-status").dataset.state=error||saveError||issues.size?"warning":loading||!assetLoaded?"loading":"saved";
       q("[data-bulletin-print]").disabled=loading||!assetLoaded||!!error||!doc?.source?.order.length||issues.size>0;
       q("[data-bulletin-undo]").disabled=!doc?.history.length;
       q("[data-bulletin-redo]").disabled=!doc?.future.length;
-      q("[data-bulletin-refresh]").disabled=loading;
+      q("[data-bulletin-refresh]").disabled=loading||!!doc?.saving;
+      q("[data-bulletin-save]").disabled=loading||!!error||!!doc?.saving||!doc?.dbLoaded||(!doc?.dirty&&!!doc?.revision);
+      q("[data-bulletin-reload]").disabled=loading||!!doc?.saving;
+      q("[data-bulletin-local]").hidden=!doc?.localDraft;
+      root.querySelectorAll(".bulletin-properties input,.bulletin-properties select,.bulletin-properties textarea,.bulletin-properties button").forEach(el=>el.disabled=loading||(!doc?.dbLoaded&&!!error));
     }
     function preview(){
       if(!doc||!assetLoaded){status();return;}
@@ -388,17 +425,16 @@
         const field=key=>`<label>${escape(fields[key])}${["issue","church","website"].includes(key)?
           `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
           `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`;
-        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3>${["issue","news","eventsText","outline","welcome"].map(field).join("")}</section>
+        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3><p class="bulletin-help">광고 원문과 입력한 번호를 그대로 표시합니다.</p>${["issue","news","eventsText","outline","welcome"].map(field).join("")}</section>
           <section class="bulletin-property-section"><h3>일정과 위원표</h3><div class="bulletin-number-grid">
           <label>교회 일정<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
           <label>예배 위원<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label></div></section>
-          <section class="bulletin-property-section"><h3>공통 정보</h3>${profileKeys.map(field).join("")}
-          <button class="bulletin-reuse" type="button" data-bulletin-profile>이 날짜부터 공통 정보 재사용</button>
-          <p class="bulletin-help">다음 주보에도 적용됩니다. 기존 주보에서 직접 수정한 내용은 유지해요.</p></section>`;
+          <section class="bulletin-property-section"><h3>공통 정보</h3><button type="button" data-bulletin-reference>기존 주보 문구 불러오기</button><p class="bulletin-help">과거 주보에서 확인한 문구입니다. 현재 정보인지 확인한 뒤 사용해 주세요.</p>${profileKeys.map(field).join("")}
+          </section>`;
 
       } else {
         const f=doc.frames.find(f=>f.id===selected)||doc.frames[0];selected=f.id;
-        p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme">${Object.entries(themes).map(([v,t])=>`<option value="${v}" ${(doc.settings.theme||"water")===v?"selected":""}>${t}</option>`).join("")}</select></label><p class="bulletin-help">MINDEX의 기존 예배 배경을 함께 사용합니다. 날짜별 자동 전환은 하지 않습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
+        p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme"><option value="" ${!doc.settings.theme?"selected":""}>배경 없음</option>${(doc.backgrounds||[]).map(({key})=>`<option value="${escape(key)}" ${backgroundKey(doc.settings.theme)===key?"selected":""}>${escape(key)}</option>`).join("")}${doc.settings.theme&&!(doc.backgrounds||[]).some(b=>b.key===backgroundKey(doc.settings.theme))?`<option value="${escape(doc.settings.theme)}" selected>기존 초안: ${escape(backgroundKey(doc.settings.theme))}</option>`:""}</select></label><p class="bulletin-help">민덱스 배경 목록에 등록된 이미지를 사용합니다.</p><label><input type="checkbox" data-bulletin-setting="compactOrder" ${doc.settings.compactOrder?"checked":""}> 인쇄용 순서로 간추리기</label><p class="bulletin-help">선택하면 준비·마침·교제·보조 성구를 빼고, 고백 전문을 생략하며 같은 순서를 묶습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
           <label><input type="checkbox" data-bulletin-hidden ${f.hidden?"":"checked"}> 출력에 표시</label><p class="bulletin-help">${escape(frameLabel(f.id))}<br>이동·크기 2.5mm · 글자 2.5pt 단계</p><div class="bulletin-number-grid">`+
           [["x","가로 위치"],["y","세로 위치"],["w","너비"],["h","높이"]].map(([key,label])=>`<label>${label} (mm)<input type="number" step="2.5" data-bulletin-dimension="${key}" value="${f[key]}"></label>`).join("")+`</div>
           <label>글자 크기 (pt)<select data-bulletin-dimension="size">${TOKENS.fontSizes.map(n=>`<option ${f.size===n?"selected":""}>${n}</option>`).join("")}</select></label>
@@ -406,18 +442,38 @@
           <p class="bulletin-help">페이지에서 드래그해 이동하거나 선택 모서리로 크기를 바꿀 수 있어요. 방향키로 2.5mm씩 이동합니다.</p>`;
       }
     }
-    async function load(id) {
-      const request=++serial;loading=true;error="";
-      if(!documents.has(id))documents.set(id,restore(options.scope,id));
-      doc=documents.get(id);q("[data-bulletin-service]").value=id;properties();preview();
-      try{const source=await options.loadSource(id,doc.settings);if(request!==serial||signal.aborted)return;doc.source=source;doc.profile=loadProfile(source.date);}
-      catch(e){if(request===serial&&!signal.aborted)error=e.message||"DB 자료를 불러오지 못했습니다.";}
-      finally{if(request===serial&&!signal.aborted){loading=false;properties();preview();}}
+    async function load(id,force=false) {
+      const request=++serial;loading=true;assetLoaded=false;error="";saveError="";
+      if(!documents.has(id)){
+        const fresh=restore(options.scope,id);fresh.id=id;
+        if(fresh.hasLocal)fresh.localDraft=snapshot(fresh);
+        try{const recovery=JSON.parse(localStorage.getItem(fresh.key+":recovery")||"null");if(recovery)fresh.localDraft=recovery;}catch{}
+        documents.set(id,fresh);
+      }
+      doc=documents.get(id);const target=doc;q("[data-bulletin-service]").value=id;properties();status();
+      try{
+        if(!target.dbLoaded||force){
+          if(!options.loadDraft)throw new Error("주보 DB 연결이 필요합니다.");
+          if(force&&target.dirty){target.localDraft=snapshot(target);localStorage.setItem(target.key+":recovery",JSON.stringify(target.localDraft));}
+          const row=await options.loadDraft(id);if(request!==serial||signal.aborted)return;
+          if(row){
+            if(target.localDraft&&!localStorage.getItem(target.key+":recovery"))localStorage.setItem(target.key+":recovery",JSON.stringify(target.localDraft));
+            applyStored(target,row);
+          }else{target.dirty=true;target.revision=0;}
+          target.dbLoaded=true;
+        }
+        const source=await options.loadSource(id,target.settings);if(request!==serial||signal.aborted)return;
+        target.source=source;target.profile=target.revision?{}:loadProfile(source.date);
+        // Preserve explicitly saved legacy common copy as ordinary content when migrating.
+        if(!target.revision)for(const [key,value] of Object.entries(target.profile))if(!Object.hasOwn(target.fields,key))target.fields[key]=value;
+        target.backgrounds=options.getBackgrounds?.()||[];await readyBackground(target);if(request!==serial||signal.aborted)return;assetLoaded=true;
+      }catch(e){if(request===serial&&!signal.aborted)error=e.message||"자료를 불러오지 못했습니다.";}
+      finally{if(request===serial&&!signal.aborted){loading=false;properties();preview();status();}}
     }
     function history(redo=false){
       const from=redo?doc.future:doc.history,to=redo?doc.history:doc.future;
-      if(!from.length)return;const months=JSON.stringify([doc.settings.eventsMonth,doc.settings.rosterMonth]);to.push(snapshot(doc));Object.assign(doc,from.pop());persist();properties();preview();
-      if(months!==JSON.stringify([doc.settings.eventsMonth,doc.settings.rosterMonth]))void load(q("[data-bulletin-service]").value);
+      if(!from.length)return;const months=JSON.stringify(doc.settings);to.push(snapshot(doc));Object.assign(doc,from.pop());persist();properties();preview();
+      if(months!==JSON.stringify(doc.settings))void load(q("[data-bulletin-service]").value);
     }
     function setDimension(f,key,value){
       if(key==="size"){if(TOKENS.fontSizes.includes(value))f.size=value;return;}
@@ -435,9 +491,9 @@
     on(root,"change",event=>{
       const t=event.target;
       if(t.dataset.bulletinSetting){
-        const key=t.dataset.bulletinSetting;if(key!=="theme"&&!validMonth(t.value))return;
-        remember();doc.settings[key]=t.value;persist();
-        if(key==="theme")preview();else void load(q("[data-bulletin-service]").value);return;
+        const key=t.dataset.bulletinSetting;if(!["theme","compactOrder"].includes(key)&&!validMonth(t.value))return;
+        remember();doc.settings[key]=key==="compactOrder"?t.checked:t.value;persist();
+        void load(q("[data-bulletin-service]").value);return;
       }
       if(t.matches("[data-bulletin-hidden]")){remember();doc.frames.find(f=>f.id===selected).hidden=!t.checked;persist();preview();return;}
       if(t.matches("[data-bulletin-service]")){void load(t.value);return;}
@@ -449,17 +505,14 @@
     on(root,"click",event=>{
       const b=event.target.closest("button");if(!b)return;
       if(b.hasAttribute("data-bulletin-reset-layout")){remember();doc.frames=defaultFrames();persist();properties();preview();return;}
-      if(b.hasAttribute("data-bulletin-profile")){
-        if(!doc.source?.date)return;
-        try {
-          const key=`mindex.bulletin.profiles:${options.scope}`;
-          let versions=JSON.parse(localStorage.getItem(key)||"[]");if(!Array.isArray(versions))versions=[];
-          versions=versions.filter(v=>v&&typeof v.date==="string"&&v.date!==doc.source.date);
-          versions.push({date:doc.source.date,fields:Object.fromEntries(profileKeys.map(k=>[k,fieldValue(doc,k)]))});
-          localStorage.setItem(key,JSON.stringify(versions));saveError="";
-          for(const d of documents.values())if(d.source)d.profile=loadProfile(d.source.date);
-          q(".bulletin-status").textContent="공통 문구를 이 날짜부터 재사용하도록 저장했습니다.";
-        }catch{saveError="공통 문구를 기기에 저장하지 못했습니다.";status();}return;
+      if(b.hasAttribute("data-bulletin-reference")){
+        remember();for(const [key,value] of Object.entries(profileForDate(doc.source?.date)))if(!fieldValue(doc,key))doc.fields[key]=value;
+        persist();properties();preview();return;
+      }
+      if(b.hasAttribute("data-bulletin-save")){void save();return;}
+      if(b.hasAttribute("data-bulletin-reload")){void load(doc.id,true);return;}
+      if(b.hasAttribute("data-bulletin-local")){
+        if(!doc.localDraft)return;remember();Object.assign(doc,clone(doc.localDraft));persist();void load(doc.id);return;
       }
       if(b.hasAttribute("data-bulletin-close")){options.onClose();return;}
       if(b.dataset.bulletinMode){mode=b.dataset.bulletinMode;properties();preview();}
@@ -486,7 +539,7 @@
     function endDrag(){if(!drag)return;if(JSON.stringify(drag.before)!==JSON.stringify(snapshot(doc))){remember(drag.before);persist();}drag=null;properties();preview();}
     on(document,"pointerup",endDrag);on(document,"pointercancel",endDrag);
     on(root,"keydown",event=>{
-      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="s"){event.preventDefault();event.stopPropagation();persist();status();return;}
+      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="s"){event.preventDefault();event.stopPropagation();void save();return;}
       if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="p"){event.preventDefault();event.stopPropagation();void print();return;}
       if(event.target.matches("input,textarea,select"))return;
       if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();event.stopPropagation();history(event.shiftKey);return;}
@@ -499,9 +552,9 @@
     let printFrame;
     async function print(){
       if(q("[data-bulletin-print]").disabled)return;
-      const output=clone({fields:doc.fields,settings:doc.settings,profile:doc.profile,frames:doc.frames,source:doc.source});
+      const output=clone({fields:doc.fields,settings:doc.settings,profile:doc.profile,frames:doc.frames,source:doc.source,backgrounds:doc.backgrounds});
       try{
-        await readyAssets();
+        await readyBackground(output);
         if(signal.aborted)return;
         const rendered=renderPages(output,"print",null);if(rendered.issues.size)throw new Error("내용이 프레임을 넘습니다. 양식을 조정해 주세요.");
         printFrame?.remove();printFrame=document.createElement("iframe");
@@ -518,9 +571,9 @@
     const observer=new MutationObserver(()=>{if(!root.isConnected)destroy();});
     observer.observe(document.body,{childList:true,subtree:true});
     function destroy(){serial++;controller.abort();observer.disconnect();printFrame?.remove();}
-    void readyAssets().then(()=>{if(signal.aborted)return;assetLoaded=true;preview();}).catch(e=>{if(!signal.aborted){error=e.message;status();}});
+
     void load(options.serviceId);
     return {destroy, reload(){return load(q("[data-bulletin-service]").value);}};
   }
-  window.MindexBulletin=Object.freeze({mount,resolveSource,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView});
+  window.MindexBulletin=Object.freeze({mount,resolveSource,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView,storedValue,applyStored});
 })();
