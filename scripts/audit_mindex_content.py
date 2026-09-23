@@ -581,7 +581,7 @@ def audit(
         code = row["code"]
         if not row.get("korean_name") or not row.get("english_name"):
             issues.append({"type": "book-name-missing", "code": code})
-        issues.extend(edge_text_issues(row, code, ("korean_name", "english_name", "short_name", "division", "testament")))
+        issues.extend(edge_text_issues(row, code, ("korean_name", "english_name", "short_name", "testament")))
 
     for row in worship_services:
         row_id = row["id"]

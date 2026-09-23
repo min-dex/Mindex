@@ -235,11 +235,10 @@ The Forms view keeps only the current working exports:
 - `XML`: downloads the selected version as a simple XML file
 
 The Scripture view stores a title, Bible book, reference, translation, passage
-text, and note. Bible books are classified in `mindex_scripture_books`.
-`english_name` is the compact book name, such as `1 Samuel`;
-`canonical_english_title` is the formal full name, such as `First Book of
-Samuel`. Book metadata is prepared for broader corpora with optional `corpus`,
-`canon`, `book_group`, `osis_code`, `usfm_code`, and flexible `metadata` columns.
+text, and note. Bible books in `mindex_scripture_books` retain only the worship
+lookup fields: code, Korean and English names, aliases, order, Old/New Testament,
+short name, and chapter count in `metadata.chapters`. Broader learning metadata
+is maintained outside Mindex.
 
 The Notion export source has been normalized into `data/scripture-books.csv`.
 Future Bible XML imports should write a row to `mindex_bible_translations` and

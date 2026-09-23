@@ -17462,7 +17462,7 @@ function renderScriptureDetail() {
   }
 
   if (!scripture) {
-    const titleMetaLine = selectedBook?.canonicalEnglishTitle || `전체 ${formatCount(getBibleBooks().length)}권`;
+    const titleMetaLine = selectedBook?.englishName || `전체 ${formatCount(getBibleBooks().length)}권`;
     const supportMetaItems = scriptureBookSupportMetaItems(selectedBook);
     refs.detailPane.innerHTML = `
       <div class="editor-shell scripture-editor scripture-taxonomy-editor">
@@ -17489,11 +17489,10 @@ function renderScriptureDetail() {
     return;
   }
 
-  const titleMetaLine = scripture.reference || selectedBook?.canonicalEnglishTitle || "";
+  const titleMetaLine = scripture.reference || selectedBook?.englishName || "";
   const supportMetaItems = [
     metaAttribute("역본", scripture.translation),
     selectedBook?.koreanName && scripture.book !== selectedBook.koreanName ? metaAttribute("권", selectedBook.koreanName) : null,
-    metaAttribute("구분", selectedBook?.division),
   ].filter(Boolean);
   refs.detailPane.innerHTML = `
     <div class="editor-shell scripture-editor">
@@ -17938,7 +17937,7 @@ function renderBibleBookOptions(testament, selectedCode) {
 
 function renderScriptureBookMarker(book) {
   if (!book?.shortName) return "";
-  const label = book.koreanName || book.canonicalEnglishTitle || book.englishName || book.code;
+  const label = book.koreanName || book.englishName || book.code;
   return `<span class="scripture-book-marker" aria-label="${escapeAttr(label)}">${escapeHtml(book.shortName)}</span>`;
 }
 
@@ -17950,12 +17949,7 @@ function renderScriptureChapterBadge(book) {
 }
 
 function scriptureBookSupportMetaItems(book) {
-  if (!book) return [];
-  return [
-    metaAttribute("Christian", book.division),
-    metaAttribute("Jewish", book.jewishCategory),
-    metaAttribute("Author", book.author),
-  ].filter(Boolean);
+  return book?.testament ? [metaAttribute("구약/신약", book.testament)] : [];
 }
 
 function renderScriptureBookTaxonomy() {
@@ -18226,7 +18220,7 @@ function renderScriptureBookCard(book) {
       <div class="taxonomy-book-order">${String(book.sortOrder).padStart(2, "0")}</div>
       <div class="taxonomy-book-main">
         <div class="taxonomy-book-title">${escapeHtml(book.koreanName)}</div>
-        <div class="taxonomy-book-subtitle">${escapeHtml(book.canonicalEnglishTitle || book.englishName)}</div>
+        <div class="taxonomy-book-subtitle">${escapeHtml(book.englishName)}</div>
         <div class="taxonomy-book-meta">${details.map(renderMetaItem).join("")}</div>
       </div>
     </article>
@@ -18417,7 +18411,6 @@ function formatScriptureReferenceForCopy(reference, book, translation) {
   const bookNames = [
     book?.koreanName,
     book?.englishName,
-    book?.canonicalEnglishTitle,
     book?.shortName,
     book?.code,
   ].map((item) => String(item || "").trim()).filter(Boolean);
@@ -18432,7 +18425,7 @@ function scriptureBookCopyName(book, translation = getSelectedBibleTranslation()
   if (isKoreanBibleTranslation(translation)) {
     return book?.shortName || KOREAN_BIBLE_BOOK_ABBREVIATIONS[book?.code] || makeKoreanBibleBookAbbreviation(book?.koreanName) || book?.koreanName || book?.code || "";
   }
-  return ENGLISH_BIBLE_BOOK_ABBREVIATIONS[book?.code] || book?.englishName || book?.canonicalEnglishTitle || book?.code || "";
+  return ENGLISH_BIBLE_BOOK_ABBREVIATIONS[book?.code] || book?.englishName || book?.code || "";
 }
 
 function makeKoreanBibleBookAbbreviation(name) {
@@ -18753,12 +18746,8 @@ function normalizeServerScriptureBook(row) {
     koreanName: row.korean_name || "",
     englishName: row.english_name || "",
     testament: row.testament || "",
-    division: row.division || "",
-    canonicalEnglishTitle: row.canonical_english_title || row.english_name || "",
     shortName,
     aliases: cleanList(row.aliases),
-    jewishCategory: row.jewish_category || "",
-    author: row.author || "",
     metadata,
     chapterCount: Number(metadata.chapters || metadata.chapter_count || BIBLE_CHAPTER_COUNTS[row.code]) || 0,
     sortOrder: Number(row.sort_order) || 999,
@@ -19452,14 +19441,10 @@ function getBibleBookSearchMatch(book, tokens = getSearchTokens(state.search)) {
   const fields = [
     searchField("title", book.koreanName, 110),
     searchField("meta", book.englishName, 90),
-    searchField("meta", book.canonicalEnglishTitle, 90),
     searchField("meta", book.shortName, 80),
     ...(book.aliases || []).map((alias) => searchField("meta", alias, 78)),
     ...(BIBLE_BOOK_ALIASES[book.code] || []).map((alias) => searchField("meta", alias, 78)),
     searchField("meta", book.testament, 55),
-    searchField("meta", book.division, 55),
-    searchField("meta", book.jewishCategory, 45),
-    searchField("meta", book.author, 40),
   ].filter((field) => field.text);
   return fields.some((field) => tokens.every((token) => matchSearchField(field, token)));
 }
@@ -19496,7 +19481,6 @@ function getBibleBookReferenceNames(book) {
     book.code,
     book.koreanName,
     book.englishName,
-    book.canonicalEnglishTitle,
     book.shortName,
     KOREAN_BIBLE_BOOK_ABBREVIATIONS[book.code],
     ENGLISH_BIBLE_BOOK_ABBREVIATIONS[book.code],
@@ -19539,7 +19523,6 @@ function fallbackBibleBookByReferenceName(normalizedName = "") {
       koreanName,
       shortName,
       englishName,
-      canonicalEnglishTitle: englishName,
       chapterCount: Number(BIBLE_CHAPTER_COUNTS?.[code]) || 0,
       sortOrder: index + 1,
       aliases: BIBLE_BOOK_ALIASES[code] || [],
@@ -19563,7 +19546,7 @@ function getBibleBookLookups() {
   const byReferenceName = new Map();
   for (const book of books) {
     byCode.set(book.code, book);
-    for (const name of [book.koreanName, book.englishName, book.canonicalEnglishTitle, book.shortName]) {
+    for (const name of [book.koreanName, book.englishName, book.shortName]) {
       const normalizedName = normalizeTitle(name);
       if (normalizedName && !byName.has(normalizedName)) byName.set(normalizedName, book);
     }
@@ -26397,7 +26380,6 @@ function renderServiceScriptureDatalist() {
       book.shortName,
       KOREAN_BIBLE_BOOK_ABBREVIATIONS[book.code],
       book.englishName,
-      book.canonicalEnglishTitle,
     ])
     .filter(Boolean)
     .filter((value, index, list) => list.indexOf(value) === index)
