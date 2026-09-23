@@ -31663,7 +31663,7 @@ function runPresenterAction(action, serviceId = state.selectedServiceId, options
   }
   if (!serviceId) return;
   if (action === "prepare-next-service") {
-    prepareNextServiceFromPresenter(serviceId, options);
+    void prepareNextServiceFromPresenter(serviceId, options);
     return;
   }
   if (action !== "open" && isPresenterOutputWindowOpen() && state.presenter.serviceId && state.presenter.serviceId !== serviceId) return;
@@ -31731,12 +31731,24 @@ function runPresenterAction(action, serviceId = state.selectedServiceId, options
   }
 }
 
-function prepareNextServiceFromPresenter(serviceId = state.selectedServiceId, options = {}) {
+let prepareNextServiceRequestSerial = 0;
+
+async function prepareNextServiceFromPresenter(serviceId = state.selectedServiceId, options = {}) {
   const current = state.services.find((service) => service.id === serviceId);
   if (!current) return;
   const nextServiceId = typeof options === "string" ? options : options.nextServiceId;
   const next = state.services.find((service) => service.id === nextServiceId) || nextPreparationService(current);
   if (!next) return;
+  const requestSerial = ++prepareNextServiceRequestSerial;
+  if (canUseClientData() && !state.loadedWorshipServiceIds.has(next.id)) {
+    try {
+      await hydratePresenterServiceData(next.id);
+    } catch (error) {
+      showToast(error.message || "다음 예배 내용을 불러오지 못했습니다.", "error");
+      return;
+    }
+    if (requestSerial !== prepareNextServiceRequestSerial) return;
+  }
   // Preparing a later service must never replace an active output. The selected
   // view moves forward while the return-to-live control keeps the live service reachable.
   const shouldSwitchPresenter = !isPresenterOutputWindowOpen() && state.presenter.serviceId === serviceId;
