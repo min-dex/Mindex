@@ -39,15 +39,22 @@ def main():
                       await new Promise(resolve => setTimeout(resolve, 0));
                       const dialog = document.querySelector('.worship-conflict-dialog');
                       check(dialog?.open, 'modal not visible');
+                      check(!dialog.querySelector('.worship-conflict-details').open, 'source comparison starts expanded');
+                      check(dialog.querySelector('[aria-label="저장 충돌 요약"]'), 'conflict summary missing');
                       await openWorshipConflictReview(service.id);
                       check(reads === 1, 'duplicate conflict review started another read');
                       items[0].raw_title = '저장 이후 새 입력';
                       release(); await opening;
                       check(items[0].raw_title === '저장 이후 새 입력', 'review overwrote active draft');
+                      check(!dialog.querySelector('[data-conflict-keep]').disabled && !dialog.querySelector('[data-conflict-reopen]').disabled, 'loaded conflict choices remain disabled');
                       dialog.querySelector('[data-conflict-export]').click();
                       check(exported[0].draft.items[0].raw_title === '입력 중', 'export not frozen at review start');
                       check(dialog.querySelector('[aria-label="내 입력"]').value.includes('<script>'), 'text not preserved');
                       check(!dialog.querySelector('script'), 'user text interpreted as HTML');
+                      check(dialog.querySelector('[data-conflict-server-summary]').textContent.includes('기준 3') && dialog.querySelector('[data-conflict-server-summary]').textContent.includes('저장본 4'), 'server revision summary missing');
+                      check(dialog.querySelector('[data-conflict-export]').textContent.includes('내 초안 다운로드'), 'draft download action unclear');
+                      check(dialog.querySelector('[data-conflict-keep]').textContent.includes('내 입력 계속 사용'), 'keep choice unclear');
+                      check(dialog.querySelector('[data-conflict-reopen]').textContent.includes('초안 보관 후 최신본으로 전환'), 'latest choice unclear');
                       const button = dialog.querySelector('[data-conflict-close]');
                       button.dispatchEvent(new KeyboardEvent('keydown',{key:'s',code:'KeyS',metaKey:true,bubbles:true,cancelable:true}));
                       button.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));
@@ -64,7 +71,7 @@ def main():
                       worshipAtomicClient = async () => ({inspectConflict:async () => {throw Error('offline')}});
                       await openWorshipConflictReview('review-fixture');
                       const dialog = document.querySelector('.worship-conflict-dialog');
-                      if (!dialog.textContent.includes('조회 실패')) throw Error('missing failure state');
+                      if (!dialog.textContent.includes('불러오지 못했습니다')) throw Error('missing failure state');
                       if (!dialog.querySelector('[aria-label="내 입력"]').value) throw Error('failure lost draft');
                       await new Promise(resolve => {dialog.addEventListener('close', resolve, {once:true}); dialog.close();});
                       let release;
@@ -124,7 +131,7 @@ def main():
                       publishPresenterState = () => {publishes++};
                       const realSet = safeStorageSet;
                       safeStorageSet = (...args) => failStorage ? false : realSet(...args);
-                      let db = {revision:'1',service:{id,title:'서버',service_date:'2026-09-19'},sections:[],elements:[]};
+                      let db = {revision:'1',service:{id,title:'서버',service_date:'2026-09-19',source_ref:{mindexServiceDocument:{sourceText:'서버 최신 원문'}}},sections:[],elements:[]};
                       const memory = new Map();
                       const atomic = createWorshipAtomicClient({journal:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)},rpc:async name => {
                         if(name !== 'get_worship_service_v1'){writes++;throw Error('unexpected write')}
@@ -151,11 +158,20 @@ def main():
                       check(atomic.baseline(id).revision === '1','changed draft adopted revision');
                       state.serviceItems[id][0].raw_title = '새 입력';
                       await openWorshipConflictReview(id);
-                      const dialog = document.querySelector('.worship-conflict-dialog');
-                      const button = dialog.querySelector('[data-conflict-reopen]');
+                      let dialog = document.querySelector('.worship-conflict-dialog');
+                      let button = dialog.querySelector('[data-conflict-reopen]');
+                      let keep = dialog.querySelector('[data-conflict-keep]');
                       check(dialog.querySelector('[aria-label="미반영 입력"]').value.includes('읽는 동안 추가 입력'),'pending input not shown in comparison');
                       check(dialog.scrollWidth <= dialog.clientWidth + 1,'pending input causes horizontal overflow');
-                      check(!button.disabled,'latest action unavailable');
+                      check(!button.disabled && !keep.disabled,'conflict choices unavailable');
+                      const keepClosed = new Promise(resolve=>dialog.addEventListener('close',resolve,{once:true}));
+                      keep.click(); await keepClosed;
+                      const serverArchive = latestWorshipRecoverySnapshotForService(id);
+                      check(state.services[0] === original && state.serviceItems[id][0].raw_title === '새 입력','keep choice changed current draft');
+                      check(serverArchive.reason === 'conflict-server-latest' && serverArchive.serviceDocument.sourceText === '서버 최신 원문','keep choice did not archive server snapshot');
+                      await openWorshipConflictReview(id);
+                      dialog = document.querySelector('.worship-conflict-dialog');
+                      button = dialog.querySelector('[data-conflict-reopen]');
                       const closed = new Promise(resolve=>dialog.addEventListener('close',resolve,{once:true}));
                       button.click(); await closed;
                       check(atomic.baseline(id).revision === '2','review not adopted');

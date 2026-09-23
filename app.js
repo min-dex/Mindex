@@ -6553,23 +6553,93 @@ async function reopenWorshipConflict(review, isOpen = () => true) {
   }});
 }
 
+function preserveWorshipConflictServerSnapshot(review = {}) {
+  const latest = review?.latest;
+  const id = String(review?.serviceId || latest?.service?.id || "").trim();
+  if (!latest?.service || !id) throw new Error("SERVER_SNAPSHOT_UNAVAILABLE");
+  const sourceText = latest.service?.source_ref?.mindexServiceDocument?.sourceText || "";
+  const archive = {
+    schema: 1,
+    reason: "conflict-server-latest",
+    capturedAt: new Date().toISOString(),
+    serviceId: id,
+    service: structuredClone(latest.service),
+    serviceDocument: { sourceText },
+    baseline: review.baseline || null,
+    sections: structuredClone(latest.sections || []),
+    elements: structuredClone(latest.elements || []),
+  };
+  const serialized = JSON.stringify(archive);
+  const archiveKey = `${worshipRecoveryLatestSnapshotKey(id)}:conflict-server:${crypto.randomUUID()}`;
+  if (!safeStorageSet("local", archiveKey, serialized)
+    || safeStorageGet("local", archiveKey, "") !== serialized
+    || !safeStorageSet("local", worshipRecoveryLatestSnapshotKey(id), serialized)) {
+    throw new Error("DRAFT_NOT_PRESERVED");
+  }
+  scheduleWorshipRecoverySnapshotHistoryWrite(serialized);
+  return true;
+}
+
 async function openWorshipConflictReview(serviceId) {
   if (worshipConflictReview || !serviceId || window.MINDEX_WORSHIP_ATOMIC_PROTOCOL !== 1) return;
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service) return;
   const draft = worshipConflictDraft(serviceId);
+  const serviceName = [...new Set(cleanList([
+    serviceDisplayTypeName(service),
+    serviceAlias(service),
+    service.title,
+  ]))].join(" · ") || "선택한 예배";
+  const serviceDate = service?.date || service?.service_date || "";
+  const conflictItems = [...new Set(draft.pendingInputs.map(input => {
+    const item = draft.items[Number(input.index)] || {};
+    return String(item.label || item.raw_title || input.itemId || "편집 항목").trim();
+  }).filter(Boolean))];
+  const itemSummary = conflictItems.length
+    ? `${conflictItems.slice(0, 2).join(", ")}${conflictItems.length > 2 ? ` 외 ${conflictItems.length - 2}개` : ""}`
+    : "예배 원문과 순서 구성";
+  const detectedAt = new Intl.DateTimeFormat("ko-KR", {
+    month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
+  }).format(new Date());
   const previousFocus = document.activeElement;
   const dialog = document.createElement("dialog");
   dialog.className = "worship-conflict-dialog";
   dialog.innerHTML = `
-    <header><h2>저장 충돌 · 원문 비교</h2><button class="icon-btn" type="button" data-conflict-close aria-label="닫기" title="닫기"><i data-lucide="x"></i></button></header>
-    <p role="status" data-conflict-status>최신 DB 확인 중</p>
-    <div class="worship-conflict-columns">
-      <label>내 입력<textarea readonly aria-label="내 입력"></textarea></label>
-      <label>최신 서버 원문<textarea readonly aria-label="최신 서버 원문"></textarea></label>
-    </div>
-    <label data-conflict-pending hidden>미반영 입력<textarea readonly aria-label="미반영 입력"></textarea></label>
-    <footer><button class="btn subtle" type="button" data-conflict-export>초안 내려받기</button><button class="btn subtle" type="button" data-conflict-close>계속 편집</button><button class="btn primary" type="button" data-conflict-reopen disabled>초안 보관 후 최신본 열기</button></footer>`;
+    <header class="worship-conflict-header">
+      <div>
+        <p class="worship-conflict-kicker">저장 충돌</p>
+        <h2>서버에 새 저장본이 있습니다</h2>
+      </div>
+      <button class="icon-btn" type="button" data-conflict-close aria-label="닫기" title="닫기"><i data-lucide="x"></i></button>
+    </header>
+    <section class="worship-conflict-summary" aria-label="저장 충돌 요약">
+      <dl class="worship-conflict-facts">
+        <div><dt>예배</dt><dd>${escapeHtml(serviceName)}${serviceDate ? `<small>${escapeHtml(formatServiceDate({date:serviceDate}))}</small>` : ""}</dd></div>
+        <div><dt>충돌 항목</dt><dd data-conflict-items>${escapeHtml(itemSummary)}</dd></div>
+        <div><dt>확인 시각</dt><dd>${escapeHtml(detectedAt)}</dd></div>
+      </dl>
+      <div class="worship-conflict-server-change" data-conflict-server-change>
+        <strong>서버 변경 요약</strong>
+        <span data-conflict-server-summary>최신 저장본을 확인하고 있습니다.</span>
+      </div>
+    </section>
+    <p class="worship-conflict-caution" role="status" data-conflict-status>내 입력은 이 기기에 그대로 유지됩니다. 자동 병합하거나 서버 내용을 덮어쓰지 않습니다.</p>
+    <details class="worship-conflict-details">
+      <summary>원문 전체 비교</summary>
+      <p>내 입력과 최신 서버 원문을 확인한 뒤 선택하세요.</p>
+      <div class="worship-conflict-columns">
+        <label>내 입력<textarea readonly aria-label="내 입력"></textarea></label>
+        <label>최신 서버 원문<textarea readonly aria-label="최신 서버 원문"></textarea></label>
+      </div>
+      <label data-conflict-pending hidden>저장 직전에 입력한 내용<textarea readonly aria-label="미반영 입력"></textarea></label>
+    </details>
+    <footer class="worship-conflict-actions">
+      <button class="btn subtle" type="button" data-conflict-export>내 초안 다운로드</button>
+      <div>
+        <button class="btn primary" type="button" data-conflict-keep disabled>내 입력 계속 사용</button>
+        <button class="btn primary" type="button" data-conflict-reopen disabled>초안 보관 후 최신본으로 전환</button>
+      </div>
+    </footer>`;
   dialog.setAttribute("aria-label", "저장 충돌 원문 비교");
   dialog.addEventListener("keydown", event => event.stopPropagation());
   dialog.querySelector('[aria-label="내 입력"]').value = draft.sourceText;
@@ -6580,8 +6650,31 @@ async function openWorshipConflictReview(serviceId) {
   }
   let review = {serviceId, draft};
   const reopen = dialog.querySelector('[data-conflict-reopen]');
+  const keep = dialog.querySelector('[data-conflict-keep]');
+  const setChoiceBusy = (busy) => {
+    keep.disabled = busy;
+    reopen.disabled = busy;
+  };
+  keep.addEventListener("click", () => {
+    setChoiceBusy(true);
+    try {
+      preserveWorshipConflictServerSnapshot(review);
+    } catch (error) {
+      dialog.querySelector("[data-conflict-status]").textContent = error.message === "DRAFT_NOT_PRESERVED"
+        ? "서버 최신본을 보관하지 못했습니다. 초안을 내려받은 뒤 다시 시도해 주세요."
+        : "서버 최신본을 보관할 수 없습니다. 연결을 확인한 뒤 다시 비교해 주세요.";
+      keep.disabled = false;
+      reopen.disabled = !review.latest || Boolean(review.pending);
+      return;
+    }
+    dialog.close();
+    showToast(toastLines(
+      "내 입력을 계속 사용합니다.",
+      "서버 최신본은 예배 원문의 로컬 복구본에 보관했습니다.",
+    ), "info");
+  });
   reopen.addEventListener('click', async () => {
-    reopen.disabled = true;
+    setChoiceBusy(true);
     try {
       await reopenWorshipConflict(review, () => dialog.isConnected && dialog.open);
     } catch (error) {
@@ -6592,7 +6685,11 @@ async function openWorshipConflictReview(serviceId) {
         PENDING_REQUEST_REQUIRES_RESOLUTION:'이전 저장 결과를 먼저 확인해야 합니다. 내 입력을 유지합니다.',
         SERVICE_NOT_FOUND:'서버에서 삭제된 예배입니다. 내 입력을 유지합니다.',
       };
-      if (dialog.isConnected) dialog.querySelector('[data-conflict-status]').textContent = messages[error.message] || '최신본 열기 실패 · 내 입력 유지됨';
+      if (dialog.isConnected) {
+        dialog.querySelector('[data-conflict-status]').textContent = messages[error.message] || '최신본 전환에 실패했습니다. 내 입력은 유지됩니다.';
+        keep.disabled = false;
+        reopen.disabled = !review.latest || Boolean(review.pending);
+      }
       return;
     }
     dialog.close();
@@ -6625,13 +6722,22 @@ async function openWorshipConflictReview(serviceId) {
     review = await atomic.inspectConflict(serviceId, draft);
     if (!dialog.isConnected || !dialog.open) return;
     const latest = review.latest;
+    keep.disabled = !latest || Boolean(review.pending);
     reopen.disabled = !latest || Boolean(review.pending);
-    dialog.querySelector('[aria-label="최신 서버 원문"]').value = latest?.service?.source_ref?.mindexServiceDocument?.sourceText || "";
+    const serverText = latest?.service?.source_ref?.mindexServiceDocument?.sourceText || "";
+    dialog.querySelector('[aria-label="최신 서버 원문"]').value = serverText;
+    const serverLines = serverText ? serverText.split(/\r?\n/).length : 0;
+    dialog.querySelector("[data-conflict-server-summary]").textContent = latest
+      ? `내가 편집한 기준 ${review.baseline?.revision ?? "없음"} 이후 서버 저장본 ${latest.revision}이 생겼습니다${serverLines ? ` · 서버 원문 ${serverLines}행` : ""}.`
+      : "서버에서 이 예배를 찾지 못했습니다.";
     dialog.querySelector("[data-conflict-status]").textContent = latest
-      ? `기준 ${review.baseline?.revision ?? "없음"} · 서버 ${latest.revision} · 내 입력 유지됨`
-      : "서버에서 삭제된 예배 · 내 입력 유지됨";
+      ? "내 입력은 유지됩니다. 최신본으로 전환하려면 먼저 초안을 안전하게 보관합니다."
+      : "내 입력은 유지됩니다. 서버에서 삭제된 예배이므로 최신본으로 전환할 수 없습니다.";
   } catch (error) {
-    if (dialog.isConnected && dialog.open) dialog.querySelector("[data-conflict-status]").textContent = "최신 DB 조회 실패 · 내 입력 유지됨";
+    if (dialog.isConnected && dialog.open) {
+      dialog.querySelector("[data-conflict-server-summary]").textContent = "서버 변경 내용을 불러오지 못했습니다.";
+      dialog.querySelector("[data-conflict-status]").textContent = "내 입력은 유지됩니다. 연결을 확인한 뒤 다시 비교해 주세요.";
+    }
     console.warn("Could not inspect worship save conflict.", error);
   }
 }
@@ -25496,6 +25602,7 @@ function renderServiceSourceRecovery(service) {
 function serviceSourceRecoveryLabel(snapshot = {}) {
   const reason = String(snapshot.reason || "").trim();
   if (reason === "before-conflict-reopen") return "충돌 전 내 입력";
+  if (reason === "conflict-server-latest") return "충돌 당시 서버 최신본";
   if (reason === "before-full-save") return "저장 직전";
   if (reason === "before-element-patch") return "항목 저장 직전";
   if (reason === "before-service-delete") return "삭제 직전";

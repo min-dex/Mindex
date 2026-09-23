@@ -5082,7 +5082,6 @@ body[data-theme="dark"] .service-week-card:hover {
   display: grid;
   gap: 6px;
   margin: 4px 0 8px 38px;
-  border-left: 3px solid var(--accent);
   border-radius: var(--r);
   background: color-mix(in srgb, var(--panel-2) 18%, transparent);
   padding: 10px 12px 12px;
@@ -7279,7 +7278,6 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   width: 100%;
   margin: 0 0 10px;
   padding: 9px 10px;
-  border-left: 3px solid var(--accent);
   border-radius: calc(var(--r) - 1px);
   background: color-mix(in srgb, var(--panel-2) 48%, transparent);
   min-width: 0;
@@ -8544,17 +8542,42 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   #returnLiveServiceBtn span { display: none; }
 }
 
-.worship-conflict-dialog { width: min(1000px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); overflow: auto; }
+.worship-conflict-dialog { width: min(760px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); overflow: auto; }
 .worship-conflict-dialog::backdrop { background: rgb(0 0 0 / 55%); }
 .worship-conflict-dialog [data-conflict-pending]:not([hidden]), .svc-source-recovery-pending label { display: grid; gap: 8px; min-width: 0; margin: 12px 0; overflow-wrap: anywhere; }
 .worship-conflict-dialog [data-conflict-pending] textarea, .svc-source-recovery-pending textarea { width: 100%; height: 120px; box-sizing: border-box; resize: vertical; font: inherit; }
 .worship-conflict-dialog header, .worship-conflict-dialog footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.worship-conflict-header { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.worship-conflict-kicker { margin: 0 0 4px; color: var(--accent); font-size: var(--ui-meta-size); font-weight: 800; }
 .worship-conflict-dialog h2 { margin: 0; font-size: 20px; }
-.worship-conflict-dialog [role="status"] { font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
-.worship-conflict-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
+.worship-conflict-summary { padding: 16px 0; display: grid; gap: 14px; }
+.worship-conflict-facts { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(132px, .7fr); gap: 14px; margin: 0; }
+.worship-conflict-facts div { min-width: 0; }
+.worship-conflict-facts dt { margin-bottom: 4px; color: var(--ink-3); font-size: var(--ui-meta-size); font-weight: 700; }
+.worship-conflict-facts dd { margin: 0; color: var(--ink); font-size: var(--ui-body-size); font-weight: 700; overflow-wrap: anywhere; }
+.worship-conflict-facts dd small { display: block; margin-top: 3px; color: var(--ink-2); font-size: var(--ui-meta-size); font-weight: 600; }
+.worship-conflict-server-change { display: flex; align-items: baseline; gap: 8px; color: var(--ink-2); font-size: var(--ui-meta-size); overflow-wrap: anywhere; }
+.worship-conflict-server-change strong { color: var(--ink); font-weight: 800; white-space: nowrap; }
+.worship-conflict-dialog [role="status"] { overflow-wrap: anywhere; }
+.worship-conflict-caution { margin: 0; padding: 11px 12px; border-left: 3px solid var(--accent); background: var(--panel-2); color: var(--ink-2); font-size: var(--ui-meta-size); line-height: 1.5; }
+.worship-conflict-details { margin-top: 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.worship-conflict-details summary { padding: 13px 0; color: var(--ink); font-size: var(--ui-body-size); font-weight: 750; cursor: pointer; }
+.worship-conflict-details > p { margin: 0 0 12px; color: var(--ink-2); font-size: var(--ui-meta-size); }
+.worship-conflict-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 0 16px; }
 .worship-conflict-columns label { display: grid; gap: 8px; min-width: 0; font-size: 14px; }
-.worship-conflict-columns textarea { width: 100%; height: 320px; box-sizing: border-box; padding: 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; resize: vertical; font: inherit; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .worship-conflict-columns { grid-template-columns: minmax(0, 1fr); } .worship-conflict-columns textarea { height: 160px; } .worship-conflict-dialog { padding: 16px; } .worship-conflict-dialog footer { flex-wrap: wrap; } }
+.worship-conflict-columns textarea { width: 100%; height: 260px; box-sizing: border-box; padding: 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; resize: vertical; font: inherit; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.worship-conflict-actions { margin-top: 16px; }
+.worship-conflict-actions > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 600px) {
+  .worship-conflict-dialog { padding: 16px; }
+  .worship-conflict-facts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .worship-conflict-server-change { display: grid; gap: 3px; }
+  .worship-conflict-columns { grid-template-columns: minmax(0, 1fr); }
+  .worship-conflict-columns textarea { height: 160px; }
+  .worship-conflict-actions { align-items: stretch; flex-wrap: wrap; }
+  .worship-conflict-actions > div { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); }
+  .worship-conflict-actions > div .btn { width: 100%; }
+}
 
 .svc-setlist-navigation { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 20px; }
 .svc-setlist-navigation button, .svc-setlist-navigation select { max-width: 100%; min-width: 0; min-height: 30px; border: 0; border-radius: var(--r); background: var(--panel); color: var(--ink-2); font: inherit; padding: 5px 10px; }
