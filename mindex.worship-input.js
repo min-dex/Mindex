@@ -118,7 +118,7 @@ function presenterPreparationPlaceholderTextLabel(item) {
   if (key === "기도" || key === "대표기도") return "대표기도";
   if (key === "성경봉독") return "성경봉독";
   if (key === "설교본문" || key === "본문" || key === "성경본문") return "설교 본문";
-  if (key === "설교" || key === "설교제목") return "말씀";
+  if (key === "설교" || key === "설교제목") return "설교";
   if (key === "봉헌기도") return "봉헌기도";
   if (key === "축도") return "축도";
   if (key === "인용구절") return "인용구절";
@@ -405,8 +405,8 @@ function normalizePresenterPreparationInputLabel(label = "") {
     설교본문: "설교 본문",
     말씀본문: "설교 본문",
     말씀: "설교 본문",
-    설교: "설교 제목",
-    설교제목: "설교 제목",
+    설교: "설교",
+    설교제목: "설교",
     인용구절: "인용 구절",
     봉헌: "봉헌찬송",
     봉헌찬양: "봉헌찬양",
@@ -451,7 +451,7 @@ function isPresenterPreparationSermonTitleItem(item = {}) {
 function presenterPreparationTargetLabel(key = "", service = null, content = "") {
   const compactKey = compactSearchValue(key);
   if (compactKey === "말씀" && !presenterPreparationContentLooksScriptureReference(content)) {
-    return "설교 제목";
+    return "설교";
   }
   return {
     대표기도: "대표기도",
@@ -462,8 +462,8 @@ function presenterPreparationTargetLabel(key = "", service = null, content = "")
     성경본문: "성경봉독",
     성경봉독본문: "성경봉독",
     본문: "성경봉독",
-    설교: "설교 제목",
-    설교제목: "설교 제목",
+    설교: "설교",
+    설교제목: "설교",
     설교본문: "성경봉독",
     말씀본문: "성경봉독",
     말씀: "성경봉독",
@@ -498,7 +498,7 @@ function findPresenterPreparationProjectedItem(service, label) {
         && ["봉헌찬송", "봉헌찬양"].includes(compactSearchValue(item.label || ""))
       ));
   }
-  if (labelKey === "설교제목") {
+  if (["설교", "설교제목"].includes(labelKey)) {
     return items.find((item) =>
       serviceItemSlotKey(item) === "sermon.title"
       || (

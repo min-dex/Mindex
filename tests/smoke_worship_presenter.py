@@ -5122,9 +5122,9 @@ def main() -> int:
                         "type": "title-assignee",
                         "elementType": "title_assignee",
                         "layout": "lower_bar_text",
-                        "title": "설교 제목",
+                        "title": "설교",
                         "assignee": "",
-                        "text": "설교 제목",
+                        "text": "설교",
                         "sectionKey": "sermon",
                         "missingContent": True,
                         "missingReason": "title_empty",
@@ -5132,7 +5132,7 @@ def main() -> int:
                         "contentState": "missing",
                         "warnings": ["입력 필요"],
                     }]
-                    and form_preset_state["sermonSubgroupHeaderLabels"] == ["설교 제목"]
+                    and form_preset_state["sermonSubgroupHeaderLabels"] == ["설교"]
                     and form_preset_state["sermonSubgroupControlLabels"] == []  # single-item subgroups reuse the header label
                     and form_preset_state["missingTitlePersonAssigneeSlides"] == [{
                         "type": "title-assignee",

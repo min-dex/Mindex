@@ -7333,7 +7333,7 @@ function sundayEditSyncEligible(item = {}, service = null) {
   const type = serviceMemoElementType(memo);
   if (key.startsWith("main-praise:")) return /^찬양[1-3]$/.test(label) && type === "praise";
   if (key === "offering-hymn") return label === "봉헌찬송" && type === "praise";
-  if (key === "sermon-title") return label === "설교제목" && ["title_person", "title_assignee"].includes(type);
+  if (key === "sermon-title") return ["설교", "설교제목"].includes(label) && ["title_person", "title_assignee"].includes(type);
   if (key === "scripture-reading") return label === "성경봉독" && type === "scripture_body";
   if (key === "sermon-scripture") return label === "설교본문" && type === "scripture_body";
   return key.startsWith("sermon-citation:") && /^인용구절\d*$/.test(label) && type === "scripture_body";
@@ -20941,7 +20941,7 @@ function publicWorshipSermonStep(options = {}) {
     flex: false,
     sectionKey: "sermon",
     elements: [
-      { label: "설교 제목", name: "설교 제목", elementType: "title_person", person: defaultPerson },
+      { label: "설교", name: "설교", elementType: "title_person", person: defaultPerson },
       { label: "인용 구절", name: "인용 구절", elementType: "scripture_body" },
     ],
   };
@@ -20958,7 +20958,7 @@ function publicWorshipThirdSermonStep(options = {}) {
     flex: false,
     sectionKey: "sermon",
     elements: [
-      { label: "설교 제목", name: "설교 제목", elementType: "title_person", person: defaultPerson },
+      { label: "설교", name: "설교", elementType: "title_person", person: defaultPerson },
       { label: "인용 구절", name: "인용 구절", elementType: "scripture_body" },
     ],
   };
@@ -22043,7 +22043,9 @@ function serviceItemTemplateProjectionKey(item = {}, options = {}) {
   const sectionKey = templateProjectionSectionKey(item);
   if (options.sectionOnly) return sectionKey;
   if (options.includeElementOrder) return `${sectionKey}:${Number(item._worshipElementOrder) || 0}`;
-  const labelKey = compactSearchValue(parseServiceItemMemo(item.memo).benedictionReplacement?.original.label || item.label || "");
+  const rawLabel = parseServiceItemMemo(item.memo).benedictionReplacement?.original.label || item.label || "";
+  const rawLabelKey = compactSearchValue(rawLabel);
+  const labelKey = sectionKey === "sermon" && rawLabelKey === "설교제목" ? "설교" : rawLabelKey;
   return `${sectionKey}:${labelKey}`;
 }
 
@@ -24233,7 +24235,12 @@ function serviceSidebarChildItemTitle(item, service = null) {
 
 function serviceElementDisplayLabel(value = "") {
   const label = String(value || "").trim();
-  return ["청소년부광고", "청년부광고"].includes(compactSearchValue(label)) ? "광고" : label;
+  const key = compactSearchValue(label);
+  if (["청소년부광고", "청년부광고"].includes(key)) return "광고";
+  // Older records keep their stored label for compatibility, while every UI
+  // surface presents the concise current element name.
+  if (key === "설교제목") return "설교";
+  return label;
 }
 
 function serviceItemOrdinalDisplayLabel(item, service = null, automaticOnly = false) {
@@ -28233,7 +28240,7 @@ function presenterPreparationPlaceholderLinesForItem(item, service, context) {
   }
   const { needsTitle, needsAssignee } = presenterServiceTextInputSpec(item, context.model, context.memo);
   if (sectionKey === "sermon" && ["설교", "설교제목"].includes(label)) {
-    if (needsTitle) return [`설교 제목: 은혜로 사는 삶${needsAssignee ? " / 홍길동 목사" : ""}`];
+    if (needsTitle) return [`설교: 은혜로 사는 삶${needsAssignee ? " / 홍길동 목사" : ""}`];
     return needsAssignee ? ["설교: 홍길동 목사"] : [];
   }
   const inputLabel = presenterPreparationPlaceholderTextLabel(item);
@@ -28256,7 +28263,7 @@ function presenterPreparationCitationItems(service, items, references) {
       String(item?._worshipSectionKey || "").trim() === "sermon"
       && ["설교", "설교제목"].includes(compactSearchValue(item?.label || "")))
     || (() => {
-      const projected = findPresenterPreparationProjectedItem(service, "설교 제목");
+      const projected = findPresenterPreparationProjectedItem(service, "설교");
       if (!projected) return null;
       return items[materializePresenterPreparationItem(service, items, projected)] || null;
     })();
@@ -28735,7 +28742,7 @@ function presenterServiceTextInputSpec(item, model, memo) {
   const manualPraise = servicePraiseInputMode(item, memo, model?.service) === "manual_praise";
   const genericTitle = presenterTitleAssigneeTitleIsGeneric(item.raw_title || "", item.label || "");
   const needsTitle = manualPraise
-    || (!monthlyCorporatePrayerGroup && /설교제목|특송|공동기도/.test(label))
+    || (!monthlyCorporatePrayerGroup && /설교(?:제목)?|특송|공동기도/.test(label))
     || serviceTitlePersonNeedsTitleInput(item, memo)
     || specialSong
     || isAnnouncementTextInputItem(item)
@@ -31110,7 +31117,7 @@ function renderPresenterBoardSubgroupInputControls(serviceId, subgroup = {}, opt
   if (!contexts.length) return "";
   // Every row of a medley is a song picker whose value already names the song, so a
   // per-row "찬양 n" label only repeats the header range. Other multi-item groups
-  // (e.g. 설교 제목/본문) hold different fields and keep their labels.
+  // (e.g. 설교/인용 구절) hold different fields and keep their labels.
   const medleyRows = contexts.length > 1 && contexts.every((context) => serviceItemConnectedPraise(context.item));
   const blocks = contexts.map((context) => {
     const controls = presenterServiceInputControls(context.item, context.index, context.service, { headerActions: true });
@@ -33623,7 +33630,7 @@ function presenterServiceItemHasOutputContent(item = {}, memo = emptyServiceItem
 }
 
 function presenterMissingContentSlide(item = {}, section = {}, index = 0, contentState = null, service = null) {
-  const label = String(item.label || section.elementLabel || section.sectionLabel || "항목").trim();
+  const label = serviceElementDisplayLabel(item.label || section.elementLabel || section.sectionLabel || "항목");
   // A missing item must identify the actionable element, never its grouping section.
   const title = label || "항목";
   const loading = contentState?.state === "loading";

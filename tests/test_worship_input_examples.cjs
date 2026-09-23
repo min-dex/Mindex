@@ -21,7 +21,7 @@ vm.runInContext(app.slice(start,app.indexOf('\n}\n',start)+2),context);
 const fixtures = [
   ['찬양 1','lyrics_db'], ['찬양 2','lyrics_db'], ['특송','manual_praise'],
   ['봉헌특송','lyrics_db'], ['성경봉독','scripture'], ['봉헌찬송','score_db'],
-  ['설교 제목','text',{needsTitle:true,needsAssignee:true},'sermon'],
+  ['설교','text',{needsTitle:true,needsAssignee:true},'sermon'],
   ['대표기도','text',{needsAssignee:true}], ['축도','text',{needsAssignee:true}],
 ];
 for (const [label,mode,model={},section=''] of fixtures) {

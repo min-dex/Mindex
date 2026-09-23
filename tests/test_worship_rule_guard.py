@@ -180,6 +180,20 @@ class WorshipRuleGuardTests(unittest.TestCase):
         self.assertIn("hasCanonicalScriptureReading", presentation_filter)
         self.assertIn("!isSermonScriptureBodyServiceItem(item)", presentation_filter)
 
+    def test_sermon_title_uses_concise_label_with_legacy_alias_support(self) -> None:
+        sermon = function_block(self.source, "publicWorshipSermonStep")
+        third_sermon = function_block(self.source, "publicWorshipThirdSermonStep")
+        input_source = WORSHIP_INPUT_JS.read_text(encoding="utf-8")
+        target = function_block(input_source, "presenterPreparationTargetLabel")
+        finder = function_block(input_source, "findPresenterPreparationProjectedItem")
+        self.assertIn('{ label: "설교", name: "설교"', sermon)
+        self.assertIn('{ label: "설교", name: "설교"', third_sermon)
+        self.assertRegex(target, r'설교:\s*"설교"')
+        self.assertRegex(target, r'설교제목:\s*"설교"')
+        self.assertIn('["설교", "설교제목"].includes(labelKey)', finder)
+        projection = function_block(self.source, "serviceItemTemplateProjectionKey")
+        self.assertIn('rawLabelKey === "설교제목" ? "설교" : rawLabelKey', projection)
+
     def test_bulk_sermon_body_aliases_write_to_scripture_reading(self) -> None:
         source = WORSHIP_INPUT_JS.read_text(encoding="utf-8")
         target = function_block(source, "presenterPreparationTargetLabel")
