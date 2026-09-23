@@ -25841,7 +25841,7 @@ function buildServiceSourceText(service, options = {}) {
     const sectionKey = String(item._worshipSectionId || item._worshipSectionKey || sectionTitle || "").trim();
     if (sectionTitle && sectionKey !== lastSectionKey) {
       if (lines.at(-1) !== "") lines.push("");
-      lines.push(`[${sectionTitle}]`);
+      lines.push(`[[${sectionTitle}]]`);
       lastSectionKey = sectionKey;
     }
     const itemLines = serviceSourceItemLines(item, service, memo);
@@ -25865,20 +25865,25 @@ function serviceSourceSectionTitle(item = {}) {
 function serviceSourceItemLines(item = {}, service = null, memo = parseServiceItemMemo(item.memo)) {
   const label = String(item.label || "").trim() || "항목";
   const value = serviceSourceItemValue(item, service, memo);
-  const lines = [value && compactSearchValue(value) !== compactSearchValue(label) ? `${label}: ${value}` : `${label}:`];
+  const lines = [`[${label}]`, `- 제목: ${value}`];
+  const elementType = serviceMemoElementType(memo);
+  if (elementType) lines.push(`- 유형: ${elementType}`);
+  const inputMode = serviceMemoInputMode(memo, item);
+  if (inputMode) lines.push(`- 입력: ${inputMode}`);
+  if (memo.formHint) lines.push(`- 송폼: ${memo.formHint}`);
   const assignee = serviceItemEditableAssigneeValue(item, service);
-  if (assignee && !lines[0].includes(assignee)) lines.push(`  담당: ${assignee}`);
+  if (assignee) lines.push(`- 담당: ${assignee}`);
   const lyrics = servicePraiseInputMode(item, memo, service) === "manual_praise"
     ? formatServiceManualPraiseLyricsInput(item.memo)
     : "";
   if (lyrics) {
-    lines.push("  가사:");
-    lines.push(...lyrics.split(/\r?\n/).map((line) => `    ${line}`));
+    lines.push("- 가사: |");
+    lines.push(...lyrics.split(/\r?\n/).map((line) => `  ${line}`));
   }
   const asset = normalizeServiceAsset(memo.asset);
   if (asset.name || asset.url) {
-    lines.push(`  파일: ${asset.name || asset.url}`);
-    if (asset.name && asset.url) lines.push(`  링크: ${asset.url}`);
+    lines.push(`- 파일: ${asset.name || asset.url}`);
+    if (asset.name && asset.url) lines.push(`- 링크: ${asset.url}`);
   }
   return lines;
 }
@@ -25892,6 +25897,7 @@ function serviceSourceItemValue(item = {}, service = null, memo = parseServiceIt
 }
 
 function parseServiceSourceText(value = "", options = {}) {
+  if (/^\s*\[\[[^\]]+\]\]/m.test(String(value || ""))) return parsePortableServiceSourceText(value, options);
   const records = [];
   const lines = String(value || "").replace(/\r\n?/g, "\n").split("\n");
   let lineNumber = 0;
@@ -25975,6 +25981,53 @@ function parseServiceSourceText(value = "", options = {}) {
   return records.filter((record) => record.label);
 }
 
+function parsePortableServiceSourceText(value = "", options = {}) {
+  const records = [];
+  let sectionTitle = "";
+  let current = null;
+  let blockKey = "";
+  const finish = () => {
+    if (!current) return;
+    if (blockKey) current[blockKey] = current._blockLines.join("\n").replace(/\s+$/g, "");
+    delete current._blockLines;
+    records.push(current);
+  };
+  String(value || "").replace(/\r\n?/g, "\n").split("\n").forEach((rawLine, index) => {
+    const line = rawLine.replace(/\s+$/g, "");
+    const section = line.match(/^\[\[([^\]]+)\]\]$/);
+    if (section) { finish(); current = null; blockKey = ""; sectionTitle = section[1].trim(); return; }
+    const element = line.match(/^\[([^\[\]]+)\]$/);
+    if (element) {
+      finish();
+      current = { portable: true, sectionTitle, label: element[1].trim(), value: "", assignee: "", hasAssignee: false, hasLyrics: false, lyricLines: [], startLine: index };
+      blockKey = "";
+      return;
+    }
+    if (!current) return;
+    const field = line.match(/^-\s*([^:]+):\s*(.*)$/);
+    if (field) {
+      if (blockKey) current[blockKey] = current._blockLines.join("\n").replace(/\s+$/g, "");
+      const key = compactSearchValue(field[1]);
+      const fieldValue = field[2].trim();
+      blockKey = fieldValue === "|" ? key : "";
+      current._blockLines = [];
+      if (key === "제목") current.value = fieldValue;
+      else if (key === "담당") { current.assignee = fieldValue; current.hasAssignee = true; }
+      else if (key === "유형") current.elementType = fieldValue;
+      else if (key === "입력") current.inputMode = fieldValue;
+      else if (key === "송폼") current.formHint = fieldValue;
+      else if (key === "파일") { current.assetName = fieldValue; current.hasAssetName = true; }
+      else if (key === "링크") { current.assetUrl = fieldValue; current.hasAssetUrl = true; }
+      else if (key === "가사") { current.hasLyrics = true; if (fieldValue !== "|") current.lyrics = fieldValue; else blockKey = "lyrics"; }
+      else if (key === "슬라이드") { current.hasSlides = true; if (fieldValue !== "|") current.slides = fieldValue; else blockKey = "slides"; }
+      return;
+    }
+    if (blockKey && /^\s{2}/.test(rawLine)) current._blockLines.push(rawLine.replace(/^\s{2}/, ""));
+  });
+  finish();
+  return records.filter((record) => record.label);
+}
+
 function serviceSourceTextareaForService(serviceId = state.selectedServiceId) {
   const id = String(serviceId || "").trim();
   if (!id) return null;
@@ -26042,6 +26095,7 @@ function applyServiceSourceText(serviceId = state.selectedServiceId, options = {
   const textarea = serviceSourceTextareaForService(id);
   if (!textarea) return false;
   const records = parseServiceSourceText(textarea.value);
+  ensurePortableSourceItems(service, records);
   const realItems = getServiceItems(id);
   const candidates = getServiceOutputItems(id)
     .map((item) => ({ item, index: realItems.findIndex((candidate) => candidate.id === item.id) }))
@@ -26093,6 +26147,46 @@ function serviceSourceFindTarget(record = {}, candidates = [], usedIndexes = new
       && compactSearchValue(item.label || "") === labelKey);
 }
 
+function ensurePortableSourceItems(service, records = []) {
+  const serviceId = String(service?.id || "").trim();
+  if (!serviceId) return 0;
+  const items = normalizeServiceItemsInCurrentOrder(getServiceItems(serviceId));
+  let added = 0;
+  for (const record of records.filter((candidate) => candidate.portable)) {
+    const exists = items.some((item) => compactSearchValue(item.label) === compactSearchValue(record.label)
+      && compactSearchValue(serviceSourceSectionTitle(item)) === compactSearchValue(record.sectionTitle));
+    if (exists) continue;
+    const elementType = normalizeServiceElementType(record.elementType || "");
+    const memo = {
+      elementType,
+      componentType: elementType,
+      inputMode: normalizeServiceInputMode(record.inputMode || ""),
+    };
+    if (record.formHint) memo.formHint = normalizeServiceFormHint(record.formHint);
+    const sectionKey = `source-${compactSearchValue(record.sectionTitle || "section").replace(/[^a-z0-9가-힣]+/g, "-") || "section"}`;
+    items.push(normalizeServiceItem({
+      service_id: serviceId,
+      sort_order: items.length + 1,
+      label: record.label,
+      raw_title: "",
+      memo: serializeServiceItemMemo(memo),
+      _worshipSectionKey: sectionKey,
+      _worshipSectionTitle: record.sectionTitle || "기타",
+      _worshipSectionTemplateModified: true,
+      _worshipSectionOrder: items.length + 1,
+      _worshipElementOrder: 1,
+      _worshipElementTemplateModified: true,
+    }, items.length));
+    added += 1;
+  }
+  if (added) {
+    state.serviceItems[serviceId] = normalizeServiceItemsInCurrentOrder(items);
+    state.dirty.service = true;
+    markServiceStructureDirty(serviceId);
+  }
+  return added;
+}
+
 function serviceSourceVirtualField(serviceId, index, key, value) {
   return {
     dataset: {
@@ -26110,6 +26204,9 @@ function applyServiceSourceRecord(serviceId, index, record = {}) {
   const memo = parseServiceItemMemo(item.memo);
   const asset = normalizeServiceAsset(memo.asset);
   const assetMode = serviceMemoInputMode(memo, item) === "asset" || asset.name || asset.url;
+  if (record.elementType) updateServiceItemField(serviceSourceVirtualField(serviceId, index, "element_type", record.elementType), { deferPresenterRefresh: true });
+  if (record.inputMode) updateServiceItemField(serviceSourceVirtualField(serviceId, index, "praise_input_mode", record.inputMode), { deferPresenterRefresh: true });
+  if (record.formHint) updateServiceItemField(serviceSourceVirtualField(serviceId, index, "form_hint", record.formHint), { deferPresenterRefresh: true });
   if (assetMode) {
     if (record.hasAssetName || record.value) {
       updateServiceItemField(serviceSourceVirtualField(serviceId, index, "asset_name", record.hasAssetName ? record.assetName : record.value), { deferPresenterRefresh: true });
@@ -26125,6 +26222,9 @@ function applyServiceSourceRecord(serviceId, index, record = {}) {
   }
   if (record.hasLyrics) {
     updateServiceItemField(serviceSourceVirtualField(serviceId, index, "manual_praise_lyrics", record.lyrics), { deferPresenterRefresh: true });
+  }
+  if (record.hasSlides) {
+    updateServiceItemField(serviceSourceVirtualField(serviceId, index, "slide_overrides", record.slides || ""), { deferPresenterRefresh: true });
   }
   return true;
 }
