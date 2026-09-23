@@ -25643,9 +25643,11 @@ function renderServicePresenterControls(service, slides = [], active = false, in
       data-board-key="${escapeAttr(boardKey)}"
       aria-label="${escapeAttr(uiText("presenter.controls"))}"
     >
-      ${serviceSupportsBulletin(service) ? `<div class="bulletin-entry"><button class="svc-output-action" type="button" data-service-bulletin-action="open" data-service-id="${escapeAttr(service.id)}"><i data-lucide="newspaper"></i><span>주보</span></button></div>` : ""}
-      ${renderServiceSourcePanel(service)}
-      ${renderPresenterThumbScaleControl()}
+      <div class="svc-presenter-toolbar">
+        ${renderServiceSourcePanel(service)}
+        ${renderPresenterThumbScaleControl()}
+        ${serviceSupportsBulletin(service) ? `<button class="svc-output-action" type="button" data-service-bulletin-action="open" data-service-id="${escapeAttr(service.id)}"><i data-lucide="newspaper"></i><span>주보</span></button>` : ""}
+      </div>
       <div class="svc-presenter-workspace">
         <div class="svc-presenter-board-column">
           ${renderPresenterSlideBoard(slides, presenterBoardActiveIndex(slides, active, index), service?.id)}
