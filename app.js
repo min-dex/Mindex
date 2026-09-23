@@ -2498,6 +2498,9 @@ function currentBrowserHistorySnapshot() {
 
 function syncBrowserHistory({ replace = false } = {}) {
   if (state.applyingBrowserHistory || !window.history?.pushState) return;
+  // Page tabs mirror the same navigation snapshot as the URL. Keep their label
+  // in this shared path so service transitions cannot update one without the other.
+  renderPageTabTitle();
   const snapshot = currentBrowserHistorySnapshot();
   const current = history.state?.mindex;
   const targetUrl = buildMindexLink(snapshot);
@@ -31776,7 +31779,6 @@ function prepareNextServiceFromPresenter(serviceId = state.selectedServiceId, op
   }
   renderServiceList();
   renderPresenterDetail();
-  renderPageTabTitle();
   renderPresenterControlState(next.id);
   scrollPresenterBoardToTop(next.id);
   scrollPresenterOutlineToActive(next.id);
