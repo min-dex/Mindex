@@ -20901,21 +20901,16 @@ function publicWorshipSermonStep(options = {}) {
   const defaultPerson = cleanServiceAssignee(
     options.defaultPerson || options.person || defaultServiceSermonLeader(options.typeId || options.type_id, options.service),
   );
-  const includeSermonBody = options.includeSermonBody !== undefined
-    ? Boolean(options.includeSermonBody)
-    : true;
-  const elements = [{ label: "설교 제목", name: "설교 제목", elementType: "title_person", person: defaultPerson }];
-  if (includeSermonBody) {
-    elements.push({ label: "설교 본문", name: "설교 본문", elementType: "scripture_body" });
-  }
-  elements.push({ label: "인용 구절", name: "인용 구절", elementType: "scripture_body" });
   return {
     label: "설교",
     name: "설교",
     required: true,
     flex: false,
     sectionKey: "sermon",
-    elements,
+    elements: [
+      { label: "설교 제목", name: "설교 제목", elementType: "title_person", person: defaultPerson },
+      { label: "인용 구절", name: "인용 구절", elementType: "scripture_body" },
+    ],
   };
 }
 
@@ -20931,7 +20926,6 @@ function publicWorshipThirdSermonStep(options = {}) {
     sectionKey: "sermon",
     elements: [
       { label: "설교 제목", name: "설교 제목", elementType: "title_person", person: defaultPerson },
-      { label: "설교 본문", name: "설교 본문", elementType: "scripture_body" },
       { label: "인용 구절", name: "인용 구절", elementType: "scripture_body" },
     ],
   };
@@ -23409,10 +23403,19 @@ function adaptServiceItemsForPresenterView(service, items = [], options = {}) {
     normalizeSendingConclusionProjectionItems(
     normalizeServiceItemsForTemplateHierarchy(service, items, options),
     ));
-  return annotated.map((item, index) => ({
+  return visibleServiceItemsForPresentation(annotated).map((item, index) => ({
     ...item,
     sort_order: index + 1,
   }));
+}
+
+function visibleServiceItemsForPresentation(items = []) {
+  const hasCanonicalScriptureReading = items.some(isSharedScriptureReadingServiceItem);
+  // Historical records can retain a sermon-body row. Once a service has its
+  // canonical reading, that duplicate must neither invite editing nor render.
+  return hasCanonicalScriptureReading
+    ? items.filter((item) => !isSermonScriptureBodyServiceItem(item))
+    : items;
 }
 
 function normalizeServicePresenterConclusionItems(service = null, items = []) {
@@ -26353,9 +26356,9 @@ function handleServicePrepEditorKeydown(event) {
 
 function servicePrepEditorItems(serviceId) {
   const service = state.services.find((svc) => svc.id === serviceId);
-  return normalizeServiceItemsForTemplateHierarchy(service, normalizeServiceItems(getServiceItems(serviceId)), {
+  return visibleServiceItemsForPresentation(normalizeServiceItemsForTemplateHierarchy(service, normalizeServiceItems(getServiceItems(serviceId)), {
     preserveSourceIndex: true,
-  })
+  }))
     .map((item, index) => ({
       ...item,
       _isDefault: false,
@@ -27292,13 +27295,13 @@ function serviceItemPreviewParts(serviceId) {
     .filter((item) => serviceItemDisplayText(item) && serviceItemDisplayText(item) !== "-")
   if (!items.length) return { text: "", title: "", reference: "" };
   const sermonTitleItem = items.find((item) => isPresenterPreparationSermonTitleItem(item));
-  const sermonBodyItem = items.find((item) => isSermonScriptureBodyServiceItem(item));
+  const scriptureReadingItem = items.find((item) => isSharedScriptureReadingServiceItem(item));
   const sermonTitle = sermonTitleItem
     && !presenterTitleAssigneeTitleIsGeneric(String(sermonTitleItem.raw_title || "").trim(), sermonTitleItem.label || "")
     ? serviceItemDisplayText(sermonTitleItem)
     : "";
-  const sermonReferences = sermonBodyItem
-    ? serviceItemScriptureReferences(sermonBodyItem, parseServiceItemMemo(sermonBodyItem.memo), service)
+  const sermonReferences = scriptureReadingItem
+    ? serviceItemScriptureReferences(scriptureReadingItem, parseServiceItemMemo(scriptureReadingItem.memo), service)
     : [];
   const sermonReference = formatServiceScriptureReferenceList(sermonReferences);
   if (sermonTitle) {
@@ -28214,14 +28217,7 @@ function isPresenterPreparationCitationItem(item = {}) {
 }
 
 function presenterPreparationCitationItems(service, items, references) {
-  const sermonBody = items.find((item) => serviceItemSlotKey(item) === "sermon.scripture" || compactSearchValue(item.label || "") === "설교본문")
-    || (() => {
-      const projected = findPresenterPreparationProjectedItem(service, "설교 본문");
-      if (!projected) return null;
-      return items[materializePresenterPreparationItem(service, items, projected)] || null;
-    })();
-  const anchor = sermonBody
-    || items.find((item) =>
+  const anchor = items.find((item) =>
       String(item?._worshipSectionKey || "").trim() === "sermon"
       && ["설교", "설교제목"].includes(compactSearchValue(item?.label || "")))
     || (() => {
@@ -28236,7 +28232,7 @@ function presenterPreparationCitationItems(service, items, references) {
   const insertionIndex = next.findIndex((item) => item.id === anchor.id) + 1;
   const baseOrder = Number(anchor._worshipElementOrder) || 2;
   const current = existing[0] || {};
-  const parsed = parseServiceItemMemo(current.memo || sermonBody?.memo || "");
+  const parsed = parseServiceItemMemo(current.memo || "");
   parsed.elementType = "scripture_body";
   parsed.componentType = "scripture_body";
   parsed.inputMode = "scripture";

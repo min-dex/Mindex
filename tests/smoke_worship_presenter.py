@@ -2178,7 +2178,7 @@ def main() -> int:
                         ],
                     }]
                     and fallback_state["corporatePrayerEditor"] == {
-                        "index": 15,
+                        "index": 14,
                         "fields": [
                             {"key": "corporate_prayer_topic", "topicIndex": "0", "label": "공동기도 1", "value": "'새 기도 제목'"},
                             {"key": "corporate_prayer_assignee", "topicIndex": "0", "label": "공동기도 1", "value": ""},

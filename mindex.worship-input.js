@@ -406,24 +406,6 @@ function normalizePresenterPreparationInputLabel(label = "") {
   return raw;
 }
 
-function presenterPreparationSermonBodyTargetLabel(service = null) {
-  const items = service?.id ? servicePrepEditorItems(service.id) : [];
-  const hasSermonBody = items.some((item) =>
-    serviceItemSlotKey(item) === "sermon.scripture"
-    || (
-      String(item?._worshipSectionKey || "").trim() === "sermon"
-      && ["설교본문", "본문", "성경본문"].includes(compactSearchValue(item?.label || ""))
-    ));
-  if (hasSermonBody) return "설교 본문";
-  const hasScriptureReading = items.some((item) =>
-    ["word.reading", "word.body"].includes(serviceItemSlotKey(item))
-    || (
-      String(item?._worshipSectionKey || "").trim() === "scripture_reading"
-      && compactSearchValue(item?.label || "") === "성경봉독"
-    ));
-  return hasScriptureReading ? "성경봉독" : "설교 본문";
-}
-
 function presenterPreparationContentLooksScriptureReference(value = "") {
   return Boolean(parseBibleReference(normalizeServiceItemReferenceSpacing(String(value || "").trim())));
 }
@@ -439,7 +421,6 @@ function isPresenterPreparationSermonTitleItem(item = {}) {
 }
 
 function presenterPreparationTargetLabel(key = "", service = null, content = "") {
-  const sermonBodyTarget = presenterPreparationSermonBodyTargetLabel(service);
   const compactKey = compactSearchValue(key);
   if (compactKey === "말씀" && !presenterPreparationContentLooksScriptureReference(content)) {
     return "설교 제목";
@@ -452,12 +433,12 @@ function presenterPreparationTargetLabel(key = "", service = null, content = "")
     성경봉독: "성경봉독",
     성경본문: "성경봉독",
     성경봉독본문: "성경봉독",
-    본문: sermonBodyTarget,
+    본문: "성경봉독",
     설교: "설교 제목",
     설교제목: "설교 제목",
-    설교본문: sermonBodyTarget,
-    말씀본문: sermonBodyTarget,
-    말씀: sermonBodyTarget,
+    설교본문: "성경봉독",
+    말씀본문: "성경봉독",
+    말씀: "성경봉독",
     인용구절: "인용 구절",
     봉헌: "봉헌찬송",
     결단: "결단찬양",

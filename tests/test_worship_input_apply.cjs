@@ -13,6 +13,7 @@ const context = {
   compactSearchValue: value => String(value || '').replace(/\s+/g, ''),
   presenterPreparationDraftForService: () => draft,
   renderServiceList: () => {}, showToast: text => toasts.push(text),
+  toastLines: (...parts) => parts.filter(Boolean).join('\n'),
   getServiceItems: () => [],
   parseServiceItemMemo: () => ({}),
   isSongServiceLabel: label => label.startsWith('찬양'), isSpecialSongServiceItem: () => false,

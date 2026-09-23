@@ -7,6 +7,7 @@ from pathlib import Path
 
 APP_JS = Path(__file__).resolve().parents[1] / "app.js"
 STYLES_CSS = Path(__file__).resolve().parents[1] / "styles.css"
+WORSHIP_INPUT_JS = Path(__file__).resolve().parents[1] / "mindex.worship-input.js"
 
 
 def read_app_js() -> str:
@@ -159,7 +160,7 @@ class WorshipRuleGuardTests(unittest.TestCase):
         self.assertIn("section.sort_order = index + 1", ordering)
         self.assertIn("element.sort_order = nextOrder", ordering)
 
-    def test_sermon_scripture_slot_wins_over_generic_sermon_label(self) -> None:
+    def test_sermon_scripture_legacy_slot_remains_distinct_from_title(self) -> None:
         derive = function_block(self.source, "deriveWorshipSlotKey")
         sermon_branch = derive.split('if (sectionKey === "sermon")', 1)[1].split('if (sectionKey === "response_song")', 1)[0]
         self.assertLess(
@@ -168,6 +169,23 @@ class WorshipRuleGuardTests(unittest.TestCase):
         )
         self.assertIn("const itemSlotKey = normalizeWorshipSlotKey(item._worshipSlotKey || item.slotKey || item.slot_key)", self.source)
         self.assertIn("if (itemSlotKey) sourceRef.slotKey = itemSlotKey", self.source)
+
+    def test_new_sermon_forms_use_scripture_reading_as_the_only_body_source(self) -> None:
+        sermon = function_block(self.source, "publicWorshipSermonStep")
+        third_sermon = function_block(self.source, "publicWorshipThirdSermonStep")
+        presentation_filter = function_block(self.source, "visibleServiceItemsForPresentation")
+        self.assertNotIn('label: "설교 본문"', sermon)
+        self.assertNotIn('label: "설교 본문"', third_sermon)
+        self.assertIn('label: "인용 구절"', sermon)
+        self.assertIn("hasCanonicalScriptureReading", presentation_filter)
+        self.assertIn("!isSermonScriptureBodyServiceItem(item)", presentation_filter)
+
+    def test_bulk_sermon_body_aliases_write_to_scripture_reading(self) -> None:
+        source = WORSHIP_INPUT_JS.read_text(encoding="utf-8")
+        target = function_block(source, "presenterPreparationTargetLabel")
+        for label in ("본문", "설교본문", "말씀본문", "말씀"):
+            self.assertRegex(target, rf"{label}:\s*\"성경봉독\"")
+        self.assertNotIn("presenterPreparationSermonBodyTargetLabel", source)
 
     def test_fixed_doxology_scope_does_not_absorb_sunday_main(self) -> None:
         fixed = function_block(self.source, "publicFixedDoxologySpec")
