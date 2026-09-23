@@ -36,7 +36,9 @@ def main():
                   panel.innerHTML=renderPresenterControlsTop(service,slides,true,0);
                   refreshIcons(panel);
                   const help=panel.querySelector('[data-presenter-help]');help.open=true;
-                  const field=panel.querySelector('[data-live-scripture-input]');
+                  const field=panel.querySelector('[data-live-scripture-input]');field.dataset.serviceId=service.id;
+                  check(normalizeReferenceInput('창 1. 1')==='창 1:1','dotted chapter/verse was not normalized');
+                  check(normalizeReferenceInput('창 1·1')==='창 1:1','middle-dot chapter/verse was not normalized');
                   const nextButton=panel.querySelector('[data-presenter-action="next"]');nextButton.focus();
                   pane.scrollTop=720;
                   const snapshot=capturePresenterViewportSnapshot(service.id);

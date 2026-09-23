@@ -19758,6 +19758,7 @@ function normalizeReferenceInput(value) {
   const normalizedValue = rawValue
     .normalize("NFKC")
     .trim()
+    .replace(/(\d{1,3})\s*[.·ㆍ]\s*(\d{1,3})/g, "$1:$2")
     .replace(/[：.]/g, ":")
     .replace(/[–—~]/g, "-")
     .replace(/^(\d{1,3})(?::\s*(\d{1,3})(?:\s*-\s*(\d{1,3}))?)?\s*(.+)$/u, (match, chapter, verse, verseEnd, book) => {
@@ -30018,7 +30019,9 @@ async function runLiveScriptureAction(action, serviceId = state.selectedServiceI
   }
   if (action !== "show") return;
 
-  const input = document.querySelector("[data-live-scripture-input]");
+  const input = serviceId
+    ? document.querySelector(`[data-live-scripture-input][data-service-id="${CSS.escape(String(serviceId))}"]`)
+    : document.querySelector("[data-live-scripture-input]");
   const query = String(input?.value || state.presenter.liveScripture.draft || "").trim();
   state.presenter.liveScripture.draft = query;
   if (!query) {
