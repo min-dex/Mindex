@@ -1320,14 +1320,6 @@ function bindStaticEvents() {
       return;
     }
 
-    const preparationForm = event.target.closest("[data-presenter-preparation-form]");
-    if (preparationForm) {
-      event.preventDefault();
-      event.stopPropagation();
-      fillPresenterPreparationForm(preparationForm);
-      return;
-    }
-
     const preparationApply = event.target.closest("[data-presenter-preparation-apply]");
     if (preparationApply) {
       event.preventDefault();
@@ -1629,7 +1621,6 @@ function bindDetailInteractionRoot(root, options = {}) {
   root.addEventListener("focusin", (event) => {
     if (event.target?.matches?.("[data-presenter-preparation-input]")) {
       syncPresenterPreparationGhost(event.target);
-      placeCaretInUntouchedPreparationForm(event.target);
     }
   });
   root.addEventListener("focusout", handleSetlistLeaderFocusOut);
@@ -9327,14 +9318,6 @@ function handlePresenterDetailClick(event) {
     event.preventDefault();
     event.stopPropagation();
     setPresenterThumbScale(thumbScale.dataset.presenterThumbScale);
-    return true;
-  }
-
-  const preparationForm = event.target.closest("[data-presenter-preparation-form]");
-  if (preparationForm) {
-    event.preventDefault();
-    event.stopPropagation();
-    fillPresenterPreparationForm(preparationForm);
     return true;
   }
 
@@ -24092,22 +24075,17 @@ function renderPresenterSidebarPreparationInput(service) {
   if (!service?.id) return "";
   const draft = presenterPreparationDisplayTextForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
-  const hasInput = Boolean(String(draft || "").trim());
   const hasValues = presenterPreparationHasEnteredValues(draft);
-  const examples = presenterPreparationPlaceholderForService(service);
+  const examples = presenterPreparationValueExamplesForService(service);
   const placeholder = examples || "입력할 항목이 없습니다";
   return `
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
         <span>예배 일괄 입력</span>
-        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="${hasInput ? "입력 내용을 비운 뒤 양식을 넣을 수 있습니다" : "입력 양식 넣기"}" ${hasInput ? "disabled" : ""}>
-            <i data-lucide="list-plus"></i>
-            <span>양식</span>
-          </button>
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
         <div class="svc-preparation-editor">
-        <textarea class="svc-presenter-preparation-text svc-presenter-preparation-text--sidebar" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="4" placeholder="${escapeAttr(placeholder)}" aria-label="예배 입력 붙여넣기">${escapeHtml(draft)}</textarea>
+        <textarea class="svc-presenter-preparation-text svc-presenter-preparation-text--sidebar" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="4" placeholder="${escapeAttr(placeholder)}" aria-label="예배 일괄 입력 값">${escapeHtml(draft)}</textarea>
         <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
         </div>
         <div class="svc-presenter-preparation-actions">
@@ -28233,45 +28211,47 @@ function presenterPreparationInputForService(serviceId) {
     || null;
 }
 
-// The bulk input starts filled with the label-only form of the service. A service whose draft was
-// never touched (or was cleared by a successful apply) shows the form again; a box the user emptied
-// on purpose stays empty.
 function presenterPreparationDisplayTextForService(service) {
   const drafts = state.presenterPreparationDrafts;
   if (Object.prototype.hasOwnProperty.call(drafts, service.id)) return drafts[service.id] || "";
-  return presenterPreparationFormFromExamples(presenterPreparationPlaceholderForService(service)) || "";
+  return "";
 }
 
-// Entering an untouched form by keyboard lands after the first label so Tab starts at the first
-// slot instead of skipping it. A mouse click places the caret itself after this focus event.
-function placeCaretInUntouchedPreparationForm(input) {
-  const serviceId = input?.dataset?.serviceId || "";
-  if (!serviceId || Object.prototype.hasOwnProperty.call(state.presenterPreparationDrafts, serviceId)) return;
-  const service = state.services.find((candidate) => candidate.id === serviceId);
-  if (!service || input.value !== presenterPreparationDisplayTextForService(service)) return;
-  if (input.selectionStart !== 0 || input.selectionEnd !== 0) return;
-  const firstLineEnd = input.value.indexOf("\n");
-  const firstLine = firstLineEnd >= 0 ? input.value.slice(0, firstLineEnd) : input.value;
-  if (/^[^:：\n]+[:：][ \t]*$/.test(firstLine)) input.setSelectionRange(firstLine.length, firstLine.length);
+function presenterPreparationValueExamplesForService(service) {
+  return presenterPreparationPlaceholderForService(service)
+    .split(/\r\n?|\n/)
+    .map((line) => line.replace(/^[^:：]+[:：]\s*/, "").trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
-function fillPresenterPreparationForm(button) {
-  const serviceId = button?.dataset?.serviceId || state.selectedServiceId;
-  const service = state.services.find((candidate) => candidate.id === serviceId);
-  const root = button.closest(".svc-presenter-input-rail, .service-sidebar-section--preparation-input, .svc-presenter-preparation-input");
-  const input = root?.querySelector?.("[data-presenter-preparation-input]") || presenterPreparationInputForService(serviceId);
-  if (!service || !input) return;
-  if (input.value.trim()) {
-    showToast("입력창이 비어 있을 때만 양식을 넣을 수 있습니다.", "info");
-    input.focus();
-    return;
-  }
-  const form = presenterPreparationFormFromExamples(presenterPreparationPlaceholderForService(service));
-  if (!form) {
-    showToast("입력할 항목이 없습니다.", "info");
-    return;
-  }
-  insertPresenterPreparationForm(input, form);
+function presenterPreparationValueSlotLabelsForService(service) {
+  return presenterPreparationFormFromExamples(presenterPreparationPlaceholderForService(service))
+    .split(/\r\n?|\n/)
+    .map((line) => line.replace(/[:：]\s*$/, "").trim())
+    .filter(Boolean);
+}
+
+function presenterPreparationDraftForApply(service, draft = "") {
+  const raw = String(draft || "");
+  const lines = raw.split(/\r\n?|\n/);
+  // Labeled schedules copied from older workflows retain their original grammar.
+  const usesLabels = lines.some((line) => {
+    const text = normalizePresenterPreparationLineText(line);
+    if (parseKnownPresenterPreparationLine(text)) return true;
+    return Boolean(parsePresenterPreparationLine(text)) && !/\d+\s*[:：]\s*\d+/.test(text);
+  });
+  if (usesLabels) return { value: raw, error: "" };
+  const slots = presenterPreparationValueSlotLabelsForService(service);
+  const overflow = lines.findIndex((line, index) => String(line || "").trim() && !slots[index]);
+  if (overflow >= 0) return { value: "", error: `${overflow + 1}번째 줄은 이 예배에 입력할 항목이 없습니다.` };
+  return {
+    value: lines.map((line, index) => {
+      const value = String(line || "").trim();
+      return value ? `${slots[index]}: ${value}` : "";
+    }).join("\n"),
+    error: "",
+  };
 }
 
 function presenterPreparationDraftNearApplyButton(button) {
@@ -28425,8 +28405,12 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
   renderServiceList();
 
   try {
-
-    const { entries, errors, skipped } = parsePresenterPreparationInput(draft, { skipEmptyLabels: true });
+    const prepared = presenterPreparationDraftForApply(service, draft);
+    if (prepared.error) {
+      showToast(prepared.error, "error");
+      return;
+    }
+    const { entries, errors, skipped } = parsePresenterPreparationInput(prepared.value, { skipEmptyLabels: true });
     if (errors.length) {
       showToast(errors[0], "error");
       return;

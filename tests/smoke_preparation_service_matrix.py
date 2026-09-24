@@ -31,6 +31,7 @@ def main():
                     state.serviceItems={[service.id]:groupWorshipElements(scaffold.sections,scaffold.elements)[service.id]||[]};
                     const items=servicePrepEditorItems(service.id);
                     const examples=presenterPreparationPlaceholderForService(service);
+                    const valueExamples=presenterPreparationValueExamplesForService(service);
                     const expected=items.filter(i=>presenterServiceInputHasEditableField(i,service)).flatMap(i=>
                       presenterPreparationPlaceholderLinesForItem(i,service,presenterServiceInputItem(i,service)));
                     const parsed=parsePresenterPreparationInput(expected.length?examples:'');
@@ -52,7 +53,8 @@ def main():
                     host.innerHTML=renderPresenterSidebarPreparationInput(service);
                     document.body.append(host);
                     const input=host.querySelector('textarea');
-                    check(input.placeholder===examples,`${type}: rendered placeholder differs`);
+                    check(input.placeholder===valueExamples,`${type}: rendered value placeholder differs`);
+                    check(!host.querySelector('[data-presenter-preparation-form]'),`${type}: form button remains`);
                     if(expected.length>10){
                       input.scrollTop=input.scrollHeight;
                       check(input.scrollTop>0,`${type}: cannot scroll through examples`);

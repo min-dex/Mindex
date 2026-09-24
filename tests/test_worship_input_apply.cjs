@@ -12,6 +12,7 @@ const context = {
     presenterPreparationApplyingServiceIds:new Set(), presenterPreparationDrafts:{fixture:'draft'}},
   compactSearchValue: value => String(value || '').replace(/\s+/g, ''),
   presenterPreparationDraftForService: () => draft,
+  presenterPreparationDraftForApply: (_service, value) => ({value, error:''}),
   renderServiceList: () => {}, showToast: text => toasts.push(text),
   toastLines: (...parts) => parts.filter(Boolean).join('\n'),
   getServiceItems: () => [],

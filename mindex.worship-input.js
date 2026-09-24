@@ -38,15 +38,9 @@ function presenterPreparationHasEnteredValues(value = "") {
 function syncPresenterPreparationControls(input) {
   const root = input?.closest?.(".svc-presenter-input-rail, .service-sidebar-section--preparation-input");
   if (!root) return;
-  const hasInput = Boolean(String(input.value || "").trim());
   const hasValues = presenterPreparationHasEnteredValues(input.value);
   const applying = Boolean(input.dataset?.serviceId && state.presenterPreparationApplyingServiceIds?.has(input.dataset.serviceId));
-  const form = root.querySelector("[data-presenter-preparation-form]");
   const apply = root.querySelector("[data-presenter-preparation-apply]");
-  if (form) {
-    form.disabled = hasInput;
-    form.title = hasInput ? "입력 내용을 비운 뒤 양식을 넣을 수 있습니다" : "입력 양식 넣기";
-  }
   if (apply) {
     apply.disabled = applying || !hasValues;
     apply.title = applying ? "반영 중" : hasValues ? "입력 반영" : "반영할 입력이 없습니다";
@@ -62,17 +56,6 @@ function presenterPreparationFormFromExamples(examples = "") {
     })
     .filter(Boolean)
     .join("\n");
-}
-
-// Insert the form only into an empty box; the caret lands after the first label.
-function insertPresenterPreparationForm(input, form) {
-  if (!input || !form || input.value.trim()) return false;
-  input.value = form;
-  const firstEnd = form.indexOf("\n") < 0 ? form.length : form.indexOf("\n");
-  input.focus();
-  input.setSelectionRange(firstEnd, firstEnd);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  return true;
 }
 
 // Tab / Shift+Tab hop between the empty value slots of the label lines. Returns the caret

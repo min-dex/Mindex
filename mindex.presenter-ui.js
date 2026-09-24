@@ -127,23 +127,18 @@ function renderPresenterRightSidebarToggle(options = {}) {
 
 function renderPresenterServiceInputRail(service) {
   const draft = presenterPreparationDisplayTextForService(service);
-  const examples = presenterPreparationPlaceholderForService(service);
+  const examples = presenterPreparationValueExamplesForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
-  const hasInput = Boolean(String(draft || "").trim());
   const hasValues = presenterPreparationHasEnteredValues(draft);
   const placeholder = examples || "입력할 항목이 없습니다";
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
         <span>예배 일괄 입력</span>
-        <button class="svc-presenter-preparation-form" type="button" data-presenter-preparation-form data-service-id="${escapeAttr(service.id)}" title="${hasInput ? "입력 내용을 비운 뒤 양식을 넣을 수 있습니다" : "입력 양식 넣기"}" ${hasInput ? "disabled" : ""}>
-            <i data-lucide="list-plus"></i>
-            <span>양식</span>
-          </button>
       </header>
       <section class="svc-presenter-preparation-input">
         <div class="svc-preparation-editor">
-        <textarea class="svc-presenter-preparation-text" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="5" placeholder="${escapeAttr(placeholder)}" aria-label="예배 준비 입력">${escapeHtml(draft)}</textarea>
+        <textarea class="svc-presenter-preparation-text" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="5" placeholder="${escapeAttr(placeholder)}" aria-label="예배 일괄 입력 값">${escapeHtml(draft)}</textarea>
         <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
         </div>
         <div class="svc-presenter-preparation-actions">

@@ -29,7 +29,7 @@ def main():
                 <div style="display:flex;flex-wrap:wrap;gap:8px">
                   <button class="svc-output-action" data-focus-probe>출력</button>
                   <span class="svc-board-scale"><button data-focus-probe>크기</button></span>
-                  <button class="svc-presenter-preparation-form" data-focus-probe>양식</button>
+                  <button class="svc-presenter-preparation-apply" data-focus-probe>반영</button>
                   <button class="svc-music-name" data-focus-probe>음악</button>
                   <button class="svc-reference-media-add" data-focus-probe>파일</button>
                 </div>
