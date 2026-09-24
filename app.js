@@ -24261,7 +24261,7 @@ function renderServiceReadyOutlineRow(service, slides = [], items = getServiceIt
   const active = presenterControllerIsLive(service.id) && readyIndex >= 0 && state.presenter.index === readyIndex;
   const interactionHint = presenterSlideInteractionHint(service.id, "준비");
   return `
-    <button class="service-outline-row service-outline-row--ready${active ? " active" : ""}" type="button"
+    <button class="service-outline-row service-outline-row--ready${active ? " active" : ""}" type="button"${active ? ' aria-current="step"' : ""}
       data-service-outline-slide="${escapeAttr(readyIndex >= 0 ? readyIndex : 0)}"
       data-service-outline-service="${escapeAttr(service.id)}"
       aria-label="${escapeAttr(interactionHint)}"
@@ -24318,7 +24318,7 @@ function renderServiceOutlineChildRow(service, item, index, selectedIndex, slide
   const missing = serviceOutlineMissingState(item, slides);
   const showMissingBadge = missing?.missingContent && !titleParts.title;
   return `
-    <button class="service-outline-row service-outline-row--child${selected ? " selected" : ""}${activeSlide ? " active" : ""}" type="button"
+    <button class="service-outline-row service-outline-row--child${selected ? " selected" : ""}${activeSlide ? " active" : ""}" type="button"${activeSlide ? ' aria-current="step"' : ""}
       data-service-outline-slide="${escapeAttr(slideIndex >= 0 ? slideIndex : "")}"
       data-service-outline-item-index="${index}"
       data-service-outline-item-id="${escapeAttr(item.id || "")}"

@@ -3469,6 +3469,24 @@ body[data-module="presenter"] .detail-pane {
 .service-outline-row--section.active {
   color: var(--sidebar-ink);
 }
+.service-outline-row--section.active .service-outline-main,
+.service-outline-row--ready.active .service-outline-main {
+  position: relative;
+  padding-left: 12px;
+}
+.service-outline-row--section.active .service-outline-main::before,
+.service-outline-row--ready.active .service-outline-main::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  transform: translateY(-50%);
+}
 .service-outline-row--ready .service-outline-main strong,
 .service-outline-row--section .service-outline-main strong {
   color: var(--sidebar-ink);
@@ -3534,6 +3552,7 @@ body[data-module="presenter"] .detail-pane {
 }
 .service-outline-row--child.active {
   background: color-mix(in srgb, var(--accent-soft) 54%, var(--sidebar-active-bg));
+  box-shadow: inset 2px 0 0 var(--accent);
   color: var(--sidebar-ink);
 }
 .service-outline-row--child:hover strong,
