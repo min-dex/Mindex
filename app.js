@@ -32137,6 +32137,7 @@ function stopPresenterOutput(serviceId = state.presenter.serviceId) {
   state.presenter.outputStoppingClientId = state.presenter.outputClientId;
   state.presenter.outputClientId = "";
   state.presenter.outputWarmup = null;
+  clearPresenterOutputVideoWarmup?.();
   stopPresenterOutputWindowMonitor();
   if (!closeDesktopOutput) {
     try {

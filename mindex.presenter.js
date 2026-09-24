@@ -3452,6 +3452,7 @@ function initPresenterOutputCore() {
     channel?.close?.();
     channel = null;
     presenterOutputImageWarmupState.onProgress = null;
+    clearPresenterOutputVideoWarmup();
   };
   const canCloseOutputWindow = () => {
     try {
@@ -3789,7 +3790,7 @@ function renderPresenterOutput(payload, options = {}) {
   const frameState = presenterOutputFrameStateForSlide(slide, payload);
   const activeImageSource = presenterSlideImageSource(slide);
   preloadPresenterOutputImages(payload, slide);
-  warmPresenterOutputNextVideo(payload, slide);
+  warmPresenterOutputNextVideo(payload);
   if (activeImageSource && !presenterOutputImageIsReady(activeImageSource)) {
     const token = ++presenterOutputRenderState.token;
     presenterOutputRenderState.pendingImageSource = activeImageSource;
@@ -4613,7 +4614,7 @@ function warmPresenterOutputImages(payload = {}, activeSlide = null) {
   schedulePresenterOutputImageWarmup();
 }
 
-function warmPresenterOutputNextVideo(payload = {}, activeSlide = null) {
+function warmPresenterOutputNextVideo(payload = {}) {
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (connection?.saveData || /(^|-)2g$/.test(String(connection?.effectiveType || ""))) return;
   const slides = Array.isArray(payload?.slides) ? payload.slides : [];
@@ -4690,6 +4691,14 @@ function warmPresenterOutputVideoMetadata(source = "") {
   }
   try { video.load(); } catch { /* Metadata warmup is optional. */ }
   return video;
+}
+
+function clearPresenterOutputVideoWarmup() {
+  presenterOutputVideoWarmupCache.forEach(({ video }) => {
+    video.removeAttribute("src");
+    try { video.load?.(); } catch { /* Best-effort media release. */ }
+  });
+  presenterOutputVideoWarmupCache.clear();
 }
 
 function presenterOutputWarmupSummary() {
