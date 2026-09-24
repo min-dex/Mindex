@@ -1373,17 +1373,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   line-height: 20px;
   list-style: none;
 }
-.manual-checklist-groups {
-  display: grid;
-  gap: 16px;
-}
-.manual-checklist-group {
-  display: grid;
-  gap: 7px;
-}
-.manual-checklist-group h5 {
-  color: var(--ink);
-}
 .manual-checklist li {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr);

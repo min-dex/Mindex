@@ -17301,15 +17301,7 @@ function renderManualSectionContent(section = {}) {
       </section>
     `).join("")}</div>`;
   }
-  const groups = Array.isArray(section.checklistGroups)
-    ? section.checklistGroups
-    : [{ items: section.items || [] }];
-  return `<div class="manual-checklist-groups">${groups.map((group) => `
-    <div class="manual-checklist-group">
-      ${group.title ? `<h5>${escapeHtml(group.title)}</h5>` : ""}
-      <ul class="manual-checklist">${(group.items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-    </div>
-  `).join("")}</div>`;
+  return `<ul class="manual-checklist">${(section.items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
 
 function renderManualsDetail() {
