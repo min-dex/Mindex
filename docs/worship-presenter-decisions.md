@@ -966,3 +966,9 @@ Small visual polish that does not alter behavior does not need an entry.
 - Explicit song IDs are authoritative. Unlinked title matching retains hymn-number validation; manual and excluded special-song titles remain unchanged.
 
 - Setlist hymn numbers use 75% of the song-title font size, on the same baseline and within the same song link.
+
+
+### 2026-09-25 Setlist audit fixes
+- Live setlist metadata includes explicit deletion markers and omits suppressed praise items before numbering. Presentation-only visibility remains independent. Cache version advances to avoid stale metadata.
+- Failed song-catalog requests may retry without force; loaded/in-flight requests remain deduplicated. Archive re-entry and refresh already force a reload.
+- Corrected canonical song e5759f4b-8de7-4b85-af7d-6713fa23c196 normalized title base to 예수로나의구주삼고e, preserving the thisismystory variant and all linked IDs.

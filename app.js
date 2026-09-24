@@ -3987,7 +3987,7 @@ async function loadWorshipSetlistSongCatalog({ force = false } = {}) {
   if (!state.client || !window.MindexSetlistLinks) return;
   const key = state.config.url;
   const current = state.worshipSetlistSongCatalog;
-  if (current.key === key && (current.status === "loading" || (!force && current.status !== "idle"))) return;
+  if (current.key === key && (current.status === "loading" || (!force && current.status === "loaded"))) return;
   const catalog = { key, status: "loading", index: current.key === key ? current.index : null };
   state.worshipSetlistSongCatalog = catalog;
   try {
@@ -4013,7 +4013,7 @@ async function fetchWorshipSetlistServices() {
   const results = await Promise.allSettled([
     fetchSupabasePaged("mindex_worship_services", "id,service_type_id,service_date,title,service_alias,status,praise_leader,worship_leader,no_gathering:source_ref->no_gathering", q => q.order("id")),
     fetchSupabasePaged("mindex_worship_sections", "id,service_id,sort_order,section_key,title", q => q.order("id")),
-    fetchSupabasePaged("mindex_worship_elements", "id,section_id,sort_order,element_type,title,song_id,label:source_ref->>label", q => q.eq("element_type", "praise").order("id")),
+    fetchSupabasePaged("mindex_worship_elements", "id,section_id,sort_order,element_type,title,song_id,label:source_ref->>label,template_suppressed:config->templateSuppressed,legacy_template_suppressed:config->template_suppressed", q => q.eq("element_type", "praise").order("id")),
   ]);
   const failure = results.find(result => result.status === "rejected");
   if (failure) throw failure.reason;
@@ -4026,7 +4026,7 @@ async function loadWorshipSetlistArchive({ force = false } = {}) {
   if (state.worshipSetlistArchive.loading) return;
   if (state.worshipSetlistArchive.loaded && !force) return;
   // Keep a complete snapshot only; authenticated projects never use this public cache.
-  const cacheKey = `${state.config.url}:live-services-v2:${WORSHIP_IMPORT_SOURCE_LIST_SELECT}:${WORSHIP_IMPORT_CANDIDATE_LIST_SELECT}`;
+  const cacheKey = `${state.config.url}:live-services-v3:${WORSHIP_IMPORT_SOURCE_LIST_SELECT}:${WORSHIP_IMPORT_CANDIDATE_LIST_SELECT}`;
   const useCache = !state.config.authRequired;
   if (!state.worshipSetlistArchive.loaded && useCache && !force) {
     const cached = readStaticSupabaseCache("worship_setlist_archive", cacheKey)?.[0];
@@ -25106,7 +25106,7 @@ async function persistWorshipSetlistLeader(id, value, expectedLeader) {
     if (source) source.leader = leader;
   }
   if (!state.config.authRequired && archive.loaded) {
-    const cacheKey = `${state.config.url}:live-services-v2:${WORSHIP_IMPORT_SOURCE_LIST_SELECT}:${WORSHIP_IMPORT_CANDIDATE_LIST_SELECT}`;
+    const cacheKey = `${state.config.url}:live-services-v3:${WORSHIP_IMPORT_SOURCE_LIST_SELECT}:${WORSHIP_IMPORT_CANDIDATE_LIST_SELECT}`;
     writeStaticSupabaseCache("worship_setlist_archive", cacheKey, [{ sources: archive.sources, candidates: archive.candidates, live: archive.live }]);
   }
   return leader;

@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const c={console,document:{addEventListener(){},querySelectorAll(){return []}},localStorage:{getItem(){return null}},setTimeout,clearTimeout,URL,URLSearchParams,crypto:require('node:crypto').webcrypto};c.window=c;c.location={search:'',hash:'',pathname:'/'};vm.createContext(c);
-for(const f of ['mindex.constants.js','mindex.presenter.js','mindex.worship-input.js','mindex.setlist-links.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of ['mindex.constants.js','mindex.worship-model.js','mindex.presenter.js','mindex.worship-input.js','mindex.setlist-links.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 c.assert=assert;
 (async()=>{try{await vm.runInContext(`(async()=>{
  state.config.authRequired=true;state.services=[{id:'live',praiseLeader:'old',leader:'old'}];

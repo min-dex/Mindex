@@ -77,6 +77,8 @@
     const sections = new Map((snapshot.sections || []).map(s => [s.id, s]));
     const grouped = new Map();
     for (const element of snapshot.elements || []) {
+      if (element.template_suppressed || element.legacy_template_suppressed
+        || element.config?.templateSuppressed || element.config?.template_suppressed) continue;
       const section = sections.get(element.section_id);
       if (!section || element.element_type !== "praise" || (!element.song_id && !String(element.title || "").trim())) continue;
       if (!grouped.has(section.service_id)) grouped.set(section.service_id, []);
