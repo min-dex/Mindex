@@ -47,7 +47,8 @@
       staff:date>="2025-12-07"?"위임목사 김남영 목사 · 담당 교역자 김석범 목사\n회장 김음파 청년 · 총무 이재희 청년\n서기 박지훈 청년 · 회계 서영윤 청년":""};
   }
   function monthlyView(calendar,date,settings={},services=[]) {
-    const eventsMonth=validMonth(settings.eventsMonth)?settings.eventsMonth:date.slice(0,7);
+    const selectedEventsMonth=validMonth(settings.eventsMonth);
+    const eventsMonth=selectedEventsMonth?settings.eventsMonth:date.slice(0,7);
     const rosterMonth=validMonth(settings.rosterMonth)?settings.rosterMonth:date.slice(0,7);
     const [y,m]=rosterMonth.split("-").map(Number),cursor=new Date(Date.UTC(y,m-1,1));
     cursor.setUTCDate(1+(7-cursor.getUTCDay())%7);
@@ -59,7 +60,10 @@
       prayers.push({date:day,person:exception?`(${exception.label||"집회 없음"})`:clean(row.young_adult_prayer)||"미정",next:day===nextDate});
       cursor.setUTCDate(cursor.getUTCDate()+7);
     } while(prayers[prayers.length-1].date.slice(0,7)===rosterMonth);
-    return {eventsMonth,rosterMonth,prayers,events:calendar.filter(r=>r.date.slice(0,7)===eventsMonth&&clean(r.church_schedule))
+    // A new bulletin should never revive an event that has already passed. Choosing
+    // a month explicitly remains a deliberate archive/monthly-view request.
+    const eventStart=selectedEventsMonth?`${eventsMonth}-01`:date;
+    return {eventsMonth,rosterMonth,prayers,events:calendar.filter(r=>r.date>=eventStart&&r.date.slice(0,7)===eventsMonth&&clean(r.church_schedule))
       .sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${shortDate(r.date)}  ${clean(r.church_schedule)}`).join("\n")};
   }
 
