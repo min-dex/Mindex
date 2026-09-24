@@ -3105,10 +3105,13 @@ body[data-module="presenter"] .detail-pane {
 }
 .service-sidebar-head {
   display: grid;
+  min-height: 32px;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: var(--s2);
-  padding: 0 var(--sidebar-section-label-x);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 56%, transparent);
+  margin-bottom: 3px;
+  padding: 0 var(--sidebar-section-label-x) 7px;
   color: var(--sidebar-label);
   font-size: var(--ui-label-size);
   font-weight: var(--ui-label-weight);
