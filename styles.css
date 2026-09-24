@@ -4948,6 +4948,7 @@ body[data-theme="dark"] .service-week-card:hover {
 .svc-edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; opacity: .58; }
 .svc-edit-item:hover .svc-edit-actions, .svc-edit-item:focus-within .svc-edit-actions { opacity: 1; }
 .svc-edit-actions .icon-btn { width: 32px; height: 32px; touch-action: manipulation; }
+.svc-edit-actions > .svc-edit-disabled-control { display: inline-flex; }
 .svc-song-create {
   display: inline-flex;
   height: 22px;

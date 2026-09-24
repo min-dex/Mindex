@@ -26355,6 +26355,18 @@ function renderPresenterSectionEditorLayer(service) {
     </div>`;
 }
 
+function renderServiceItemMoveButton(options = {}) {
+  const direction = options.direction === "down" ? "down" : "up";
+  const disabled = Boolean(options.disabled);
+  const label = String(options.label || `항목 ${direction === "up" ? "위로" : "아래로"} 이동`);
+  const unavailable = direction === "up"
+    ? "첫 항목은 위로 이동할 수 없습니다"
+    : "마지막 항목은 아래로 이동할 수 없습니다";
+  const stateLabel = disabled ? unavailable : label;
+  const button = `<button class="icon-btn" type="button" ${options.actionAttr}="${direction}" ${options.indexAttr}="${escapeAttr(options.index)}" ${disabled ? "disabled" : ""} aria-label="${escapeAttr(stateLabel)}" title="${escapeAttr(stateLabel)}"><i data-lucide="arrow-${direction}"></i></button>`;
+  return disabled ? `<span class="svc-edit-disabled-control" title="${escapeAttr(stateLabel)}">${button}</span>` : button;
+}
+
 function renderPresenterSectionEditorItem(item, localIndex, context) {
   const origIndex = item._origIndex;
   const displayLabel = serviceItemOrdinalDisplayLabel(item, context.service);
@@ -26373,8 +26385,8 @@ function renderPresenterSectionEditorItem(item, localIndex, context) {
       </select>
       <div class="svc-edit-actions">
         <button class="icon-btn" type="button" data-presenter-section-item-action="toggle-visibility" data-service-item-index="${origIndex}" aria-pressed="${hidden}" aria-label="${hidden ? "송출에 표시" : "송출에서 숨기기"}" title="${hidden ? "송출에 표시" : "송출에서 숨기기"}"><i data-lucide="${hidden ? "eye-off" : "eye"}"></i></button>
-        <button class="icon-btn" type="button" data-presenter-section-item-action="up" data-service-item-index="${origIndex}" ${first ? "disabled" : ""} aria-label="엘리멘트 위로 이동" title="위로 이동"><i data-lucide="arrow-up"></i></button>
-        <button class="icon-btn" type="button" data-presenter-section-item-action="down" data-service-item-index="${origIndex}" ${last ? "disabled" : ""} aria-label="엘리멘트 아래로 이동" title="아래로 이동"><i data-lucide="arrow-down"></i></button>
+        ${renderServiceItemMoveButton({ actionAttr: "data-presenter-section-item-action", indexAttr: "data-service-item-index", index: origIndex, direction: "up", disabled: first, label: "엘리멘트 위로 이동" })}
+        ${renderServiceItemMoveButton({ actionAttr: "data-presenter-section-item-action", indexAttr: "data-service-item-index", index: origIndex, direction: "down", disabled: last, label: "엘리멘트 아래로 이동" })}
         <button class="icon-btn danger" type="button" data-presenter-section-item-action="delete" data-service-item-index="${origIndex}" aria-label="엘리멘트 삭제" title="엘리멘트 삭제"><i data-lucide="trash-2"></i></button>
       </div>
     </article>`;
@@ -26708,8 +26720,8 @@ function renderServiceItemGroups(items) {
             ${renderServiceItemLinkControl(item, origIndex)}
           </div>
           <div class="svc-edit-actions">
-            <button class="icon-btn" type="button" data-service-item-action="up" data-service-item-index="${origIndex}" ${upDisabled ? "disabled" : ""} aria-label="항목 위로 이동" title="위로 이동"><i data-lucide="arrow-up"></i></button>
-            <button class="icon-btn" type="button" data-service-item-action="down" data-service-item-index="${origIndex}" ${downDisabled ? "disabled" : ""} aria-label="항목 아래로 이동" title="아래로 이동"><i data-lucide="arrow-down"></i></button>
+            ${renderServiceItemMoveButton({ actionAttr: "data-service-item-action", indexAttr: "data-service-item-index", index: origIndex, direction: "up", disabled: upDisabled, label: "항목 위로 이동" })}
+            ${renderServiceItemMoveButton({ actionAttr: "data-service-item-action", indexAttr: "data-service-item-index", index: origIndex, direction: "down", disabled: downDisabled, label: "항목 아래로 이동" })}
             <button class="icon-btn" type="button" data-service-item-action="duplicate" data-service-item-index="${origIndex}" aria-label="항목 복제" title="복제"><i data-lucide="copy"></i></button>
             <button class="icon-btn danger" type="button" data-service-item-action="delete" data-service-item-index="${origIndex}" aria-label="항목 삭제" title="삭제"><i data-lucide="trash-2"></i></button>
           </div>
@@ -26989,8 +27001,8 @@ function renderServiceEditorItem(item, mergedIndex, mergedItems, groupNum) {
       ${renderServiceEditorAssigneeControl(item, origIndex, attrs, model)}
       ${renderServiceEditorTitleControl(item, origIndex, attrs, model)}
       <div class="svc-edit-actions">
-        <button class="icon-btn" type="button" ${actionAttr}="up" ${indexAttr}="${origIndex}" ${upDisabled ? "disabled" : ""} aria-label="${isDefault ? "기본 항목 위로 이동" : "항목 위로 이동"}" title="위로 이동"><i data-lucide="arrow-up"></i></button>
-        <button class="icon-btn" type="button" ${actionAttr}="down" ${indexAttr}="${origIndex}" ${downDisabled ? "disabled" : ""} aria-label="${isDefault ? "기본 항목 아래로 이동" : "항목 아래로 이동"}" title="아래로 이동"><i data-lucide="arrow-down"></i></button>
+        ${renderServiceItemMoveButton({ actionAttr, indexAttr, index: origIndex, direction: "up", disabled: upDisabled, label: isDefault ? "기본 항목 위로 이동" : "항목 위로 이동" })}
+        ${renderServiceItemMoveButton({ actionAttr, indexAttr, index: origIndex, direction: "down", disabled: downDisabled, label: isDefault ? "기본 항목 아래로 이동" : "항목 아래로 이동" })}
         <button class="icon-btn" type="button" ${actionAttr}="duplicate" ${indexAttr}="${origIndex}" aria-label="${isDefault ? "기본 항목 복제" : "항목 복제"}" title="복제"><i data-lucide="copy"></i></button>
         <button class="icon-btn danger" type="button" ${actionAttr}="delete" ${indexAttr}="${origIndex}" aria-label="${isDefault ? "기본 항목 삭제" : "항목 삭제"}" title="삭제"><i data-lucide="trash-2"></i></button>
       </div>
