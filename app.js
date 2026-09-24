@@ -24016,7 +24016,9 @@ function renderPresenterSidebar(query, services, selectedService) {
     <div class="service-sidebar service-sidebar--presenter">
       ${searchSection}
       ${selectedService ? renderPresenterSidebarServiceSummary(selectedService) : ""}
-      ${selectedService ? renderServiceCurrentSidebar(selectedService) : renderUpcomingServiceShortcuts()}
+      ${selectedService && !serviceIsNoGathering(selectedService)
+        ? renderServiceCurrentSidebar(selectedService)
+        : !selectedService ? renderUpcomingServiceShortcuts() : ""}
     </div>`;
 }
 
@@ -24033,6 +24035,7 @@ function renderPresenterSidebarServiceSummary(service) {
     dateStr,
     variantName && compactSearchValue(variantName) !== compactSearchValue(serviceName) ? variantName : "",
   ]);
+  const noGathering = serviceIsNoGathering(service);
   const anyOutputOpen = isPresenterOutputWindowOpen();
   const launchAction = anyOutputOpen ? "stop" : "open";
   const launchLabel = uiText(anyOutputOpen ? "presenter.action.stop" : "presenter.action.present");
@@ -24043,10 +24046,10 @@ function renderPresenterSidebarServiceSummary(service) {
       <div class="service-sidebar-presenter-context">
         <strong class="service-sidebar-presenter-title">${escapeHtml(serviceName)}</strong>
         ${details.length ? `<span class="service-sidebar-presenter-date">${escapeHtml(details.join(" · "))}</span>` : ""}
-        <button class="svc-present-btn svc-presenter-launch svc-presenter-launch--sidebar svc-presenter-launch--${launchTone}${anyOutputOpen ? " is-stop" : ""}" type="button" data-presenter-action="${escapeAttr(launchAction)}" data-service-id="${escapeAttr(service.id)}" aria-label="${escapeAttr(launchLabel)}">
+        ${noGathering ? '<span class="service-sidebar-presenter-date">집회 없음</span>' : `<button class="svc-present-btn svc-presenter-launch svc-presenter-launch--sidebar svc-presenter-launch--${launchTone}${anyOutputOpen ? " is-stop" : ""}" type="button" data-presenter-action="${escapeAttr(launchAction)}" data-service-id="${escapeAttr(service.id)}" aria-label="${escapeAttr(launchLabel)}">
           <i data-lucide="${escapeAttr(launchIcon)}"></i>
           <span>${escapeHtml(launchLabel)}</span>
-        </button>
+        </button>`}
       </div>
     </section>`;
 }

@@ -42,6 +42,10 @@ try:
               renderPresenterDetail();
               check(refs.detailPane.textContent.includes('집회 없음') && !loads,'deep link loaded editor');
               check(!refs.detailPane.querySelector('input,textarea,[data-presenter-action]'),'deep link contains controls');
+              const presenterSidebar=renderPresenterSidebar('',[],absent);
+              check(presenterSidebar.includes('집회 없음'),'presenter sidebar missing no-gathering state');
+              check(!presenterSidebar.includes('data-presenter-action'),'presenter sidebar kept output action');
+              check(!presenterSidebar.includes('service-outline-list'),'presenter sidebar kept service outline');
               check(JSON.stringify(state.services)===before,'service records mutated');
               renderCurrentServiceModuleDetail=()=>{};renderServiceList=()=>{};
               syncBrowserHistory=()=>{};captureCleanFingerprint=()=>{};
