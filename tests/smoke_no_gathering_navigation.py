@@ -37,6 +37,15 @@ try:
               check(state.selectedServiceId==='regular' && !loads && !confirms && !prepares,'blocked path mutated state');
               check(!serviceNavigationBlocked(regular.id),'missing setlist blocked');
               check(getHomeNextService(new Date('2026-09-17T00:00:00')).id==='regular','home chose absent service');
+              let releaseLoad;
+              loadServiceItems=()=>new Promise((resolve)=>{releaseLoad=resolve});
+              switchModule=async(moduleName)=>{state.module=moduleName};
+              state.module='home';state.selectedServiceId=absent.id;
+              const opening=openHomeNextService('service',regular.id);
+              await Promise.resolve();
+              check(state.module==='service','home kept its dashboard while service data loaded');
+              releaseLoad();await opening;
+              loadServiceItems=async()=>{loads++};
               state.client={};state.serviceError='';state.selectedServiceId=absent.id;
               state.presenter.viewServiceId=absent.id;state.serviceItems={};
               renderPresenterDetail();

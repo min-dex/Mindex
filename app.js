@@ -34375,8 +34375,10 @@ async function openHomeNextService(action = "presenter", serviceId = "") {
   state.selectedServiceItemIndex = 0;
   const service = state.services.find((entry) => entry.id === id);
   if (service) state.selectedServiceTypeId = service.type_id;
-  await loadServiceItems(id);
+  // Move to the working surface first so a slow item load cannot leave the
+  // selected service in the sidebar while the home dashboard remains visible.
   await switchModule("service", { clearSearch: false });
+  await loadServiceItems(id);
 }
 
 async function openServiceInPresenter(id) {
@@ -34389,15 +34391,16 @@ async function openServiceInPresenter(id) {
   state.selectedServiceItemIndex = 0;
   const service = state.services.find((svc) => svc.id === id);
   if (service) state.selectedServiceTypeId = service.type_id;
-  await loadServiceItems(id);
   if (state.module === "presenter") {
     // switchModule() returns early for the current module, which would leave the old screen and URL.
     persistUiState();
     render();
     syncBrowserHistory();
+    await loadServiceItems(id);
     return;
   }
   await switchModule("presenter", { clearSearch: false });
+  await loadServiceItems(id);
 }
 
 // ─── end Service module ───────────────────────────────────────────────────────
