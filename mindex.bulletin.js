@@ -83,7 +83,7 @@
       const type=config.elementType||config.element_type||el.element_type;
       const slot=clean(ref.slotKey||config.slotKey);
       let label=clean(ref.label||section.title);
-      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || slot === "sermon.citation"
+      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation(?:\.|$)/.test(slot)
         || /^(ready|preparation|closing|fellowship)$/.test(section.section_key)
         || /^(준비|폐회|실시간 성구 송출)$/.test(label)))
         || ["blank","image","video","audio","file","ppt","pdf","live_scripture"].includes(type)
@@ -96,7 +96,7 @@
       if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&settings.compactOrder)continue;}
       if (reference && /scripture|성경|본문/.test([type,slot,label].join(" "))) {
         content=reference;
-        if (!source.scripture && slot !== "sermon.citation") source.scripture=reference;
+        if (!source.scripture&&!/^sermon\.citation(?:\.|$)/.test(slot)) source.scripture=reference;
         if(settings.compactOrder)label="성경봉독";
       }
       if (slot==="sermon.title" || label==="설교") {source.sermon=content;label="설교";}
@@ -203,9 +203,11 @@
   }
   function writeText(parent,text,box,issues,id) {
     if (!text) return 0;
+    if(box.w<=0||box.h<=0){issues.add(id);return 0;}
     const size=box.size||12.5,weight=box.weight||500;
     const leading=snap(size*1.4,TOKENS.baseline);
     const lines=wrap(text,box.w,size,weight);
+    if(lines.some(line=>wrap.context.measureText(line).width/MM>box.w+.01))issues.add(id);
     const first=Math.ceil((box.y*MM+size)/TOKENS.baseline)*TOKENS.baseline/MM;
     const end=first+(lines.length-1)*leading/MM;
     if (end+size*.25/MM>box.y+box.h+.01) issues.add(id);
@@ -244,32 +246,32 @@
       for(const x of [5,153.5])root.append(svg("rect",{x,y:10,width:138.5,height:190,fill:"white","fill-opacity":1}));
       if(page===0)root.append(svg("image",{href:new URL(logoPath,document.baseURI).href,x:170,y:67.5,width:105,height:72.5}));
       for(const f of doc.frames.filter(f=>f.page===page&&(!f.hidden||mode==="layout"))) {
-        const group=svg("g",{"data-frame-id":f.id});
+        const group=svg("g",{"data-frame-id":f.id}),frameIssues=f.hidden?new Set():issues;
         if(f.type==="rules") {
           for(let y=0;y<=f.h;y+=7.5)group.append(svg("line",{x1:f.x,y1:f.y+y,x2:f.x+f.w,y2:f.y+y,stroke:"#555","stroke-width":.15}));
         } else if(f.type==="list") {
-          writeText(group,boundText(doc,f),f,issues,f.id);
+          writeText(group,boundText(doc,f),f,frameIssues,f.id);
         } else if(f.type==="staff") {
           const value=boundText(doc,f),pairs=value.split(/\n|\s*·\s*/).filter(Boolean);
           const parsed=pairs.map(t=>t.match(/^(위임목사|담당 교역자|회장|총무|서기|회계)\s+(.+)$/));
           if(parsed.every(Boolean)&&parsed.length===6)parsed.forEach((row,i)=>{
             const col=(f.w-7.5)/2,x=f.x+(i%2)*(col+7.5),y=f.y+Math.floor(i/2)*7.5;
-            writeText(group,row[1],{...f,x,y,w:col,h:7.5},issues,f.id);
-            writeText(group,row[2],{...f,x,y,w:col,h:7.5,align:"right"},issues,f.id);
-          });else writeText(group,value,f,issues,f.id);
+            writeText(group,row[1],{...f,x,y,w:col,h:7.5},frameIssues,f.id);
+            writeText(group,row[2],{...f,x,y,w:col,h:7.5,align:"right"},frameIssues,f.id);
+          });else writeText(group,value,f,frameIssues,f.id);
         } else if(f.type==="events") {
           let y=f.y;
           for(const line of String(boundText(doc,f)).split("\n").filter(Boolean)) {
             const parts=line.match(/^(\d+월 \d+일)\s+(.+)$/);
-            if(!parts){y+=writeText(group,line,{...f,y,h:f.y+f.h-y},issues,f.id)+2.5;continue;}
+            if(!parts){y+=writeText(group,line,{...f,y,h:f.y+f.h-y},frameIssues,f.id)+2.5;continue;}
             const body=parts[2],h=Math.max(7.5,wrap(body,f.w-35,f.size).length*snap(f.size*1.4)/MM+2.5);
-            writeText(group,parts[1],{...f,y,w:30,h},issues,f.id);
-            writeText(group,body,{...f,x:f.x+35,y,w:f.w-35,h,align:"right"},issues,f.id);y+=h;
-            if(y>f.y+f.h+.01)issues.add(f.id);
+            writeText(group,parts[1],{...f,y,w:30,h},frameIssues,f.id);
+            writeText(group,body,{...f,x:f.x+35,y,w:f.w-35,h,align:"right"},frameIssues,f.id);y+=h;
+            if(y>f.y+f.h+.01)frameIssues.add(f.id);
           }
         } else if(f.type==="order") {
           const list=doc.source?.order||[],inner=f.w-60;
-          if(inner<10){issues.add(f.id);root.append(group);continue;}
+          if(inner<10){frameIssues.add(f.id);root.append(group);continue;}
           const leading=snap(f.size*1.4)/MM;
           const counts=list.map(row=>Math.max(wrap(row.label,30,f.size).length,wrap(row.content,inner,f.size,700).length,wrap(row.person,30,f.size).length));
           const used=counts.reduce((sum,n)=>sum+n*leading,0),gap=list.length>1?Math.max(2.5,(f.h-used)/(list.length-1)):0;
@@ -279,24 +281,25 @@
             const centered=y+Math.max(0,(counts[i]-1)*leading/2);
             const printLabel=row.label==="봉헌찬양"?"봉헌":row.label;
             const letters=printLabel.replace(/\s/g,"");
-            if(letters.length>1&&letters.length<=5) [...letters].forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+j*27.5/(letters.length-1),w:6},issues,f.id));
-            else writeText(group,row.label,{...base,y:centered,w:30},issues,f.id);
-            writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},issues,f.id);
-            writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},issues,f.id);
+            if(letters.length>1&&letters.length<=5) [...letters].forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+j*27.5/(letters.length-1),w:6},frameIssues,f.id));
+            else writeText(group,row.label,{...base,y:centered,w:30},frameIssues,f.id);
+            writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},frameIssues,f.id);
+            writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},frameIssues,f.id);
             y+=height+(i<list.length-1?gap:0);
           });
-          if(y>f.y+f.h+.01)issues.add(f.id);
+          if(y>f.y+f.h+.01)frameIssues.add(f.id);
         } else if(f.type==="prayers") {
           const list=doc.source?.prayers||[],left=Math.floor(list.length/2),col=(f.w-5)/2;
+          if(col<=38.5){frameIssues.add(f.id);root.append(group);continue;}
           list.forEach((r,i)=>{
             const x=f.x+(i>=left?col+5:0),y=f.y+(i>=left?i-left:i)*10;
-            writeText(group,shortDate(r.date),{...f,x,y,w:27.5,h:10},issues,f.id);
+            writeText(group,shortDate(r.date),{...f,x,y,w:27.5,h:10},frameIssues,f.id);
             if(r.next){group.append(svg("rect",{x:x+29,y:y+2,width:9,height:4,rx:2,fill:"white",stroke:"#555","stroke-width":.2}));
-              writeText(group,"NEXT",{...f,x:x+29,y:y+1,w:9,h:7.5,size:7.5,align:"center"},issues,f.id);}
-            writeText(group,r.person,{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},issues,f.id);
-            if(y+10>f.y+f.h+.01)issues.add(f.id);
+              writeText(group,"NEXT",{...f,x:x+29,y:y+1,w:9,h:7.5,size:7.5,align:"center"},frameIssues,f.id);}
+            writeText(group,r.person,{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},frameIssues,f.id);
+            if(y+10>f.y+f.h+.01)frameIssues.add(f.id);
           });
-        } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&(background||theme==="ink")?"#fff":"#231f20"},issues,f.id);
+        } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&(background||theme==="ink")?"#fff":"#231f20"},frameIssues,f.id);
         if(mode==="layout") {
           group.append(svg("rect",{class:`bulletin-frame-hit${selected===f.id?" is-selected":""}`,x:f.x,y:f.y,width:f.w,height:f.h,
             fill:"transparent",stroke:selected===f.id?"#477953":"#47795380","stroke-width":.25,"data-frame-hit":f.id}));
@@ -309,31 +312,36 @@
     return {pages,issues};
   }
 
-  function restore(scope,id) {
-    const key=`mindex.bulletin.v1:${scope}:${id}`;
-    let saved=null;
-    try {saved=JSON.parse(localStorage.getItem(key)||"null");}catch{ /* corrupt/blocked storage remains recoverable */ }
-    const frames=defaultFrames();
-    if([1,2].includes(saved?.version))for(const f of frames){
-      const patch=saved.frames?.find(p=>p.id===f.id);
+  const isRecord=value=>!!value&&typeof value==="object"&&!Array.isArray(value);
+  function normalizeSnapshot(value={}) {
+    const values={},settings={},frames=defaultFrames();
+    if(!isRecord(value))return {fields:values,settings,frames};
+    for(const key of Object.keys(fields))if(typeof value.fields?.[key]==="string")values[key]=value.fields[key];
+    for(const key of ["eventsMonth","rosterMonth"])if(validMonth(value.settings?.[key]))settings[key]=value.settings[key];
+    if(typeof value.settings?.theme==="string")settings.theme=value.settings.theme;
+    settings.compactOrder=value.settings?.compactOrder===true;
+    for(const f of frames){
+      const patch=Array.isArray(value.frames)?value.frames.find(p=>isRecord(p)&&p.id===f.id):null;
       if(!patch)continue;
-      for(const name of ["x","y","w","h","size"]){
-        const n=Number(patch[name]);
-        if(Number.isFinite(n)&&n>=0&&n<=297&&(name!=="size"||TOKENS.fontSizes.includes(n)))f[name]=n;
+      for(const key of ["x","y","w","h","size"]){
+        const n=patch[key];
+        if(typeof n==="number"&&Number.isFinite(n)&&n>=0&&n<=297&&(key!=="size"||TOKENS.fontSizes.includes(n)))f[key]=n;
       }
-      f.hidden=patch.hidden===true;
-      if(["left","center","right"].includes(patch.align))f.align=patch.align;
       f.w=Math.max(10,Math.min(297,f.w));f.h=Math.max(5,Math.min(210,f.h));
       f.x=Math.min(f.x,297-f.w);f.y=Math.min(f.y,210-f.h);
+      f.hidden=patch.hidden===true;if(["left","center","right"].includes(patch.align))f.align=patch.align;
     }
-    const values={};
-    if([1,2].includes(saved?.version))for(const key of Object.keys(fields))if(typeof saved.fields?.[key]==="string")values[key]=saved.fields[key];
-    const settings={};
-    for(const k of ["eventsMonth","rosterMonth"])if(validMonth(saved?.settings?.[k]))settings[k]=saved.settings[k];
-    if(typeof saved?.settings?.theme==="string")settings.theme=saved.settings.theme;
-    settings.compactOrder=saved?.settings?.compactOrder===true;
-    if(saved?.version===1&&!Object.hasOwn(settings,"theme"))settings.theme="26-A5.png";
-    return {key,fields:values,settings,frames,hasLocal:!!saved,source:null,history:[],future:[],revision:0,dirty:false,saving:false};
+    return {fields:values,settings,frames};
+  }
+  function readLocal(key) {
+    try{return JSON.parse(localStorage.getItem(key)||"null");}catch{return null;}
+  }
+  function restore(scope,id) {
+    const key=`mindex.bulletin.v1:${scope}:${id}`,saved=readLocal(key);
+    const hasLocal=isRecord(saved)&&[1,2,3].includes(saved.version);
+    const value=normalizeSnapshot(hasLocal?saved:{});
+    if(saved?.version===1&&!Object.hasOwn(value.settings,"theme"))value.settings.theme="26-A5.png";
+    return {key,...value,hasLocal,savedAt:Number(saved?.savedAt)||0,source:null,history:[],future:[],revision:0,dirty:false,saving:false,backupUnavailable:false};
   }
   function snapshot(doc){return {fields:clone(doc.fields),settings:clone(doc.settings||{}),frames:clone(doc.frames)};}
 
@@ -343,25 +351,15 @@
       layout:{background:backgroundKey(theme),frames:clone(doc.frames)}};
   }
   function applyStored(doc,row) {
-    if(!row||!Number.isInteger(row.revision)||row.revision<1||!row.content||!row.layout)throw new Error("주보 저장 데이터 형식을 확인해 주세요.");
-    const values={};
-    for(const key of Object.keys(fields))if(typeof row.content.fields?.[key]==="string")values[key]=row.content.fields[key];
-    const settings={compactOrder:row.content.compactOrder===true};
-    for(const key of ["eventsMonth","rosterMonth"])if(validMonth(row.content[key]))settings[key]=row.content[key];
-    if(typeof row.layout.background==="string")settings.theme=row.layout.background;
-    const frames=defaultFrames();
-    for(const f of frames){
-      const patch=row.layout.frames?.find?.(p=>p.id===f.id);if(!patch)continue;
-      for(const key of ["x","y","w","h","size"]){const n=Number(patch[key]);if(Number.isFinite(n)&&n>=0&&n<=297&&(key!=="size"||TOKENS.fontSizes.includes(n)))f[key]=n;}
-      f.w=Math.max(10,Math.min(297,f.w));f.h=Math.max(5,Math.min(210,f.h));f.x=Math.min(f.x,297-f.w);f.y=Math.min(f.y,210-f.h);
-      f.hidden=patch.hidden===true;if(["left","center","right"].includes(patch.align))f.align=patch.align;
-    }
-    Object.assign(doc,{fields:values,settings,frames,revision:row.revision,dirty:false,history:[],future:[]});
+    if(!row||!Number.isInteger(row.revision)||row.revision<1||!isRecord(row.content)||!isRecord(row.layout)
+      ||(row.layout.frames!==undefined&&!Array.isArray(row.layout.frames)))throw new Error("주보 저장 데이터 형식을 확인해 주세요.");
+    const value=normalizeSnapshot({fields:row.content.fields,settings:{...row.content,theme:row.layout.background},frames:row.layout.frames});
+    Object.assign(doc,value,{revision:row.revision,dirty:false,history:[],future:[]});
   }
 
   function mount(host,options) {
     const controller=new AbortController(),signal=controller.signal;
-    let doc,mode="content",selected="news",loading=false,assetLoaded=false,error="",serial=0,saveError="",issues=new Set();
+    let doc,mode="content",selected="news",loading=false,assetLoaded=false,error="",serial=0,saveError="",printError="",printing=false,issues=new Set();
     const documents=new Map();
     const on=(target,event,fn)=>target.addEventListener(event,fn,{signal});
     host.innerHTML=`<section class="bulletin-workbench" aria-label="주보 편집">
@@ -384,13 +382,22 @@
       return profile;
     }
     function remember(before=snapshot(doc)){doc.history.push(before);if(doc.history.length>50)doc.history.shift();doc.future=[];}
-    function backup(target=doc){
-      try{localStorage.setItem(target.key,JSON.stringify({version:2,...snapshot(target)}));}
-      catch{saveError="브라우저 복구본을 저장하지 못했습니다. DB 저장을 확인해 주세요.";}
+    function writeLocal(target,key,value) {
+      try{localStorage.setItem(key,JSON.stringify(value));target.backupUnavailable=false;return true;}
+      catch{target.backupUnavailable=true;return false;}
     }
-    function persist(){doc.dirty=true;saveError="";backup();}
+    function backup(target=doc){
+      const savedAt=Date.now(),value=snapshot(target);
+      if(writeLocal(target,target.key,{version:3,...value,savedAt}))target.savedAt=savedAt;
+    }
+    function retainRecovery(target,value) {
+      target.localDraft=normalizeSnapshot(value);
+      writeLocal(target,target.key+":recovery",{version:3,...target.localDraft,savedAt:Date.now()});
+    }
+    function persist(){doc.dirty=true;saveError="";printError="";backup();}
     async function save(){
       const target=doc;if(!target||target.saving||loading||error||!target.dbLoaded)return false;
+      endDrag();
       if(!target.dirty&&target.revision)return true;
       const value=storedValue(target),before=JSON.stringify(snapshot(target));target.saving=true;saveError="";status();
       try{
@@ -403,17 +410,18 @@
     }
     on(root,"mindex-bulletin-save",event=>{const result=save();if(event.detail)event.detail.result=result;});
     function status(){
-      const text=error||saveError||(loading?"저장된 예배 자료를 불러오는 중…":!assetLoaded?"글꼴과 이미지를 준비하는 중…":
+      const text=error||saveError||printError||(loading?"저장된 예배 자료를 불러오는 중…":!assetLoaded?"글꼴과 이미지를 준비하는 중…":
         `주보 ${doc?.saving?"DB 저장 중…":doc?.dirty?"수정됨 · DB 저장 전":doc?.revision?"DB 저장됨":"새 주보 · DB 저장 전"}${issues.size?` · 영역 넘침: ${[...issues].map(frameLabel).join(", ")}`:""}`);
-      q(".bulletin-status").textContent=text;
-      q(".bulletin-status").dataset.state=error||saveError||issues.size?"warning":loading||!assetLoaded?"loading":"saved";
-      q("[data-bulletin-print]").disabled=loading||!assetLoaded||!!error||!doc?.source?.order.length||issues.size>0;
-      q("[data-bulletin-undo]").disabled=!doc?.history.length;
-      q("[data-bulletin-redo]").disabled=!doc?.future.length;
+      q(".bulletin-status").textContent=text+(doc?.backupUnavailable?" · 브라우저 임시 저장 불가":"");
+      q(".bulletin-status").dataset.state=error||saveError||printError||doc?.backupUnavailable||issues.size?"warning":loading||!assetLoaded?"loading":"saved";
+      q("[data-bulletin-print]").disabled=printing||loading||!assetLoaded||!!error||!doc?.source?.order.length||issues.size>0;
+      q("[data-bulletin-undo]").disabled=loading||!doc?.history.length;
+      q("[data-bulletin-redo]").disabled=loading||!doc?.future.length;
       q("[data-bulletin-refresh]").disabled=loading||!!doc?.saving;
       q("[data-bulletin-save]").disabled=loading||!!error||!!doc?.saving||!doc?.dbLoaded||(!doc?.dirty&&!!doc?.revision);
       q("[data-bulletin-reload]").disabled=loading||!!doc?.saving;
       q("[data-bulletin-local]").hidden=!doc?.localDraft;
+      q("[data-bulletin-local]").disabled=loading||!!doc?.saving;
       root.querySelectorAll(".bulletin-properties input,.bulletin-properties select,.bulletin-properties textarea,.bulletin-properties button").forEach(el=>el.disabled=loading||(!doc?.dbLoaded&&!!error));
     }
     function preview(){
@@ -447,21 +455,23 @@
       }
     }
     async function load(id,force=false) {
-      const request=++serial;loading=true;assetLoaded=false;error="";saveError="";
+      const request=++serial;loading=true;assetLoaded=false;error="";saveError="";printError="";drag=null;
       if(!documents.has(id)){
         const fresh=restore(options.scope,id);fresh.id=id;
         if(fresh.hasLocal)fresh.localDraft=snapshot(fresh);
-        try{const recovery=JSON.parse(localStorage.getItem(fresh.key+":recovery")||"null");if(recovery)fresh.localDraft=recovery;}catch{}
+        const recovery=readLocal(fresh.key+":recovery");
+        if(isRecord(recovery)&&isRecord(recovery.fields)&&Array.isArray(recovery.frames)
+          &&(!fresh.hasLocal||(Number(recovery.savedAt)||0)>fresh.savedAt))fresh.localDraft=normalizeSnapshot(recovery);
         documents.set(id,fresh);
       }
       doc=documents.get(id);const target=doc;q("[data-bulletin-service]").value=id;properties();status();
       try{
         if(!target.dbLoaded||force){
           if(!options.loadDraft)throw new Error("주보 DB 연결이 필요합니다.");
-          if(force&&target.dirty){target.localDraft=snapshot(target);localStorage.setItem(target.key+":recovery",JSON.stringify(target.localDraft));}
+          if(force&&target.dirty)retainRecovery(target,snapshot(target));
           const row=await options.loadDraft(id);if(request!==serial||signal.aborted)return;
           if(row){
-            if(target.localDraft&&!localStorage.getItem(target.key+":recovery"))localStorage.setItem(target.key+":recovery",JSON.stringify(target.localDraft));
+            if(target.localDraft&&!readLocal(target.key+":recovery"))retainRecovery(target,target.localDraft);
             applyStored(target,row);
           }else{target.dirty=true;target.revision=0;}
           target.dbLoaded=true;
@@ -475,6 +485,7 @@
       finally{if(request===serial&&!signal.aborted){loading=false;properties();preview();status();}}
     }
     function history(redo=false){
+      if(loading||!doc?.dbLoaded)return;
       const from=redo?doc.future:doc.history,to=redo?doc.history:doc.future;
       if(!from.length)return;const months=JSON.stringify(doc.settings);to.push(snapshot(doc));Object.assign(doc,from.pop());persist();properties();preview();
       if(months!==JSON.stringify(doc.settings))void load(q("[data-bulletin-service]").value);
@@ -516,7 +527,7 @@
       if(b.hasAttribute("data-bulletin-save")){void save();return;}
       if(b.hasAttribute("data-bulletin-reload")){void load(doc.id,true);return;}
       if(b.hasAttribute("data-bulletin-local")){
-        if(!doc.localDraft)return;remember();Object.assign(doc,clone(doc.localDraft));persist();void load(doc.id);return;
+        if(!doc.localDraft)return;remember();Object.assign(doc,normalizeSnapshot(doc.localDraft));persist();void load(doc.id);return;
       }
       if(b.hasAttribute("data-bulletin-close")){options.onClose();return;}
       if(b.dataset.bulletinMode){mode=b.dataset.bulletinMode;properties();preview();}
@@ -527,14 +538,14 @@
     });
     let drag=null;
     on(root,"pointerdown",event=>{
-      const hit=event.target.closest("[data-frame-hit],[data-resize]");if(!hit||mode!=="layout"||event.button!==0)return;
+      const hit=event.target.closest("[data-frame-hit],[data-resize]");if(loading||!doc?.dbLoaded||!hit||mode!=="layout"||event.button!==0)return;
       event.preventDefault();selected=hit.dataset.frameHit||hit.dataset.resize;
       const f=doc.frames.find(f=>f.id===selected),rect=hit.closest("svg").getBoundingClientRect();
       drag={before:snapshot(doc),frame:clone(f),clientX:event.clientX,clientY:event.clientY,scale:297/rect.width,resize:!!hit.dataset.resize};
       properties();preview();q(".bulletin-canvas").focus();
     });
     on(document,"pointermove",event=>{
-      if(!drag||!root.isConnected)return;
+      if(loading||!drag||!root.isConnected)return;
       const f=doc.frames.find(f=>f.id===selected),dx=(event.clientX-drag.clientX)*drag.scale,dy=(event.clientY-drag.clientY)*drag.scale;
       setDimension(f,drag.resize?"w":"x",drag.frame[drag.resize?"w":"x"]+dx);
       setDimension(f,drag.resize?"h":"y",drag.frame[drag.resize?"h":"y"]+dy);
@@ -547,7 +558,7 @@
       if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="p"){event.preventDefault();event.stopPropagation();void print();return;}
       if(event.target.matches("input,textarea,select"))return;
       if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();event.stopPropagation();history(event.shiftKey);return;}
-      if(mode!=="layout"||!selected||!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key))return;
+      if(loading||!doc?.dbLoaded||mode!=="layout"||!selected||!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key))return;
       event.preventDefault();event.stopPropagation();remember();const f=doc.frames.find(f=>f.id===selected),step=event.shiftKey?10:2.5;
       if(event.key==="ArrowLeft")setDimension(f,"x",f.x-step);if(event.key==="ArrowRight")setDimension(f,"x",f.x+step);
       if(event.key==="ArrowUp")setDimension(f,"y",f.y-step);if(event.key==="ArrowDown")setDimension(f,"y",f.y+step);
@@ -556,6 +567,8 @@
     let printFrame;
     async function print(){
       if(q("[data-bulletin-print]").disabled)return;
+      endDrag();
+      printing=true;printError="";status();
       const output=clone({fields:doc.fields,settings:doc.settings,profile:doc.profile,frames:doc.frames,source:doc.source,backgrounds:doc.backgrounds});
       try{
         await readyBackground(output);
@@ -564,13 +577,20 @@
         printFrame?.remove();printFrame=document.createElement("iframe");
         printFrame.title="주보 인쇄";printFrame.className="bulletin-print-frame";
         const fontCSS=[[500,"5Medium"],[700,"7Bold"],[800,"8ExtraBold"]].map(([w,n])=>`@font-face{font-family:MindexBulletin;font-weight:${w};src:url('${new URL(`vendor/fonts/freesentation/Freesentation-${n}.woff2`,document.baseURI)}')}`).join("");
-        const loaded=new Promise(resolve=>printFrame.onload=resolve);
+        const frame=printFrame;
+        const loaded=new Promise(resolve=>{
+          const abort=()=>resolve(false);
+          signal.addEventListener("abort",abort,{once:true});
+          frame.onload=()=>{signal.removeEventListener("abort",abort);resolve(true);};
+        });
         printFrame.srcdoc=`<!doctype html><html lang="ko"><meta charset="utf-8"><title>주보 ${escape(output.source.date)}</title><style>${fontCSS}@page{size:297mm 210mm;margin:0}body{margin:0}svg{display:block;width:297mm;height:210mm;break-after:page}svg:last-child{break-after:auto}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}</style><body>${rendered.pages.map(p=>p.outerHTML).join("")}</body></html>`;
-        document.body.append(printFrame);await loaded;
-        await Promise.all([500,700,800].map(w=>printFrame.contentDocument.fonts.load(`${w} 12.5pt MindexBulletin`)));
-        await printFrame.contentDocument.fonts.ready;
-        printFrame.contentWindow.focus();printFrame.contentWindow.print();
-      }catch(e){error=e.message;status();}
+        document.body.append(frame);if(!await loaded||signal.aborted)return;
+        await Promise.all([500,700,800].map(w=>frame.contentDocument.fonts.load(`${w} 12.5pt MindexBulletin`)));
+        await frame.contentDocument.fonts.ready;
+        if(signal.aborted||!frame.isConnected)return;
+        frame.contentWindow.focus();frame.contentWindow.print();
+      }catch(e){if(!signal.aborted)printError=e.message;}
+      finally{printing=false;if(!signal.aborted)status();}
     }
     const observer=new MutationObserver(()=>{if(!root.isConnected)destroy();});
     observer.observe(document.body,{childList:true,subtree:true});
@@ -579,5 +599,5 @@
     void load(options.serviceId);
     return {destroy, reload(){return load(q("[data-bulletin-service]").value);}};
   }
-  window.MindexBulletin=Object.freeze({mount,resolveSource,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView,storedValue,applyStored});
+  window.MindexBulletin=Object.freeze({mount,resolveSource,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView,storedValue,applyStored,normalizeSnapshot});
 })();

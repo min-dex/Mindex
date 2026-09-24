@@ -86,3 +86,13 @@ assert.equal(restored.fields.news,'① 그대로');
 assert.equal(restored.settings.compactOrder,true);
 assert.equal(restored.frames.length,doc.frames.length);
 console.log('PASS content/layout serialization and legacy background identity');
+
+const sanitized=c.window.MindexBulletin.normalizeSnapshot({fields:{news:'문구',unexpected:'ignored'},frames:[null,{id:'news',x:999,y:-1,size:Infinity}],settings:{theme:'26-A1.png'},revision:999,id:'wrong'});
+assert.equal(sanitized.fields.news,'문구');assert.equal(sanitized.fields.unexpected,undefined);assert.equal(sanitized.revision,undefined);
+assert.equal(sanitized.frames.find(f=>f.id==='news').x,10);
+assert.doesNotThrow(()=>c.window.MindexBulletin.normalizeSnapshot({frames:{}}));
+assert.throws(()=>c.window.MindexBulletin.applyStored({}, {revision:1,content:[],layout:{}}));
+assert.throws(()=>c.window.MindexBulletin.applyStored({}, {revision:1,content:{},layout:{frames:{}}}));
+fixture.elements.find(e=>e.id==='citation').source_ref.slotKey='sermon.citation.1';
+assert.ok(!c.window.MindexBulletin.resolveSource({...fixture,settings:{compactOrder:true}}).order.some(r=>r.id==='citation'));
+console.log('PASS safe snapshots, invalid DB layout and canonical citation slot');

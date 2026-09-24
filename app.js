@@ -15288,7 +15288,7 @@ async function saveBulletinDraft(serviceId, value, revision) {
     ? table.update(value).eq("service_id",serviceId).eq("revision",revision)
     : table.insert({service_id:serviceId,...value});
   const {data,error}=await query.select("service_id,content,layout,revision").maybeSingle();
-  if(error?.code==="23505"||(!error&&!data))throw new Error("다른 곳에서 주보가 변경되었습니다. DB 다시 불러오기로 확인해 주세요. 현재 수정 내용은 이 브라우저에 남아 있습니다.");
+  if(error?.code==="23505"||(!error&&!data))throw new Error("다른 곳에서 주보가 변경되었습니다. DB 다시 불러오기로 확인해 주세요. 현재 수정 내용은 이 화면에 남아 있습니다.");
   if(error)throw new Error(`주보 DB 저장 실패: ${error.message}`);
   return data;
 }

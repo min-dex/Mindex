@@ -176,6 +176,107 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-save]').click();
     await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장됨'));
     console.log('PASS DB save, failure recovery, revision conflicts, local recovery, clean-browser reload and edits during save');
+    // Local storage is optional: quota/security failures must never mask or block DB work.
+    await page.evaluate(()=>{
+      window.bulletinStorage={set:Storage.prototype.setItem,get:Storage.prototype.getItem};
+      Storage.prototype.setItem=function(key,value){if(key.startsWith('mindex.bulletin'))throw new DOMException('quota','QuotaExceededError');return window.bulletinStorage.set.call(this,key,value);};
+    });
+    await page.locator('[data-bulletin-field="news"]').fill('복구 공간이 없어도 DB 저장');
+    assert.match(await page.locator('.bulletin-status').textContent(),/수정됨.*브라우저 임시 저장 불가/);
+    assert.equal(await page.evaluate(()=>saveAll()),true);
+    assert.match(await page.locator('.bulletin-status').textContent(),/DB 저장됨.*브라우저 임시 저장 불가/);
+    await page.locator('[data-bulletin-field="news"]').fill('공간 부족 중 새 수정');
+    await page.locator('[data-bulletin-reload]').click();
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-field="news"]').value==='복구 공간이 없어도 DB 저장');
+    await page.locator('[data-bulletin-local]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'공간 부족 중 새 수정');
+    await page.evaluate(()=>{window.bulletinTest.saveFail=true;});
+    assert.equal(await page.evaluate(()=>saveAll()),false);
+    assert.match(await page.locator('.bulletin-status').textContent(),/DB 저장 실패 테스트/);
+    await page.evaluate(()=>{
+      window.bulletinTest.saveFail=false;
+      Storage.prototype.getItem=function(key){if(key.startsWith('mindex.bulletin'))throw new DOMException('blocked','SecurityError');return window.bulletinStorage.get.call(this,key);};
+    });
+    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'복구 공간이 없어도 DB 저장');
+    await page.evaluate(()=>Object.assign(Storage.prototype,{getItem:window.bulletinStorage.get,setItem:window.bulletinStorage.set}));
+    // Invalid local shapes and metadata cannot break DB loading or replace its revision/identity.
+    await page.evaluate(()=>{
+      const key='mindex.bulletin.v1:https://offline-bulletin.test:'+window.bulletinTest.id;
+      localStorage.setItem(key,JSON.stringify({version:3,fields:{news:'로컬'},frames:{},settings:{},savedAt:1}));
+      localStorage.setItem(key+':recovery',JSON.stringify({fields:{news:'복구된 문구'},frames:[null,{id:'news',x:999}],settings:{},id:'wrong-id',revision:999,key:'wrong-key',savedAt:2}));
+    });
+    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    await page.locator('[data-bulletin-local]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'복구된 문구');
+    assert.equal(await page.evaluate(()=>saveAll()),true);
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].content.fields.news),'복구된 문구');
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts['wrong-id']),undefined);
+    // Newer local edits outrank an older recovery snapshot.
+    await page.evaluate(()=>{
+      const key='mindex.bulletin.v1:https://offline-bulletin.test:'+window.bulletinTest.id;
+      localStorage.setItem(key,JSON.stringify({version:3,fields:{news:'최신 로컬 수정'},frames:[],settings:{},savedAt:200}));
+      localStorage.setItem(key+':recovery',JSON.stringify({fields:{news:'오래된 복구본'},frames:[],settings:{},savedAt:100}));
+    });
+    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    await page.locator('[data-bulletin-local]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'최신 로컬 수정');
+    // Hidden overflowing frames must not disable printing even while editing the layout.
+    await page.locator('[data-bulletin-field="news"]').fill('영역 넘침 검사 '.repeat(200));
+    await page.locator('[data-bulletin-mode="layout"]').click();
+    await page.locator('[data-bulletin-frame]').selectOption('news');
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
+    await page.locator('[data-bulletin-hidden]').uncheck();
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),false);
+    await page.locator('[data-bulletin-frame]').selectOption('prayers');
+    await page.locator('[data-bulletin-dimension="w"]').fill('50');
+    await page.locator('[data-bulletin-dimension="w"]').press('Tab');
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
+    await page.locator('[data-bulletin-undo]').click();
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),false);
+    await page.locator('[data-bulletin-frame]').selectOption('events');
+    await page.locator('[data-bulletin-dimension="w"]').fill('30');
+    await page.locator('[data-bulletin-dimension="w"]').press('Tab');
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
+    await page.locator('[data-bulletin-undo]').click();
+    assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),false);
+    console.log('PASS quota/security failures, DB status, safe recovery, newest draft and hidden-frame output');
+    // Print is single-flight; closing the editor while print fonts load must cancel safely.
+    await page.evaluate(()=>{
+      const create=document.createElement;
+      window.printAudit={created:0,calls:0,releases:[],restore:()=>document.createElement=create};
+      document.createElement=function(...args){
+        const node=create.apply(this,args);
+        if(args[0]==='iframe'){
+          window.printAudit.created++;
+          node.addEventListener('load',()=>{
+            node.contentWindow.print=()=>window.printAudit.calls++;
+            node.contentDocument.fonts.load=()=>new Promise(resolve=>window.printAudit.releases.push(resolve));
+          },{once:true});
+        }
+        return node;
+      };
+      document.querySelector('[data-bulletin-print]').click();
+      document.querySelector('[data-bulletin-print]').click();
+    });
+    await page.waitForFunction(()=>window.printAudit.releases.length===3);
+    assert.equal(await page.evaluate(()=>window.printAudit.created),1);
+    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>{window.printAudit.releases.forEach(resolve=>resolve([]));window.printAudit.restore();});
+    await page.waitForTimeout(50);
+    assert.equal(await page.evaluate(()=>window.printAudit.calls),0);
+    console.log('PASS duplicate print prevention and close-during-print cancellation');
+
+
 
     await page.evaluate(async()=>{
       const host=document.getElementById('detailPane');host.replaceChildren();
