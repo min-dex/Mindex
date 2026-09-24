@@ -30490,6 +30490,7 @@ function syncPresenterBoardSelectionClasses(root = document.getElementById("serv
     const isSelected = state.presenterBoardSelection.serviceId === serviceId
       && selected.has(index);
     thumb.classList.toggle("selected", isSelected);
+    thumb.setAttribute("aria-pressed", String(isSelected));
     thumb.closest(".svc-slide-thumb-wrap")?.classList.toggle("selected", isSelected);
   });
 }
@@ -31531,6 +31532,7 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
         data-presenter-element-key="${escapeAttr(elementKey)}"
         data-presenter-slide-id="${escapeAttr(slideId)}"
         data-service-id="${escapeAttr(serviceId)}"
+        aria-pressed="${selected ? "true" : "false"}"
         aria-label="${escapeAttr(`${ariaPrefix}: ${presenterSlideTitle(slide)}`)}"
         title="${escapeAttr(ariaPrefix)}">
         <span class="svc-slide-thumb-frame svc-slide-thumb-frame--${escapeAttr(presenterSlideRenderClass(slide))}" data-element-type="${escapeAttr(presenterSlideElementType(slide))}" data-slide-layout="${escapeAttr(presenterSlideLayout(slide))}">

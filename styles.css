@@ -8032,6 +8032,12 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
 .svc-slide-thumb.active::after {
   border-color: color-mix(in srgb, var(--accent) 86%, white);
 }
+.svc-slide-thumb.selected::after {
+  border-color: color-mix(in srgb, var(--ink-4) 72%, transparent);
+}
+.svc-slide-thumb.active.selected::after {
+  border-color: color-mix(in srgb, var(--accent) 86%, white);
+}
 .svc-slide-thumb:focus-visible {
   outline: none;
 }
@@ -8114,6 +8120,10 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 }
 .svc-slide-thumb.selected .svc-slide-thumb-frame {
   box-shadow: none;
+}
+.svc-slide-thumb-wrap.selected:not(.active) .svc-slide-thumb-no {
+  color: var(--ink-2);
+  font-weight: 800;
 }
 .svc-slide-thumb-frame--video,
 .svc-slide-thumb-frame--image {
