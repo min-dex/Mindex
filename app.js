@@ -20693,6 +20693,7 @@ function replaceLucideIcon(node) {
     return acc;
   }, {});
   attrs["data-lucide"] = iconName;
+  attrs.focusable = "false";
   const hasAccessibleAttrs = Object.keys(attrs).some((key) =>
     key.startsWith("aria-") || key === "role" || key === "title"
   );
