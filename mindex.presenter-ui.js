@@ -1,9 +1,9 @@
 function renderPresenterScreenControl() {
   if (state.presenter.screens.length) {
     return `
-      <label class="svc-presenter-screen-select">
-        <i data-lucide="monitor"></i>
-        <select data-presenter-screen-select>
+      <label class="svc-presenter-screen-select" title="송출 화면 선택">
+        <i data-lucide="monitor" aria-hidden="true"></i>
+        <select data-presenter-screen-select aria-label="송출 화면 선택">
           <option value="">${escapeHtml(uiText("presenter.option.auto"))}</option>
           ${state.presenter.screens.map((screen) => `
             <option value="${escapeAttr(screen.key)}" ${state.presenter.selectedScreenId === screen.key ? "selected" : ""}>
@@ -24,7 +24,7 @@ function renderPresenterAlwaysOnTopControl() {
   const supported = Boolean(window.mindexElectron?.setPresenterAlwaysOnTop);
   return `
     <label class="svc-presenter-pin-toggle${supported ? "" : " is-unavailable"}" title="${supported ? "출력 창을 항상 위에 표시" : "웹 버전에서는 항상 위 표시를 지원하지 않습니다"}">
-      <input type="checkbox" data-presenter-always-on-top ${supported && state.presenter.alwaysOnTop ? "checked" : ""} />
+      <input type="checkbox" data-presenter-always-on-top ${supported && state.presenter.alwaysOnTop ? "checked" : ""} ${supported ? "" : "disabled"} />
       <span class="svc-presenter-pin-track" aria-hidden="true"></span>
       <span>항상 위</span>
     </label>`;
