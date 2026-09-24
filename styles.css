@@ -3174,6 +3174,9 @@ body[data-module="presenter"] .detail-pane {
   flex-direction: column;
   gap: 2px;
 }
+.service-sidebar-stack--navigation {
+  gap: 5px;
+}
 .service-sidebar-date-groups {
   display: flex;
   min-width: 0;
