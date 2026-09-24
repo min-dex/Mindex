@@ -54,7 +54,7 @@ function presenterPreparationPlaceholderTextLabel(item) {
   if (key === "설교" || key === "설교제목") return "설교";
   if (key === "봉헌기도") return "봉헌기도";
   if (key === "축도") return "축도";
-  if (key === "인용구절") return "인용구절";
+  if (key === "인용구절") return "인용 구절";
   return normalizePresenterPreparationInputLabel(item?.label || "");
 }
 

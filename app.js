@@ -9473,6 +9473,29 @@ function handleDetailKeydown(event) {
   }
   const preparationInput = event.target.closest("[data-presenter-preparation-field]");
   if (preparationInput) {
+    if (event.key === "Enter" && !event.isComposing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      const root = preparationInput.closest(".svc-presenter-preparation-input");
+      const fields = [...(root?.querySelectorAll("[data-presenter-preparation-field]") || [])];
+      const currentIndex = fields.indexOf(preparationInput);
+      const next = fields[currentIndex + 1] || null;
+      void applyPresenterPreparationInput(
+        preparationInput.dataset.serviceId || state.selectedServiceId,
+        {
+          draft: presenterPreparationDraftFromRoot(
+            root,
+            state.services.find((service) => service.id === (preparationInput.dataset.serviceId || state.selectedServiceId)),
+          ),
+          focusTarget: {
+            scope: root?.classList.contains("svc-presenter-preparation-input--sidebar") ? "sidebar" : "controller",
+            label: next?.dataset.presenterPreparationFieldLabel || "",
+            apply: !next,
+          },
+        },
+      );
+      return;
+    }
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
       event.stopPropagation();
@@ -28232,7 +28255,67 @@ function resolvePresenterTargetScreenRect() {
 function presenterPreparationDisplayTextForService(service) {
   const drafts = state.presenterPreparationDrafts;
   if (Object.prototype.hasOwnProperty.call(drafts, service.id)) return drafts[service.id] || "";
-  return "";
+  return presenterPreparationDefaultDraftForService(service);
+}
+
+function presenterPreparationDefaultDraftForService(service) {
+  if (!service?.id) return "";
+  const fields = presenterPreparationFieldsForService(service);
+  const values = new Map(fields.map((field) => [compactSearchValue(field.label), ""]));
+  const setValue = (label, value) => {
+    const key = compactSearchValue(label);
+    const text = String(value || "").trim();
+    if (key && text && values.has(key)) values.set(key, text);
+  };
+
+  for (const item of servicePrepEditorItems(service.id)) {
+    const context = presenterServiceInputItem(item, service);
+    if (!context || !presenterServiceInputHasEditableField(item, service)) continue;
+    const { mode, model, memo } = context;
+
+    if (isMonthlyCorporatePrayerGroupItem(item, memo)) {
+      const ordinals = monthlyCorporatePrayerOrdinalsForItem(item);
+      monthlyCorporatePrayerEntries(item, memo).forEach((prayer, index) => {
+        const value = [prayer.title, prayer.assignee].filter(Boolean).join(" / ");
+        setValue(`공동기도 ${ordinals[index] || index + 1}`, value);
+      });
+      continue;
+    }
+
+    const songMode = ["praise_db", "score_db", "lyrics_db"].includes(mode)
+      || servicePraiseInputMode(item, memo, service) === "manual_praise"
+      || serviceItemRequiresSongSelection(item, service);
+    if (songMode) {
+      const song = serviceItemLinkedSong(item);
+      const title = song?.title || String(item.raw_title || "").trim();
+      const value = isSpecialSongServiceItem(item)
+        ? [title, cleanServiceAssignee(item.assignee)].filter(Boolean).join(" / ")
+        : title;
+      setValue(presenterPreparationPlaceholderSongLabel(item), value);
+      continue;
+    }
+
+    if (mode === "scripture" || isScriptureBodyServiceItem(item)) {
+      const references = serviceItemScriptureReferences(item, memo, service);
+      setValue(presenterPreparationPlaceholderTextLabel(item), references.length
+        ? formatServiceScriptureReferenceList(references)
+        : normalizeServiceItemReferenceSpacing(memo.scriptureReference || item.raw_title || ""));
+      continue;
+    }
+
+    const { needsTitle, needsAssignee } = presenterServiceTextInputSpec(item, model, memo);
+    if (!needsTitle && !needsAssignee) continue;
+    const state = presenterServiceRequiredTextInputState(item, model, memo, service);
+    const value = needsTitle && needsAssignee
+      ? [state.titleText, state.assignee].filter(Boolean).join(" / ")
+      : needsTitle ? state.titleText : state.assignee;
+    setValue(presenterPreparationPlaceholderTextLabel(item), value);
+  }
+
+  return presenterPreparationDraftFromFields(service, fields.map((field) => ({
+    label: field.label,
+    value: values.get(compactSearchValue(field.label)) || "",
+  })));
 }
 
 function presenterPreparationFieldsForService(service) {
@@ -28349,6 +28432,26 @@ function presenterPreparationDraftNearApplyButton(button) {
   return presenterPreparationDraftFromRoot(root, service);
 }
 
+function focusPresenterPreparationTarget(serviceId, target = {}) {
+  if (!serviceId || !target) return;
+  requestAnimationFrame(() => {
+    const roots = target.scope === "sidebar"
+      ? [refs.songList]
+      : [refs.detailPane, refs.rightSidebar];
+    const root = roots.find((candidate) => candidate?.querySelector?.(`[data-presenter-preparation-field][data-service-id="${cssEscape(serviceId)}"]`));
+    if (!root) return;
+    const inputRoot = target.scope === "sidebar"
+      ? root.querySelector(".svc-presenter-preparation-input--sidebar")
+      : root.querySelector(".svc-presenter-input-rail .svc-presenter-preparation-input");
+    const selector = target.apply
+      ? `[data-presenter-preparation-apply][data-service-id="${cssEscape(serviceId)}"]`
+      : `[data-presenter-preparation-field][data-service-id="${cssEscape(serviceId)}"][data-presenter-preparation-field-label="${cssEscape(target.label || "")}"]`;
+    const field = inputRoot?.querySelector(selector) || root.querySelector(selector);
+    field?.focus?.();
+    if (!target.apply && typeof field?.select === "function") field.select();
+  });
+}
+
 function presenterPreparationDraftForService(serviceId, options = {}) {
   if (options.draft != null) return String(options.draft || "").trim();
   const service = state.services.find((candidate) => candidate.id === serviceId);
@@ -28397,7 +28500,7 @@ function presenterPreparationPlaceholderLinesForItem(item, service, context) {
   if (mode === "asset" || context.memo?.benedictionReplacement) return [];
   if (isMonthlyCorporatePrayerGroupItem(item, context.memo)) {
     const start = Number(String(item.label).match(/\d+/)?.[0]);
-    return [start, start + 1].map((ordinal) => `공동기도${ordinal}: 교회를 위해 / 홍길동 집사`);
+    return [start, start + 1].map((ordinal) => `공동기도 ${ordinal}: 교회를 위해 / 홍길동 집사`);
   }
   if (isAnnouncementTextInputItem(item)) return ["광고: 다음 주 예배 후 모임이 있습니다."];
   if (["praise_db", "score_db", "lyrics_db", "manual_praise"].includes(mode)
@@ -28495,6 +28598,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
   state.presenterPreparationApplyingServiceIds.add(serviceId);
   renderServiceList();
 
+  let applied = false;
   try {
     const prepared = presenterPreparationDraftForApply(service, draft);
     if (prepared.error) {
@@ -28816,6 +28920,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
     state.serviceItems[serviceId] = projectedItems;
     state.dirty.service = true;
     delete state.presenterPreparationDrafts[serviceId];
+    applied = true;
     refreshPresenterForService(serviceId);
     updateSaveState();
 
@@ -28842,6 +28947,7 @@ async function applyPresenterPreparationInput(serviceId = state.selectedServiceI
   } finally {
     state.presenterPreparationApplyingServiceIds.delete(serviceId);
     renderServiceList();
+    if (applied && options.focusTarget) focusPresenterPreparationTarget(serviceId, options.focusTarget);
   }
 }
 
