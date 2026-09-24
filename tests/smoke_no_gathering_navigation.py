@@ -17,11 +17,11 @@ try:
               state.serviceTypes=[{id:'friday',name:'금요기도회'}];state.calendarData=[];
               serviceItemPreviewParts=()=>({text:''});
               const before=JSON.stringify(state.services);
-              for(const render of [renderServiceDateCard,renderServiceWeekCard]) {
+              for(const render of [renderServiceDateCard,renderServiceWeekCard,renderServiceSidebarCard]) {
                 const host=document.createElement('div');host.innerHTML=render(absent);
                 check(host.querySelector('button').disabled,'absent card enabled');
                 check(!host.querySelector('[data-service-id]'),'absent navigation attribute');
-                check(host.textContent.includes('집회 없음'),'missing status');
+                check(host.querySelector('button').getAttribute('aria-disabled')==='true','absent accessibility state');
                 host.innerHTML=render(regular);
                 check(!host.querySelector('button').disabled,'regular card disabled');
                 check(host.querySelector('[data-service-id]').dataset.serviceId==='regular','regular target missing');

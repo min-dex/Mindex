@@ -24182,20 +24182,22 @@ function serviceSidebarDateKey(service) {
 }
 
 function renderServiceSidebarCard(service, options = {}) {
-  const active = service.id === state.selectedServiceId ? " active" : "";
+  const noGathering = serviceIsNoGathering(service);
+  const active = !noGathering && service.id === state.selectedServiceId ? " active" : "";
   const showDate = options.showDate !== false;
   const cardButton = `
     <button
-      class="service-sidebar-card${showDate ? "" : " service-sidebar-card--compact"}${active}"
+      class="service-sidebar-card${showDate ? "" : " service-sidebar-card--compact"}${active}${noGathering ? " is-no-gathering" : ""}"
       type="button"
-      data-service-id="${escapeAttr(service.id)}"
+      ${noGathering ? 'disabled aria-disabled="true"' : `data-service-id="${escapeAttr(service.id)}"`}
+      aria-label="${escapeAttr(`${formatServiceDate(service, { compact: true })} ${serviceDisplayTypeName(service)} ${noGathering ? "집회 없음" : "열기"}`)}"
     >
       ${showDate ? `<span class="service-sidebar-date">${escapeHtml(formatServiceDate(service, { compact: true }))}</span>` : ""}
       <span class="service-sidebar-title">${escapeHtml(serviceDisplayTypeName(service))}</span>
     </button>`;
   if (!showDate) {
     return `
-      <div class="service-sidebar-card-row${active}">
+      <div class="service-sidebar-card-row${active}${noGathering ? " is-no-gathering" : ""}">
         ${cardButton}
       </div>`;
   }

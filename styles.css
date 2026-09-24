@@ -3202,6 +3202,9 @@ body[data-module="presenter"] .detail-pane {
 .service-sidebar-card-row:hover {
   background: var(--sidebar-hover-bg);
 }
+.service-sidebar-card-row.is-no-gathering:hover {
+  background: transparent;
+}
 .service-sidebar-card-row.active {
   background: var(--sidebar-active-bg);
 }
@@ -3232,6 +3235,9 @@ body[data-module="presenter"] .detail-pane {
 .service-sidebar-card:hover .service-sidebar-date,
 .service-sidebar-card.active .service-sidebar-date {
   color: var(--accent);
+}
+.service-sidebar-card.is-no-gathering .service-sidebar-date {
+  color: var(--sidebar-sub);
 }
 .service-sidebar-title {
   min-width: 0;
