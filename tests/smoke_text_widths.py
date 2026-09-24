@@ -40,9 +40,14 @@ def main():
               return results;
             }''')
             for r in result:
-                assert abs(r['width'] - (0.85 if r['clean'] else 0.95)) < 0.001, r
-                assert abs(r['left'] - (0.075 if r['clean'] else 0.025)) < 0.001, r
-            print('PASS 16 text layouts: 95% lower bar, 85% fullscreen, symmetric margins')
+                if r['type'] == 'liturgical-body':
+                    # Fullscreen liturgical copy is centered in the full stage at a 45px output inset.
+                    assert abs(r['width'] - (1 - 90 / 1920)) < 0.001, r
+                    assert abs(r['left'] - (45 / 1920)) < 0.001, r
+                else:
+                    assert abs(r['width'] - (0.85 if r['clean'] else 0.95)) < 0.001, r
+                    assert abs(r['left'] - (0.075 if r['clean'] else 0.025)) < 0.001, r
+            print('PASS 16 text layouts: standard margins plus 45px fullscreen liturgical inset')
             browser.close()
     finally:
         if server:
