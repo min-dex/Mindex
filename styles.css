@@ -1980,6 +1980,19 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 .song-delete-btn:disabled {
   border-color: transparent;
 }
+.song-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+.song-editor-actions .song-header-meta-row {
+  width: auto;
+  flex: 1 1 auto;
+}
+.song-editor-actions .head-actions {
+  flex: 0 0 auto;
+}
 .song-description {
   display: grid;
   max-width: min(920px, 100%);
@@ -3826,6 +3839,13 @@ body[data-module="presenter"] .detail-pane {
 }
 .service-week-day.is-today {
   background: color-mix(in srgb, var(--accent-soft) 24%, transparent);
+}
+.service-week-day.is-empty {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 36%, transparent);
+}
+.service-week-day.is-empty header {
+  opacity: 0.66;
 }
 .service-week-day header {
   display: flex;
@@ -8619,15 +8639,15 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 .service-date-list--setlists .svc-setlist-leader-form input:focus { color: var(--ink-2); }
 
 /* A single presenter toolbar; expanded source stays in normal flow below it. */
-.svc-presenter-toolbar{display:grid;grid-template-columns:minmax(140px,1fr) max-content max-content;gap:10px;align-items:center;margin-bottom:15px;overflow-x:auto}
+.svc-presenter-toolbar{display:grid;grid-template-columns:minmax(160px,240px) max-content max-content;gap:7px;align-items:center;margin-bottom:12px;overflow-x:auto}
 .svc-presenter-toolbar .svc-source-panel{display:contents}
-.svc-presenter-toolbar .svc-source-panel-head{grid-column:1;grid-row:1;min-height:35px;padding:0 10px;gap:10px;border:1px solid var(--line);border-radius:var(--r);font-size:13px;white-space:nowrap}
+.svc-presenter-toolbar .svc-source-panel-head{grid-column:1;grid-row:1;min-height:32px;padding:0 9px;gap:8px;border:1px solid var(--line);border-radius:var(--r);font-size:13px;white-space:nowrap}
 .svc-presenter-toolbar .svc-source-panel-head small{display:none}
 .svc-presenter-toolbar .svc-source-panel-body{grid-column:1/-1;grid-row:2;padding:10px;border:1px solid var(--line);border-radius:var(--r)}
 .svc-presenter-toolbar .svc-source-panel:not([open]) .svc-source-panel-body{display:none}
 .svc-presenter-toolbar .svc-board-scale{grid-column:2;grid-row:1;margin:0;padding:0;gap:5px;flex-wrap:nowrap;white-space:nowrap}
-.svc-presenter-toolbar .svc-board-scale button{min-height:35px;padding:0 10px}
-.svc-presenter-toolbar>.svc-output-action{grid-column:3;grid-row:1;min-height:35px;height:35px;margin:0;padding:0 10px;white-space:nowrap}
+.svc-presenter-toolbar .svc-board-scale button{min-height:32px;padding:0 9px}
+.svc-presenter-toolbar>.svc-output-action{grid-column:3;grid-row:1;min-height:32px;height:32px;margin:0;padding:0 9px;white-space:nowrap}
 @media(max-width:850px){.svc-presenter-toolbar .svc-board-scale>span{display:none}.svc-presenter-toolbar .svc-board-scale button{padding:0 7.5px}}
 
 .svc-presenter-toolbar .svc-source-panel::details-content{display:contents}
@@ -8638,8 +8658,8 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
 }
 
 /* Quiet, compact preview zoom control. */
-.svc-presenter-toolbar .svc-board-scale{gap:0;padding:2.5px;border:1px solid var(--line);border-radius:var(--r);height:35px;box-sizing:border-box}
+.svc-presenter-toolbar .svc-board-scale{gap:0;padding:2.5px;border:1px solid var(--line);border-radius:var(--r);height:32px;box-sizing:border-box}
 .svc-presenter-toolbar .svc-board-scale-icon{display:flex;align-items:center;justify-content:center;width:30px;margin:0;color:var(--ink-4)}
 .svc-presenter-toolbar .svc-board-scale-icon svg{width:15px;height:15px}
-.svc-presenter-toolbar .svc-board-scale button{height:28px;min-height:28px;padding:0 7.5px;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+.svc-presenter-toolbar .svc-board-scale button{height:25px;min-height:25px;padding:0 7.5px;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
 .svc-presenter-toolbar .svc-board-scale button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}

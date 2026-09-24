@@ -17109,7 +17109,7 @@ function renderDetail() {
           </h2>
           ${renderSongDescription(song, titleMetaLine, [], relatedSongs)}
         </div>
-        <div class="editor-head-right">
+        <div class="editor-head-right song-editor-actions">
           <div class="song-header-meta-row">
             ${renderSongHeaderMeta(supportMetaItems, { reserve: true })}
             <button class="icon-btn quiet metadata-edit-btn" type="button" data-open-metadata aria-label="곡 정보 수정" title="곡 정보 수정">
@@ -27303,7 +27303,7 @@ function renderServiceWeekDay(date, services) {
   const dateStr = toLocalDateStr(date);
   const today = toLocalDateStr(new Date());
   return `
-    <section class="service-week-day${dateStr === today ? " is-today" : ""}">
+    <section class="service-week-day${dateStr === today ? " is-today" : ""}${services.length ? "" : " is-empty"}">
       <header>
         <strong>${escapeHtml(weekdays[date.getDay()])}</strong>
         <span>${escapeHtml(`${date.getMonth() + 1}/${date.getDate()}`)}</span>
