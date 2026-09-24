@@ -32718,14 +32718,15 @@ function patchServiceOutlineActiveState(serviceId = state.selectedServiceId) {
   if (state.module !== "presenter" || state.selectedServiceId !== serviceId) return;
   const outline = refs.songList?.querySelector(".service-outline-list");
   if (!outline) return;
-  outline.querySelectorAll(".service-outline-row.active, .service-outline-group.active")
-    .forEach((node) => node.classList.remove("active"));
+  outline.querySelectorAll(".service-outline-row.active, .service-outline-row.is-complete, .service-outline-group.active")
+    .forEach((node) => node.classList.remove("active", "is-complete"));
   outline.querySelectorAll('.service-outline-row[aria-current="step"]')
     .forEach((node) => node.removeAttribute("aria-current"));
   if (!presenterControllerIsLive(serviceId)) return;
   const slides = state.presenter.serviceId === serviceId ? state.presenter.slides : [];
   const activeSlide = slides[clampPresenterIndex(state.presenter.index, slides.length)] || null;
   if (!activeSlide) return;
+  const showProgress = !state.presenter.safetyBlank && !state.presenter.liveScripture?.active;
   const service = state.services.find((svc) => svc.id === serviceId);
   const itemByIndex = new Map();
   if (service) {
@@ -32742,7 +32743,12 @@ function patchServiceOutlineActiveState(serviceId = state.selectedServiceId) {
     const active = item
       ? presenterSlideBelongsToItem(activeSlide, item)
       : Number(row.dataset.serviceOutlineSlide) === state.presenter.index;
+    const slideIndexValue = row.dataset.serviceOutlineSlide;
+    const slideIndex = Number(slideIndexValue);
+    const complete = showProgress && !active && slideIndexValue !== "" && Number.isInteger(slideIndex)
+      && slideIndex >= 0 && slideIndex < state.presenter.index;
     row.classList.toggle("active", active);
+    row.classList.toggle("is-complete", complete);
     if (active && (row.classList.contains("service-outline-row--child") || row.classList.contains("service-outline-row--ready"))) {
       row.setAttribute("aria-current", "step");
     }

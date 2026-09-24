@@ -3550,6 +3550,13 @@ body[data-module="presenter"] .detail-pane {
 .service-outline-row--child.selected:not(.active) {
   background: var(--sidebar-hover-bg);
 }
+.service-outline-row.is-complete:not(.selected) {
+  opacity: 0.56;
+}
+.service-outline-row.is-complete:not(.selected):hover,
+.service-outline-row.is-complete:not(.selected):focus-visible {
+  opacity: 1;
+}
 .service-outline-row--child.active {
   background: color-mix(in srgb, var(--accent-soft) 54%, var(--sidebar-active-bg));
   box-shadow: inset 2px 0 0 var(--accent);
