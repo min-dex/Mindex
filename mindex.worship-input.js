@@ -38,11 +38,11 @@ function presenterPreparationPlaceholderSongLabel(item) {
   const label = String(item?.label || "").replace(/\s+/g, "").trim();
   if (!label) return "";
   const numberedPraise = label.match(/^찬양(\d+)$/);
-  if (numberedPraise) return `찬양${Number(numberedPraise[1])}`;
+  if (numberedPraise) return `찬양 ${Number(numberedPraise[1])}`;
   const numberedPrayerPraise = label.match(/^기도찬양(\d+)$/);
-  if (numberedPrayerPraise) return `기도찬양${Number(numberedPrayerPraise[1])}`;
+  if (numberedPrayerPraise) return `기도찬양 ${Number(numberedPrayerPraise[1])}`;
   const numberedCommonPrayer = label.match(/^공동기도(\d+)$/);
-  if (numberedCommonPrayer) return `공동기도${Number(numberedCommonPrayer[1])}`;
+  if (numberedCommonPrayer) return `공동기도 ${Number(numberedCommonPrayer[1])}`;
   return normalizePresenterPreparationInputLabel(item.label || "");
 }
 

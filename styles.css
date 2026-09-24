@@ -5577,10 +5577,10 @@ body[data-theme="dark"] .service-week-card:hover {
 .svc-presenter-preparation-fields { display: grid; gap: 6px; }
 .svc-presenter-preparation-field-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 80px minmax(0, 1fr);
   min-height: 32px;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 .svc-presenter-preparation-field-label {
   color: var(--ink-4);
@@ -5649,7 +5649,7 @@ body[data-theme="dark"] .service-week-card:hover {
   padding: 0 var(--sidebar-item-pad-x);
 }
 .svc-presenter-preparation-fields--sidebar { gap: 5px; }
-.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-row { grid-template-columns: 66px minmax(0, 1fr); min-height: 28px; gap: 7px; }
+.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-row { grid-template-columns: 60px minmax(0, 1fr); min-height: 28px; gap: 5px; }
 .svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-label { color: var(--sidebar-label); font-size: var(--ui-meta-size); }
 .svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-value {
   height: 28px;

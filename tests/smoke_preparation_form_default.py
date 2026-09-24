@@ -21,6 +21,7 @@ def main():
                 const inputs = fields(renderPresenterServiceInputRail(service));
                 check(inputs.length > 0 && inputs.every((input) => input.value === ''), 'value fields must start empty');
                 check(inputs.every((input) => input.dataset.presenterPreparationFieldLabel), 'each field needs a fixed label');
+                check(inputs.some((input) => input.dataset.presenterPreparationFieldLabel === '찬양 1'), 'numbered praise label needs readable spacing');
                 const host = document.createElement('div'); host.innerHTML = renderPresenterSidebarPreparationInput(service);
                 check(!host.querySelector('[data-presenter-preparation-form]'), 'no form button');
                 state.presenterPreparationDrafts[service.id] = '찬양1: 주 은혜임을';
