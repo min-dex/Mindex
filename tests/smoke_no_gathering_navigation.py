@@ -15,6 +15,8 @@ try:
               const regular={id:'regular',type_id:'friday',date:'2026-09-25'};
               state.services=[absent,regular];state.selectedServiceId='regular';
               state.serviceTypes=[{id:'friday',name:'금요기도회'}];state.calendarData=[];
+              const presenterControls=renderPresenterControlsTop(regular,[],false,0);
+              check(presenterControls.includes('data-presenter-action="fullscreen"'),'presenter fullscreen control failed to render');
               serviceItemPreviewParts=()=>({text:''});
               const before=JSON.stringify(state.services);
               for(const render of [renderServiceDateCard,renderServiceWeekCard,renderServiceSidebarCard]) {

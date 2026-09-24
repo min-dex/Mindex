@@ -24034,8 +24034,6 @@ function renderPresenterSidebarServiceSummary(service) {
   const launchLabel = uiText(anyOutputOpen ? "presenter.action.stop" : "presenter.action.present");
   const launchIcon = anyOutputOpen ? "screen-share-off" : "screen-share";
   const launchTone = anyOutputOpen ? "stop" : "start";
-  const fullscreenLabel = anyOutputOpen ? "송출 화면 전체화면" : "송출을 시작하면 전체화면을 사용할 수 있습니다";
-  const fullscreenControl = `<button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="${escapeAttr(fullscreenLabel)}" title="${escapeAttr(fullscreenLabel)}" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i><span>전체화면</span></button>`;
   return `
     <section class="service-sidebar-section service-sidebar-section--presenter-context" aria-label="현재 예배">
       <div class="service-sidebar-presenter-context">
@@ -29312,6 +29310,8 @@ function renderPresenterControlsTop(service, slides, active, index) {
   const launchLabel = uiText(anyOutputOpen ? "presenter.action.stop" : "presenter.action.present");
   const launchIcon = anyOutputOpen ? "screen-share-off" : "screen-share";
   const launchTone = anyOutputOpen ? "stop" : "start";
+  const fullscreenLabel = anyOutputOpen ? "송출 화면 전체화면" : "송출을 시작하면 전체화면을 사용할 수 있습니다";
+  const fullscreenControl = `<button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="${escapeAttr(fullscreenLabel)}" title="${escapeAttr(fullscreenLabel)}" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i><span>전체화면</span></button>`;
   return `
       <div class="svc-presenter-top">
         <div class="svc-presenter-output-group">
