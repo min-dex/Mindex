@@ -8048,7 +8048,8 @@ body.is-chromium .svc-slide-thumb-wrap.active:has(.svc-slide-thumb:focus-visible
   border-color: color-mix(in srgb, var(--accent) 86%, white);
 }
 .svc-slide-thumb:focus-visible {
-  outline: none;
+  outline: 2px solid color-mix(in srgb, var(--accent) 72%, white);
+  outline-offset: 3px;
 }
 .svc-slide-thumb-frame {
   --presenter-preview-scale: 0.15;
