@@ -16491,7 +16491,7 @@ function renderHomeDetail() {
     renderServiceSetlistArchiveDetail();
     return;
   }
-  renderServiceDashboard({ compactWeeks: true, title: "예배 일정" });
+  renderServiceDashboard();
 }
 
 function renderHomeSearchDetail() {
@@ -27272,7 +27272,6 @@ function renderServiceDashboard(options = {}) {
   const services = getServiceDashboardServices();
   const q = normalizeSearchValue(state.search);
   const title = options.title || SERVICE_HOME_WEEK_TITLE;
-  const compactWeeks = Boolean(options.compactWeeks);
   const weeks = recentServiceWeeks();
   const servicesByDate = new Map();
   for (const service of services) {
@@ -27301,14 +27300,9 @@ function renderServiceDashboard(options = {}) {
               <p class="service-week-range">${escapeHtml(formatServiceWeekRange(week.start, week.end))}</p>
             </div>
           </div>
-          ${compactWeeks ? (() => {
-            const weekServices = week.days.flatMap((date) => servicesByDate.get(toLocalDateStr(date)) || []);
-            return weekServices.length ? `<div class="service-date-grid service-date-grid--dashboard">
-              ${weekServices.map((service) => renderServiceDateCard(service, { showType: true })).join("")}
-            </div>` : `<p class="service-no-results">등록된 예배가 없습니다.</p>`;
-          })() : `<div class="service-week-board">
+          <div class="service-week-board">
             ${week.days.map(date => renderServiceWeekDay(date, servicesByDate.get(toLocalDateStr(date)) || [])).join("")}
-          </div>`}
+          </div>
         </section>
       `).join("") : ""}
     </div>`;

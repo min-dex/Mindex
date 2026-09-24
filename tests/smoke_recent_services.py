@@ -33,12 +33,6 @@ try:
               check(!refs.detailPane.textContent.includes('다가오는 예배'),'old section remains');
               check(refs.detailPane.querySelectorAll('.service-week-card:disabled').length===1,'no gathering guard lost');
               check(refs.detailPane.querySelector('[data-service-list]'),'all services missing');
-              renderServiceDashboard({compactWeeks:true,title:'예배 일정'});
-              check(refs.detailPane.querySelector('.service-date-list-title').textContent==='예배 일정','home schedule title');
-              check(!refs.detailPane.querySelector('.service-week-board'),'home retained empty calendar board');
-              check(!refs.detailPane.querySelector('.service-week-day'),'home retained empty calendar days');
-              check(refs.detailPane.querySelectorAll('.service-date-card').length===5,'home schedule cards');
-              check(refs.detailPane.querySelectorAll('.service-date-card:disabled').length===1,'home no gathering guard lost');
               const html=refs.detailPane.innerHTML;
               state.search='검색';renderServiceDashboard();
               check(!refs.detailPane.querySelector('.service-week-board'),'search should remain list');
