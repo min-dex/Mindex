@@ -964,3 +964,5 @@ Small visual polish that does not alter behavior does not need an entry.
 ### 2026-09-24 Setlist hymn numbers from canonical songs
 - 역대 콘티의 연결된 곡은 DB `hymn_no`와 메인 제목으로 표시한다. 원문에 번호가 없어도 표시하고, 원문의 이전 번호는 표시용으로 재사용하지 않는다.
 - Explicit song IDs are authoritative. Unlinked title matching retains hymn-number validation; manual and excluded special-song titles remain unchanged.
+
+- Setlist hymn numbers use 75% of the song-title font size, on the same baseline and within the same song link.

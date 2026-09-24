@@ -8567,6 +8567,7 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   background: none; color: inherit; font: inherit; line-height: inherit;
   text-align: left; cursor: pointer;
 }
+.svc-setlist-hymn-no { font-size: 75%; }
 .svc-setlist-song-link:hover, .svc-setlist-song-link:focus-visible {
   text-decoration: underline; text-underline-offset: 3px;
 }

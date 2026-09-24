@@ -25099,7 +25099,12 @@ function renderWorshipSetlistCandidate(candidate) {
   const displayTitle = matches.map((match) => match.text).join(" + ");
   const content = matches.map((match) => {
     if (match.status !== "linked") return escapeHtml(match.text);
-    return `<button class="svc-setlist-song-link" type="button" data-global-song-id="${escapeAttr(match.song.id)}" title="${escapeAttr(match.text)}">${escapeHtml(match.text)}</button>`;
+    const hymnNo = String(match.song.hymn_no || "").trim();
+    const prefix = hymnNo ? `${hymnNo} ` : "";
+    const content = prefix && match.text.startsWith(prefix)
+      ? `<span class="svc-setlist-hymn-no">${escapeHtml(hymnNo)}</span> ${escapeHtml(match.text.slice(prefix.length))}`
+      : escapeHtml(match.text);
+    return `<button class="svc-setlist-song-link" type="button" data-global-song-id="${escapeAttr(match.song.id)}" title="${escapeAttr(match.text)}">${content}</button>`;
   }).join(" + ");
   return `
     <li>
