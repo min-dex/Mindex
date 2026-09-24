@@ -47,25 +47,4 @@ assert.deepEqual(chained.entries.map(entry => [entry.key, entry.content]), [['�
 // Default mode is untouched by the new branch.
 assert.equal(j(context.parsePresenterPreparationInput('광고:')).entries[0]?.content, '광고:');
 
-// Tab targets: next empty value slot, previous empty slot, -1 when none is left.
-const form = '찬양1: 주 은혜임을\n설교: \n설교 본문: 히브리서\n인용구절: \n축도: ';
-const at = (text, needle) => text.indexOf(needle) + needle.length;
-const lineEnd = (text, needle) => { const start = text.indexOf(needle); const end = text.indexOf('\n', start); return end < 0 ? text.length : end; };
-assert.equal(context.presenterPreparationTabTarget(form, at(form, '찬양1: 주 은혜임을')), lineEnd(form, '설교:'));
-assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '설교:')), lineEnd(form, '인용구절:'), 'filled line is skipped');
-assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '인용구절:')), lineEnd(form, '축도:'));
-assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '축도:')), -1, 'no slot after the last one');
-assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '축도:'), true), lineEnd(form, '인용구절:'));
-assert.equal(context.presenterPreparationTabTarget(form, lineEnd(form, '설교:'), true), -1, 'no slot before the first');
-assert.equal(context.presenterPreparationTabTarget('메모만 있는 줄', 3), -1);
-assert.equal(context.presenterPreparationTabTarget('', 0), -1);
-
-// Ghost: a label-only line keeps the example value as a faint hint; typed values hide it.
-const hints = '설교: 은혜로 사는 삶 / 홍길동 목사\n축도: 홍길동 목사';
-const ghost = context.renderPresenterPreparationGhost(hints, '설교: \n축도: 김 목사');
-assert.ok(ghost.includes('svc-preparation-ghost-typed">설교: </span>은혜로 사는 삶 / 홍길동 목사'), 'blank label shows example hint');
-assert.ok(ghost.includes('is-occupied">축도: 김 목사'), 'typed line is hidden in the ghost');
-assert.ok(context.renderPresenterPreparationGhost(hints, '').includes('설교: 은혜로 사는 삶'), 'empty box still shows examples');
-assert.ok(!context.renderPresenterPreparationGhost('축도: 홍길동 목사', '설교: ').includes('svc-preparation-ghost-typed'), 'no hint when the line is not a prefix of the example');
-
-console.log('PASS worship input form: label form, blank-label skipping, tab slots, ghost hints');
+console.log('PASS worship input form: label parsing and blank-label skipping');

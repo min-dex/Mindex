@@ -1303,7 +1303,6 @@ function bindStaticEvents() {
     syncBrowserHistory();
   });
   refs.songList.addEventListener("scroll", saveCurrentListScroll, { passive: true });
-  refs.songList.addEventListener("scroll", handlePresenterPreparationScroll, { capture: true, passive: true });
   refs.songList.addEventListener("keydown", handleDetailKeydown);
   refs.songList.addEventListener("input", handleDetailInput);
   refs.songList.addEventListener("paste", handlePresenterPreparationPaste);
@@ -1617,10 +1616,9 @@ function bindDetailInteractionRoot(root, options = {}) {
   if (options.presenterBoard) root.addEventListener("dblclick", handlePresenterBoardDoubleClick);
   root.addEventListener("keydown", handleDetailKeydown, { capture: true });
   root.addEventListener("input", handleDetailInput);
-  root.addEventListener("scroll", handlePresenterPreparationScroll, { capture: true, passive: true });
   root.addEventListener("focusin", (event) => {
-    if (event.target?.matches?.("[data-presenter-preparation-input]")) {
-      syncPresenterPreparationGhost(event.target);
+    if (event.target?.matches?.("[data-presenter-preparation-field]")) {
+      syncPresenterPreparationControls(event.target);
     }
   });
   root.addEventListener("focusout", handleSetlistLeaderFocusOut);
@@ -9449,7 +9447,7 @@ function handlePresenterDetailClick(event) {
 }
 
 function isPresenterPreparationInputEvent(event) {
-  return Boolean(event?.target?.closest?.("[data-presenter-preparation-input]"));
+  return Boolean(event?.target?.closest?.("[data-presenter-preparation-field]"));
 }
 
 function handleDetailKeydown(event) {
@@ -9473,33 +9471,16 @@ function handleDetailKeydown(event) {
     event.preventDefault();
     return;
   }
-  const preparationInput = event.target.closest("[data-presenter-preparation-input]");
+  const preparationInput = event.target.closest("[data-presenter-preparation-field]");
   if (preparationInput) {
-    if (presenterPreparationDoubleEnterShouldApply(preparationInput, event)) {
-      event.preventDefault();
-      event.stopPropagation();
-      void applyPresenterPreparationInput(
-        preparationInput.dataset.serviceId || state.selectedServiceId,
-        { draft: preparationInput.value },
-      );
-      return;
-    }
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
       event.stopPropagation();
       void applyPresenterPreparationInput(
         preparationInput.dataset.serviceId || state.selectedServiceId,
-        { draft: preparationInput.value },
+        { draft: presenterPreparationDraftFromRoot(preparationInput.closest(".svc-presenter-preparation-input"), state.services.find((service) => service.id === (preparationInput.dataset.serviceId || state.selectedServiceId))) },
       );
       return;
-    }
-    if (event.key === "Tab" && !event.isComposing && !event.altKey && !event.metaKey && !event.ctrlKey
-      && preparationInput.selectionStart === preparationInput.selectionEnd) {
-      const target = presenterPreparationTabTarget(preparationInput.value, preparationInput.selectionStart, event.shiftKey);
-      if (target >= 0) {
-        event.preventDefault();
-        preparationInput.setSelectionRange(target, target);
-      }
     }
     event.stopPropagation();
     return;
@@ -9707,11 +9688,17 @@ function handleDetailInput(event) {
     return;
   }
 
-  const preparationInput = event.target.closest("[data-presenter-preparation-input]");
+  const preparationInput = event.target.closest("[data-presenter-preparation-field]");
   if (preparationInput) {
     const serviceId = preparationInput.dataset.serviceId || state.selectedServiceId;
-    if (serviceId) state.presenterPreparationDrafts[serviceId] = preparationInput.value;
-    syncPresenterPreparationGhost(preparationInput);
+    const service = state.services.find((candidate) => candidate.id === serviceId);
+    if (serviceId && service) {
+      state.presenterPreparationDrafts[serviceId] = presenterPreparationDraftFromRoot(
+        preparationInput.closest(".svc-presenter-preparation-input"),
+        service,
+      );
+    }
+    syncPresenterPreparationControls(preparationInput);
     event.stopPropagation();
     return;
   }
@@ -9822,16 +9809,8 @@ function handleDetailInput(event) {
 }
 
 function handlePresenterPreparationPaste(event) {
-  const input = event.target.closest("[data-presenter-preparation-input]");
-  if (!input) return;
-  const text = (event.clipboardData || window.clipboardData)?.getData("text/plain");
-  if (!text) return;
-  event.preventDefault();
-  event.stopPropagation();
-  const start = Number.isInteger(input.selectionStart) ? input.selectionStart : input.value.length;
-  const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
-  input.setRangeText(text, start, end, "end");
-  input.dispatchEvent(new Event("input", { bubbles: true }));
+  const input = event.target.closest("[data-presenter-preparation-field]");
+  if (input) event.stopPropagation();
 }
 
 function handleDetailSubmit(event) {
@@ -10535,16 +10514,6 @@ function isDeferredServiceTextInput(field) {
 function isPresenterEnterCommittedServiceInput(field) {
   return state.module === "presenter"
     && isDeferredServiceTextInput(field);
-}
-
-function presenterPreparationDoubleEnterShouldApply(input, event) {
-  if (!input || event?.key !== "Enter" || event.isComposing || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey) return false;
-  const start = Number.isInteger(input.selectionStart) ? input.selectionStart : input.value.length;
-  const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
-  if (start !== end) return false;
-  const before = input.value.slice(0, start);
-  const after = input.value.slice(end);
-  return Boolean(before.trim() && !after.trim() && /\n\s*$/.test(before));
 }
 
 function isServiceSongTitleInputField(field) {
@@ -16938,18 +16907,15 @@ function setRightSidebarContent(html = "") {
     && current.dataset.serviceId === next.dataset.serviceId;
   if (sameService) {
     const scrollTop = refs.rightSidebar.scrollTop;
-    const preparation = current.querySelector("[data-presenter-preparation-input]");
-    const resizedHeight = preparation?.style.height;
     refreshIcons(next);
     patchPresenterControlTree(current, next);
-    if (resizedHeight && preparation.isConnected) preparation.style.height = resizedHeight;
     refs.rightSidebar.scrollTop = scrollTop;
   } else {
     refs.rightSidebar.replaceChildren(template.content);
   }
   refs.rightSidebar.dataset.hasContent = hasContent ? "true" : "false";
   applyRightSidebarVisibility(hasContent);
-  refs.rightSidebar.querySelectorAll("[data-presenter-preparation-input]").forEach(syncPresenterPreparationGhost);
+  refs.rightSidebar.querySelectorAll("[data-presenter-preparation-field]").forEach(syncPresenterPreparationControls);
   if (hasContent) {
     refreshIcons(refs.rightSidebar);
     applyPresenterPreviewScales(refs.rightSidebar);
@@ -24117,19 +24083,14 @@ function renderPresenterSidebarPreparationInput(service) {
   if (!service?.id) return "";
   const draft = presenterPreparationDisplayTextForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
-  const hasValues = presenterPreparationHasEnteredValues(draft);
-  const examples = presenterPreparationValueExamplesForService(service);
-  const placeholder = examples || "입력할 항목이 없습니다";
+  const hasValues = presenterPreparationDraftHasValues(service, draft);
   return `
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
         <span>예배 일괄 입력</span>
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
-        <div class="svc-preparation-editor">
-        <textarea class="svc-presenter-preparation-text svc-presenter-preparation-text--sidebar" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="4" placeholder="${escapeAttr(placeholder)}" aria-label="예배 일괄 입력 값">${escapeHtml(draft)}</textarea>
-        <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
-        </div>
+        ${renderPresenterPreparationFieldRows(service, draft, { sidebar: true })}
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply svc-presenter-preparation-apply--sidebar" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}"
             aria-label="${applying ? "예배 입력 반영 중" : "예배 입력 반영"}" title="${applying ? "반영 중" : hasValues ? "입력 반영" : "반영할 입력이 없습니다"}" ${applying || !hasValues ? "disabled" : ""}>
@@ -28244,27 +28205,84 @@ function resolvePresenterTargetScreenRect() {
   return selected.rect;
 }
 
-function presenterPreparationInputForService(serviceId) {
-  if (!serviceId) return null;
-  const selector = `[data-presenter-preparation-input][data-service-id="${cssEscape(serviceId)}"]`;
-  return refs.rightSidebar?.querySelector(selector)
-    || refs.detailPane?.querySelector(selector)
-    || refs.songList?.querySelector(selector)
-    || null;
-}
-
 function presenterPreparationDisplayTextForService(service) {
   const drafts = state.presenterPreparationDrafts;
   if (Object.prototype.hasOwnProperty.call(drafts, service.id)) return drafts[service.id] || "";
   return "";
 }
 
-function presenterPreparationValueExamplesForService(service) {
+function presenterPreparationFieldsForService(service) {
   return presenterPreparationPlaceholderForService(service)
     .split(/\r\n?|\n/)
-    .map((line) => line.replace(/^[^:：]+[:：]\s*/, "").trim())
-    .filter(Boolean)
-    .join("\n");
+    .map((line) => {
+      const colon = line.search(/[:：]/);
+      if (colon < 1) return null;
+      return {
+        label: line.slice(0, colon).trim(),
+        example: line.slice(colon + 1).trim(),
+      };
+    })
+    .filter(Boolean);
+}
+
+function presenterPreparationFieldValues(service, draft = "") {
+  const fields = presenterPreparationFieldsForService(service);
+  const values = new Map(fields.map((field) => [compactSearchValue(field.label), ""]));
+  const lines = String(draft || "").split(/\r\n?|\n/);
+  const labeled = lines.some((line) => {
+    const colon = String(line).search(/[:：]/);
+    return colon > 0 && values.has(compactSearchValue(String(line).slice(0, colon)));
+  });
+  if (labeled) {
+    for (const line of lines) {
+      const colon = String(line).search(/[:：]/);
+      if (colon < 1) continue;
+      const key = compactSearchValue(String(line).slice(0, colon));
+      if (values.has(key)) values.set(key, String(line).slice(colon + 1).trim());
+    }
+  } else {
+    lines.forEach((line, index) => {
+      if (fields[index]) values.set(compactSearchValue(fields[index].label), String(line || "").trim());
+    });
+  }
+  return fields.map((field) => ({ ...field, value: values.get(compactSearchValue(field.label)) || "" }));
+}
+
+function presenterPreparationDraftFromFields(service, fields) {
+  const definitions = presenterPreparationFieldsForService(service);
+  const values = new Map(fields.map((field) => [compactSearchValue(field.label), String(field.value || "").trim()]));
+  return definitions.map(({ label }) => {
+    const value = values.get(compactSearchValue(label)) || "";
+    return value ? `${label}: ${value}` : "";
+  }).join("\n");
+}
+
+function presenterPreparationRenderedFields(root, service) {
+  if (!root || !service) return [];
+  return [...root.querySelectorAll("[data-presenter-preparation-field]")].map((input) => ({
+    label: input.dataset.presenterPreparationFieldLabel || "",
+    value: input.value || "",
+  }));
+}
+
+function presenterPreparationDraftFromRoot(root, service) {
+  return presenterPreparationDraftFromFields(service, presenterPreparationRenderedFields(root, service));
+}
+
+function presenterPreparationDraftHasValues(service, draft = "") {
+  return presenterPreparationFieldValues(service, draft).some((field) => field.value.trim());
+}
+
+function renderPresenterPreparationFieldRows(service, draft = "", options = {}) {
+  const fields = presenterPreparationFieldValues(service, draft);
+  if (!fields.length) return '<p class="svc-presenter-preparation-empty">입력할 항목이 없습니다.</p>';
+  return `<div class="svc-presenter-preparation-fields${options.sidebar ? " svc-presenter-preparation-fields--sidebar" : ""}">
+    ${fields.map((field) => `
+      <label class="svc-presenter-preparation-field-row">
+        <span class="svc-presenter-preparation-field-label">${escapeHtml(field.label)}</span>
+        <input class="svc-presenter-preparation-field-value" type="text" data-presenter-preparation-field data-service-id="${escapeAttr(service.id)}" data-presenter-preparation-field-label="${escapeAttr(field.label)}" value="${escapeAttr(field.value)}" placeholder="${escapeAttr(field.example)}" aria-label="${escapeAttr(`${field.label} 값`)}" />
+      </label>`).join("")}
+  </div>`;
 }
 
 function presenterPreparationValueSlotLabelsForService(service) {
@@ -28298,19 +28316,26 @@ function presenterPreparationDraftForApply(service, draft = "") {
 
 function presenterPreparationDraftNearApplyButton(button) {
   const serviceId = button?.dataset?.serviceId || state.selectedServiceId;
+  const service = state.services.find((candidate) => candidate.id === serviceId);
+  if (!service) return "";
   const root = button?.closest?.(".svc-presenter-preparation-input")
     || button?.closest?.("[data-presenter-right-sidebar], .service-sidebar-presenter-context, .svc-presenter-input-rail")
     || button?.parentElement
     || null;
-  const scoped = serviceId
-    ? root?.querySelector?.(`[data-presenter-preparation-input][data-service-id="${cssEscape(serviceId)}"]`)
-    : root?.querySelector?.("[data-presenter-preparation-input]");
-  return scoped?.value;
+  return presenterPreparationDraftFromRoot(root, service);
 }
 
 function presenterPreparationDraftForService(serviceId, options = {}) {
-  const inputValue = options.draft ?? presenterPreparationInputForService(serviceId)?.value;
-  const draft = inputValue == null ? state.presenterPreparationDrafts[serviceId] : inputValue;
+  if (options.draft != null) return String(options.draft || "").trim();
+  const service = state.services.find((candidate) => candidate.id === serviceId);
+  const selector = `[data-presenter-preparation-field][data-service-id="${cssEscape(serviceId)}"]`;
+  const input = refs.rightSidebar?.querySelector(selector)
+    || refs.detailPane?.querySelector(selector)
+    || refs.songList?.querySelector(selector)
+    || null;
+  const draft = input && service
+    ? presenterPreparationDraftFromRoot(input.closest(".svc-presenter-preparation-input"), service)
+    : state.presenterPreparationDrafts[serviceId];
   return String(draft || "").trim();
 }
 
@@ -32582,10 +32607,11 @@ function capturePresenterFocusedInput(root) {
     return { type: "citation", serviceId: field.dataset.serviceId, elementId: field.dataset.presenterCitationElementId,
       value: field.value, selectionStart: field.selectionStart, selectionEnd: field.selectionEnd };
   }
-  if (field?.matches?.("[data-presenter-preparation-input]")) {
+  if (field?.matches?.("[data-presenter-preparation-field]")) {
     return {
       type: "preparation",
       serviceId: field.dataset.serviceId || "",
+      label: field.dataset.presenterPreparationFieldLabel || "",
       value: field.value,
       selectionStart: typeof field.selectionStart === "number" ? field.selectionStart : null,
       selectionEnd: typeof field.selectionEnd === "number" ? field.selectionEnd : null,
@@ -32639,7 +32665,7 @@ function restorePresenterFocusedInput(root, snapshot) {
     return;
   }
   if (snapshot.type === "preparation") {
-    const field = root.querySelector(`[data-presenter-preparation-input][data-service-id="${CSS.escape(snapshot.serviceId || "")}"]`);
+    const field = root.querySelector(`[data-presenter-preparation-field][data-service-id="${CSS.escape(snapshot.serviceId || "")}"][data-presenter-preparation-field-label="${CSS.escape(snapshot.label || "")}"]`);
     if (!field) return;
     if (typeof snapshot.value === "string") field.value = snapshot.value;
     field.focus({ preventScroll: true });

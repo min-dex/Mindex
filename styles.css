@@ -5532,24 +5532,38 @@ body[data-theme="dark"] .service-week-card:hover {
   display: grid;
   gap: 6px;
 }
-.svc-presenter-preparation-text {
+.svc-presenter-preparation-fields { display: grid; gap: 6px; }
+.svc-presenter-preparation-field-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+}
+.svc-presenter-preparation-field-label {
+  color: var(--ink-4);
+  font-size: var(--ui-label-size);
+  font-weight: var(--ui-label-weight);
+  white-space: nowrap;
+}
+.svc-presenter-preparation-field-value {
   box-sizing: border-box;
   width: 100%;
-  min-height: 104px;
-  resize: vertical;
+  height: 32px;
+  min-width: 0;
   border: 0;
-  border-radius: calc(var(--r) - 1px);
+  border-radius: calc(var(--r) - 2px);
   background: color-mix(in srgb, var(--panel-2) 44%, transparent);
   color: var(--ink);
   font: inherit;
   font-size: var(--ui-body-size);
   font-weight: var(--ui-row-weight);
-  line-height: 1.55;
   outline: 0;
-  padding: 10px 12px;
+  padding: 0 9px;
 }
-.svc-presenter-preparation-text::placeholder { color: var(--ink-4); opacity: 1; font-weight: var(--ui-meta-weight); }
-.svc-presenter-preparation-text:focus { background: color-mix(in srgb, var(--panel-2) 68%, transparent); }
+.svc-presenter-preparation-field-value::placeholder { color: var(--ink-4); opacity: 1; font-weight: var(--ui-meta-weight); }
+.svc-presenter-preparation-field-value:focus { background: color-mix(in srgb, var(--panel-2) 68%, transparent); }
+.svc-presenter-preparation-empty { margin: 2px 0; color: var(--ink-4); font-size: var(--ui-meta-size); font-weight: var(--ui-meta-weight); }
 .svc-presenter-preparation-actions {
   display: flex;
   align-items: center;
@@ -5563,7 +5577,6 @@ body[data-theme="dark"] .service-week-card:hover {
   background: transparent;
   color: inherit;
 }
-.svc-preparation-ghost-typed { visibility: hidden; }
 .svc-presenter-preparation-apply {
   display: inline-flex;
   width: 100%;
@@ -5593,39 +5606,17 @@ body[data-theme="dark"] .service-week-card:hover {
   gap: 6px;
   padding: 0 var(--sidebar-item-pad-x);
 }
-.svc-presenter-preparation-text--sidebar {
-  min-height: 78px;
-  max-height: 180px;
+.svc-presenter-preparation-fields--sidebar { gap: 5px; }
+.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-row { min-height: 28px; gap: 7px; }
+.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-label { color: var(--sidebar-label); font-size: var(--ui-meta-size); }
+.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-value {
+  height: 28px;
   background: color-mix(in srgb, var(--sidebar-active-bg) 76%, transparent);
   color: var(--sidebar-ink);
   font-size: var(--ui-meta-size);
-  font-weight: var(--ui-row-weight);
-  line-height: 1.45;
-  padding: 9px 10px;
+  padding: 0 8px;
 }
-.svc-presenter-preparation-text--sidebar:focus {
-  background: var(--sidebar-hover-bg);
-}
-.svc-preparation-editor { position: relative; min-width: 0; overflow: hidden; border-radius: calc(var(--r) - 1px); }
-.svc-preparation-editor > textarea { display: block; }
-.svc-preparation-editor > textarea::placeholder { color: transparent; }
-.svc-preparation-ghost {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  box-sizing: border-box;
-  pointer-events: none;
-  color: var(--ink-4);
-  font: inherit;
-  font-size: var(--ui-body-size);
-  font-weight: var(--ui-row-weight);
-  line-height: 1.55;
-  padding: 10px 12px;
-}
-.svc-preparation-ghost-line { display: block; white-space: pre; overflow: hidden; text-overflow: ellipsis; min-height: 1lh; }
-.svc-preparation-ghost-line.is-occupied { visibility: hidden; white-space: pre-wrap; overflow-wrap: break-word; }
-.svc-presenter-preparation-input--sidebar .svc-preparation-ghost { font-size: var(--ui-meta-size); line-height: 1.45; padding: 9px 10px; }
+.svc-presenter-preparation-fields--sidebar .svc-presenter-preparation-field-value:focus { background: var(--sidebar-hover-bg); }
 .svc-presenter-preparation-apply--sidebar {
   justify-self: start;
   height: 28px;

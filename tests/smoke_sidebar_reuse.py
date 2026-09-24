@@ -17,12 +17,12 @@ def main():
                     <div style="height:600px">${title}</div>
                     <div class="svc-presenter-live-preview" style="width:254px"><span class="svc-slide-mini-output"><span class="svc-slide-mini-canvas presenter-output-root"><span>${title}</span></span></span></div>
                     <details data-presenter-help><summary>도움말</summary>내용</details>
-                    <textarea data-presenter-preparation-input>초안</textarea></div>`;
+                    <input data-presenter-preparation-field data-service-id="${id}" data-presenter-preparation-field-label="광고" value="초안"></div>`;
                   refs.rightSidebar.style.cssText='display:block;height:300px;overflow:auto';
                   setRightSidebarContent(markup('fixture','첫 화면'));
                   const root=refs.rightSidebar.firstElementChild, canvas=root.querySelector('.svc-slide-mini-canvas');
-                  const input=root.querySelector('textarea'), help=root.querySelector('details');
-                  input.value='작성 중';input.style.height='180px';input.focus();input.setSelectionRange(1,2);help.open=true;
+                  const input=root.querySelector('[data-presenter-preparation-field]'), help=root.querySelector('details');
+                  input.value='작성 중';input.focus();input.setSelectionRange(1,2);help.open=true;
                   refs.rightSidebar.scrollTop=200;
                   let removals=0;
                   const observer=new MutationObserver(records=>records.forEach(r=>r.removedNodes.forEach(n=>{if(n===root||n===canvas||n===input)removals++;})));
@@ -30,7 +30,7 @@ def main():
                   for(let i=0;i<10;i++)setRightSidebarContent(markup('fixture','화면 '+i));
                   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
                   const stable=root.isConnected && canvas.isConnected && input.isConnected && !removals;
-                  const editing=document.activeElement===input && input.value==='작성 중' && input.selectionStart===1 && input.style.height==='180px';
+                  const editing=document.activeElement===input && input.value==='작성 중' && input.selectionStart===1;
                   const preserved=help.open && refs.rightSidebar.scrollTop===200;
                   const updated=canvas.textContent==='화면 9';
                   observer.disconnect();

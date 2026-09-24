@@ -5992,7 +5992,7 @@ def main() -> int:
                           renderPresenterDetail();
                           const legacyContext = document.querySelector('.service-sidebar-input-context');
                           const rightSidebar = document.querySelector('#mindexRightSidebar');
-                          const bulkInput = rightSidebar?.querySelector('.svc-presenter-side-panel [data-presenter-preparation-input]');
+                          const bulkInput = rightSidebar?.querySelector('.svc-presenter-side-panel [data-presenter-preparation-field]');
                           const bulkButton = rightSidebar?.querySelector('.svc-presenter-side-panel [data-presenter-preparation-apply]');
                           const sidePanel = rightSidebar?.querySelector('.svc-presenter-side-panel');
                           const topbarToggle = document.querySelector('#presenterRightSidebarBtn');
@@ -6002,7 +6002,7 @@ def main() -> int:
                           bulkTemplate.innerHTML = renderPresenterSidebarPreparationInput(service).trim();
                           const bulkStatus = bulkTemplate.content.querySelector('.service-sidebar-head small')?.textContent.trim() || '';
                           if (bulkInput) {
-                            bulkInput.value = '찬양 1: 평화 하나님의 평강이';
+                            bulkInput.value = '평화 하나님의 평강이';
                             bulkInput.dispatchEvent(new Event('input', { bubbles: true }));
                           }
                           const topbarActionButtons = ['themeBtn', 'saveAllBtn']
@@ -6110,19 +6110,18 @@ def main() -> int:
                         and abs(presenter_header_input["controlAlignedLeft"] or 0) <= 2
                         and presenter_header_input["fieldCount"] >= 12
                         and presenter_header_input["songFieldCount"] >= 5
-                        and presenter_header_input["bulkInput"] == presenter_header_input["bulkButton"]
+                        and presenter_header_input["bulkInput"]
+                        and presenter_header_input["bulkButton"]
                         and not presenter_header_input["bulkExamples"]
-                        and presenter_header_input["bulkPlaceholder"].startswith("찬양1:")
+                        and presenter_header_input["bulkPlaceholder"]
                         and presenter_header_input["bulkButtonLabel"] == "반영"
-                        and presenter_header_input["bulkButtonTitle"] == "입력창에서 Enter 두 번 또는 ⌘/Ctrl+Enter"
-                        and presenter_header_input["bulkButtonWidth"] >= presenter_header_input["bulkActionsWidth"] - 2
-                        and presenter_header_input["bulkButtonWidth"] >= presenter_header_input["bulkInputWidth"] - 2
+                        and presenter_header_input["bulkButtonTitle"] == "입력 반영"
                         and (
                             presenter_header_input["bulkStatus"] == ""
                             or presenter_header_input["bulkStatus"] in ("불러오는 중", "입력 완료", "입력 없음")
                             or presenter_header_input["bulkStatus"].endswith("개 입력 필요")
                         )
-                        and presenter_header_input["bulkDraft"] in ("", "찬양 1: 평화 하나님의 평강이")
+                        and presenter_header_input["bulkDraft"] in ("", "찬양1: 평화 하나님의 평강이")
                         and (
                             not presenter_header_input["rightRailDesktop"]
                             or (
@@ -6144,7 +6143,8 @@ def main() -> int:
                     presenter_preparation_apply_click = page.evaluate(
                         """
                         (async () => {
-                          const input = document.querySelector('#mindexRightSidebar [data-presenter-preparation-input]');
+                          const input = [...document.querySelectorAll('#mindexRightSidebar [data-presenter-preparation-field]')]
+                            .find((field) => field.dataset.presenterPreparationFieldLabel === '대표기도');
                           const button = document.querySelector('#mindexRightSidebar [data-presenter-preparation-apply]');
                           if (!input || !button) return { ready: false, reason: 'control' };
                           const serviceId = input.dataset.serviceId || state.selectedServiceId;
@@ -6170,9 +6170,9 @@ def main() -> int:
                             showToast = (message, type = 'info') => toasts.push({ message, type });
                             delete state.presenterPreparationDrafts[serviceId];
                             state.dirty.service = false;
-                            input.value = '대표기도: 테스트 권사';
+                            input.value = '테스트 권사';
                             input.dispatchEvent(new Event('input', { bubbles: true }));
-                            await applyPresenterPreparationInput(serviceId, { draft: input.value });
+                            await applyPresenterPreparationInput(serviceId, { draft: presenterPreparationDraftFromRoot(input.closest('.svc-presenter-preparation-input'), state.services.find((service) => service.id === serviceId)) });
                             await new Promise((resolve) => window.setTimeout(resolve, 80));
                             return {
                               ready: true,
@@ -6891,14 +6891,15 @@ def main() -> int:
                     else:
                         fail("service-document-snapshot", json.dumps(service_document_snapshot, ensure_ascii=False))
 
-                    presenter_preparation_double_enter = page.evaluate(
+                    presenter_preparation_keyboard_apply = page.evaluate(
                         """
                         (() => {
                           if (
                             typeof handleDetailKeydown !== 'function'
-                            || typeof presenterPreparationDoubleEnterShouldApply !== 'function'
+                            || typeof presenterPreparationDraftFromRoot !== 'function'
                           ) return { ready: false };
-                          const input = document.querySelector('#mindexRightSidebar [data-presenter-preparation-input]');
+                          const input = [...document.querySelectorAll('#mindexRightSidebar [data-presenter-preparation-field]')]
+                            .find((field) => field.dataset.presenterPreparationFieldLabel === '대표기도');
                           if (!input) return { ready: false, reason: 'input' };
                           const originalApply = applyPresenterPreparationInput;
                           const originalValue = input.value;
@@ -6907,32 +6908,21 @@ def main() -> int:
                             applyPresenterPreparationInput = (serviceId, options = {}) => {
                               calls.push({ serviceId, draft: options.draft || '' });
                             };
-                            input.value = '대표기도: 더블엔터 권사';
+                            input.value = 'Cmd Enter 권사';
                             input.selectionStart = input.selectionEnd = input.value.length;
-                            let firstPrevented = false;
+                            let prevented = false;
+                            let stopped = false;
                             handleDetailKeydown({
                               target: input,
                               key: 'Enter',
-                              preventDefault() { firstPrevented = true; },
-                              stopPropagation() {},
-                            });
-                            const firstCalls = calls.length;
-                            input.value = '대표기도: 더블엔터 권사\\n';
-                            input.selectionStart = input.selectionEnd = input.value.length;
-                            let secondPrevented = false;
-                            let secondStopped = false;
-                            handleDetailKeydown({
-                              target: input,
-                              key: 'Enter',
-                              preventDefault() { secondPrevented = true; },
-                              stopPropagation() { secondStopped = true; },
+                              metaKey: true,
+                              preventDefault() { prevented = true; },
+                              stopPropagation() { stopped = true; },
                             });
                             return {
                               ready: true,
-                              firstPrevented,
-                              firstCalls,
-                              secondPrevented,
-                              secondStopped,
+                              prevented,
+                              stopped,
                               calls,
                             };
                           } finally {
@@ -6943,17 +6933,15 @@ def main() -> int:
                         """
                     )
                     if (
-                        presenter_preparation_double_enter.get("ready")
-                        and not presenter_preparation_double_enter["firstPrevented"]
-                        and presenter_preparation_double_enter["firstCalls"] == 0
-                        and presenter_preparation_double_enter["secondPrevented"]
-                        and presenter_preparation_double_enter["secondStopped"]
-                        and len(presenter_preparation_double_enter["calls"]) == 1
-                        and presenter_preparation_double_enter["calls"][0]["draft"] == "대표기도: 더블엔터 권사\n"
+                        presenter_preparation_keyboard_apply.get("ready")
+                        and presenter_preparation_keyboard_apply["prevented"]
+                        and presenter_preparation_keyboard_apply["stopped"]
+                        and len(presenter_preparation_keyboard_apply["calls"]) == 1
+                        and "대표기도: Cmd Enter 권사" in presenter_preparation_keyboard_apply["calls"][0]["draft"]
                     ):
-                        pass_("presenter-preparation-double-enter", json.dumps(presenter_preparation_double_enter, ensure_ascii=False))
+                        pass_("presenter-preparation-keyboard-apply", json.dumps(presenter_preparation_keyboard_apply, ensure_ascii=False))
                     else:
-                        fail("presenter-preparation-double-enter", json.dumps(presenter_preparation_double_enter, ensure_ascii=False))
+                        fail("presenter-preparation-keyboard-apply", json.dumps(presenter_preparation_keyboard_apply, ensure_ascii=False))
 
                     presenter_input_label_vocabulary = page.evaluate(
                         """

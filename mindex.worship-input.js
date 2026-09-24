@@ -1,31 +1,6 @@
 // Worship preparation input parsing and song-resolution helpers.
 // Loaded before app.js so these browser globals stay available to app orchestration.
 
-function renderPresenterPreparationGhost(examples = "", draft = "") {
-  const values = String(draft).split(/\r\n?|\n/);
-  const hints = String(examples).split(/\r\n?|\n/);
-  return Array.from({ length: Math.max(values.length, hints.length) }, (_, index) => {
-    const value = values[index] || "";
-    const occupied = value.length > 0;
-    const hint = hints[index] || "";
-    // A label-only line from the form keeps the example value as a faint hint after the colon.
-    if (occupied && /[:：]\s*$/.test(value) && hint.length > value.length && hint.startsWith(value)) {
-      return `<span class="svc-preparation-ghost-line"><span class="svc-preparation-ghost-typed">${escapeHtml(value)}</span>${escapeHtml(hint.slice(value.length))}</span>`;
-    }
-    return `<span class="svc-preparation-ghost-line${occupied ? " is-occupied" : ""}">${escapeHtml(occupied ? value : hint || " ")}</span>`;
-  }).join("");
-}
-
-function syncPresenterPreparationGhost(input) {
-  const ghost = input?.parentElement?.querySelector("[data-presenter-preparation-ghost]");
-  if (!ghost) return;
-  const markup = renderPresenterPreparationGhost(input.placeholder, input.value);
-  if (ghost.innerHTML !== markup) ghost.innerHTML = markup;
-  ghost.style.width = `${input.clientWidth}px`;
-  ghost.style.transform = `translateY(${-input.scrollTop}px)`;
-  syncPresenterPreparationControls(input);
-}
-
 function presenterPreparationHasEnteredValues(value = "") {
   return String(value || "").split(/\r\n?|\n/).some((line) => {
     const text = String(line || "").trim();
@@ -35,11 +10,12 @@ function presenterPreparationHasEnteredValues(value = "") {
   });
 }
 
-function syncPresenterPreparationControls(input) {
-  const root = input?.closest?.(".svc-presenter-input-rail, .service-sidebar-section--preparation-input");
+function syncPresenterPreparationControls(field) {
+  const root = field?.closest?.(".svc-presenter-input-rail, .service-sidebar-section--preparation-input");
   if (!root) return;
-  const hasValues = presenterPreparationHasEnteredValues(input.value);
-  const applying = Boolean(input.dataset?.serviceId && state.presenterPreparationApplyingServiceIds?.has(input.dataset.serviceId));
+  const hasValues = [...root.querySelectorAll("[data-presenter-preparation-field]")]
+    .some((input) => String(input.value || "").trim());
+  const applying = Boolean(field.dataset?.serviceId && state.presenterPreparationApplyingServiceIds?.has(field.dataset.serviceId));
   const apply = root.querySelector("[data-presenter-preparation-apply]");
   if (apply) {
     apply.disabled = applying || !hasValues;
@@ -57,32 +33,6 @@ function presenterPreparationFormFromExamples(examples = "") {
     .filter(Boolean)
     .join("\n");
 }
-
-// Tab / Shift+Tab hop between the empty value slots of the label lines. Returns the caret
-// position to move to, or -1 to leave the key to the browser (focus moves on).
-function presenterPreparationTabTarget(value = "", caret = 0, backwards = false) {
-  const text = String(value);
-  const lines = text.split(/\r\n?|\n/);
-  const starts = [];
-  let offset = 0;
-  for (const line of lines) { starts.push(offset); offset += line.length + 1; }
-  const current = Math.max(0, starts.findIndex((start, index) => caret >= start && (index === lines.length - 1 || caret < starts[index + 1])));
-  // A slot is a label line whose value is still empty.
-  const slot = (index) => /^[^:：\n]+[:：][ \t]*$/.test(lines[index]) ? starts[index] + lines[index].length : -1;
-  const order = backwards
-    ? Array.from({ length: current }, (_, i) => current - 1 - i)
-    : Array.from({ length: lines.length - current - 1 }, (_, i) => current + 1 + i);
-  for (const index of order) {
-    const target = slot(index);
-    if (target >= 0) return target;
-  }
-  return -1;
-}
-
-function handlePresenterPreparationScroll(event) {
-  if (event.target?.matches?.("[data-presenter-preparation-input]")) syncPresenterPreparationGhost(event.target);
-}
-
 
 function presenterPreparationPlaceholderSongLabel(item) {
   const label = String(item?.label || "").replace(/\s+/g, "").trim();

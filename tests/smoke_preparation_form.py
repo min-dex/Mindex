@@ -1,4 +1,4 @@
-"""Bulk worship input accepts values in template order without inserting labels."""
+"""Bulk worship input keeps labels fixed beside value-only fields."""
 from smoke_app import launch_chromium, start_local_app_server, sync_playwright
 
 
@@ -29,27 +29,25 @@ def main():
                     state.presenterPreparationDrafts = {}; state.selectedServiceId = service.id;
                     servicePrepEditorItems = () => state.serviceItems[service.id];
                     getServiceItems = () => state.serviceItems[service.id];
-                    const values = presenterPreparationValueExamplesForService(service);
-                    check(values.includes('다음 주 예배 후 모임이 있습니다') && !values.includes('광고:'), 'value-only examples: ' + values);
                     const host = document.createElement('div'); host.innerHTML = renderPresenterServiceInputRail(service); document.body.append(host);
-                    const input = host.querySelector('[data-presenter-preparation-input]');
-                    check(input.value === '', 'the input must start empty');
+                    const inputs = [...host.querySelectorAll('[data-presenter-preparation-field]')];
+                    check(inputs.length === 2, 'two fixed fields render');
+                    check(inputs[0].dataset.presenterPreparationFieldLabel === '광고', 'first field label');
+                    check(inputs[0].value === '' && inputs[0].placeholder.includes('다음 주 예배'), 'value field starts empty with example');
                     check(!host.querySelector('[data-presenter-preparation-form]'), 'the form button must not render');
-                    check(input.placeholder === values, 'placeholder must contain only values');
-                    const prepared = presenterPreparationDraftForApply(service, '공지 내용\\n김은혜 집사');
-                    check(prepared.value === '광고: 공지 내용\\n대표기도: 김은혜 집사', 'slot mapping: ' + prepared.value);
+                    inputs[0].value = '공지 내용'; inputs[1].value = '김은혜 집사';
+                    const draft = presenterPreparationDraftFromRoot(host, service);
+                    check(draft === '광고: 공지 내용\\n대표기도: 김은혜 집사', 'field mapping: ' + draft);
+                    const prepared = presenterPreparationDraftForApply(service, draft);
+                    check(prepared.value === draft, 'prepared labeled draft');
                     const legacy = presenterPreparationDraftForApply(service, '광고: 기존 공지\\n대표기도: 김은혜 집사');
                     check(legacy.value.includes('광고: 기존 공지'), 'legacy labels remain supported');
-                    const scripture = presenterPreparationDraftForApply(service, '요 3:16');
-                    check(scripture.value.startsWith('광고: 요 3:16'), 'scripture-shaped value remains a value');
-                    const overflow = presenterPreparationDraftForApply(service, '첫 줄\\n둘째 줄\\n셋째 줄');
-                    check(overflow.error.includes('3번째 줄'), 'overflow is explicit');
                     host.remove();
                     return 'ok';
                   } finally { state.services = previous.services; state.serviceItems = previous.items; state.presenterPreparationDrafts = previous.drafts; }
                 }""")
                 assert result == "ok", result
-                print(engine, "PASS values-only bulk input, legacy labels, and slot bounds", flush=True)
+                print(engine, "PASS fixed-label bulk input fields and legacy labels", flush=True)
                 browser.close()
     finally:
         server.shutdown()

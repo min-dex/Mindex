@@ -127,20 +127,15 @@ function renderPresenterRightSidebarToggle(options = {}) {
 
 function renderPresenterServiceInputRail(service) {
   const draft = presenterPreparationDisplayTextForService(service);
-  const examples = presenterPreparationValueExamplesForService(service);
   const applying = state.presenterPreparationApplyingServiceIds.has(service.id);
-  const hasValues = presenterPreparationHasEnteredValues(draft);
-  const placeholder = examples || "입력할 항목이 없습니다";
+  const hasValues = presenterPreparationDraftHasValues(service, draft);
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
         <span>예배 일괄 입력</span>
       </header>
       <section class="svc-presenter-preparation-input">
-        <div class="svc-preparation-editor">
-        <textarea class="svc-presenter-preparation-text" data-presenter-preparation-input data-service-id="${escapeAttr(service.id)}" rows="5" placeholder="${escapeAttr(placeholder)}" aria-label="예배 일괄 입력 값">${escapeHtml(draft)}</textarea>
-        <div class="svc-preparation-ghost" data-presenter-preparation-ghost aria-hidden="true">${renderPresenterPreparationGhost(placeholder, draft)}</div>
-        </div>
+        ${renderPresenterPreparationFieldRows(service, draft)}
         <div class="svc-presenter-preparation-actions">
           <button class="svc-presenter-preparation-apply" type="button" data-presenter-preparation-apply data-service-id="${escapeAttr(service.id)}"
             aria-label="${applying ? "예배 입력 반영 중" : "예배 입력 반영"}" title="${applying ? "반영 중" : hasValues ? "입력 반영" : "반영할 입력이 없습니다"}" ${applying || !hasValues ? "disabled" : ""}>

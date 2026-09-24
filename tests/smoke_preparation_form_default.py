@@ -1,4 +1,4 @@
-"""Untouched bulk inputs stay empty and expose value-only examples."""
+"""Bulk input renders fixed labels with empty value fields."""
 from smoke_app import launch_chromium, start_local_app_server, sync_playwright
 
 
@@ -15,24 +15,23 @@ def main():
               const check = (ok, message) => { if (!ok) throw new Error(message); };
               const service = { id: '__prep_values_default__', type_id: 'sunday-main', date: '2026-09-20', title: '주일예배 [3부]' };
               const previous = { services: state.services, drafts: state.presenterPreparationDrafts, dirty: state.dirty.service };
-              const textarea = html => { const host = document.createElement('div'); host.innerHTML = html; return host.querySelector('[data-presenter-preparation-input]'); };
+              const fields = html => { const host = document.createElement('div'); host.innerHTML = html; return [...host.querySelectorAll('[data-presenter-preparation-field]')]; };
               try {
                 state.services = [service, ...previous.services]; state.presenterPreparationDrafts = {};
-                const examples = presenterPreparationValueExamplesForService(service);
-                const box = textarea(renderPresenterServiceInputRail(service));
-                check(box.value === '', 'untouched input must be empty');
-                check(box.placeholder === examples && !/^\S+[:：]/m.test(examples), 'examples must be values only: ' + examples);
+                const inputs = fields(renderPresenterServiceInputRail(service));
+                check(inputs.length > 0 && inputs.every((input) => input.value === ''), 'value fields must start empty');
+                check(inputs.every((input) => input.dataset.presenterPreparationFieldLabel), 'each field needs a fixed label');
                 const host = document.createElement('div'); host.innerHTML = renderPresenterSidebarPreparationInput(service);
                 check(!host.querySelector('[data-presenter-preparation-form]'), 'no form button');
-                state.presenterPreparationDrafts[service.id] = '주 은혜임을';
-                check(textarea(renderPresenterServiceInputRail(service)).value === '주 은혜임을', 'typed value is retained');
+                state.presenterPreparationDrafts[service.id] = '찬양1: 주 은혜임을';
+                check(fields(renderPresenterServiceInputRail(service))[0].value === '주 은혜임을', 'typed value is retained');
                 delete state.presenterPreparationDrafts[service.id];
-                check(textarea(renderPresenterServiceInputRail(service)).value === '', 'cleared draft returns to an empty input');
+                check(fields(renderPresenterServiceInputRail(service)).every((input) => input.value === ''), 'cleared draft returns to empty values');
                 return 'ok';
               } finally { state.services = previous.services; state.presenterPreparationDrafts = previous.drafts; state.dirty.service = previous.dirty; }
             }""")
             assert result == "ok", result
-            print("PASS bulk worship input starts empty with value-only examples", flush=True)
+            print("PASS bulk worship input renders fixed labels with empty values", flush=True)
             browser.close()
     finally:
         server.shutdown()
