@@ -17244,17 +17244,32 @@ function renderManualsDetail() {
         <div>
           <span>${escapeHtml(active.eyebrow)}</span>
           <h2>예배 매뉴얼</h2>
+          ${active.summary ? `<p>${escapeHtml(active.summary)}</p>` : ""}
         </div>
       </header>
+      <nav class="manuals-index" aria-label="예배 매뉴얼 목차">
+        ${active.sections.map((section, index) => {
+          const sectionId = `manual-${escapeAttr(active.id)}-${index + 1}`;
+          return `<a href="#${sectionId}"><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(section.title)}</a>`;
+        }).join("")}
+      </nav>
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
         <h3 id="manualGuideTitle" class="sr-only">${escapeHtml(active.title)}</h3>
         <div class="manual-guide-grid">
-          ${active.sections.map((section) => `
-            <section class="manual-section${section.layout ? ` manual-section--${escapeAttr(section.layout)}` : ""}">
-              <h4>${escapeHtml(section.title)}</h4>
-              ${renderManualSectionContent(section)}
+          ${active.sections.map((section, index) => {
+            const sectionId = `manual-${escapeAttr(active.id)}-${index + 1}`;
+            return `
+            <section id="${sectionId}" class="manual-section${section.layout ? ` manual-section--${escapeAttr(section.layout)}` : ""}" aria-labelledby="${sectionId}-title">
+              <header class="manual-section-head">
+                <span>${String(index + 1).padStart(2, "0")}</span>
+                <h4 id="${sectionId}-title">${escapeHtml(section.title)}</h4>
+              </header>
+              <div class="manual-section-content">
+                ${renderManualSectionContent(section)}
+              </div>
             </section>
-          `).join("")}
+          `;
+          }).join("")}
         </div>
       </article>
     </div>
