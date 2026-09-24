@@ -19,6 +19,8 @@ try:
               check(sections.length>8,'manual sections missing');
               check(links.length===sections.length,'manual index count');
               check(quickLinks.length===4,'manual quick start count');
+              check(refs.detailPane.querySelector('.manuals-notice'),'manual source notice missing');
+              check(refs.detailPane.querySelectorAll('.manual-checklist-group').length>=4,'manual paragraph groups missing');
               check(refs.detailPane.querySelector('.manuals-head p'),'manual summary missing');
               check(sections.every((section,index)=>section.id && links[index].getAttribute('href')===`#${section.id}`),'manual index targets');
               check(quickLinks.every(link=>refs.detailPane.querySelector(link.getAttribute('href'))),'manual quick start targets');
