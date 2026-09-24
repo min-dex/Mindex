@@ -79,8 +79,18 @@ const server=http.createServer((req,res)=>{
     });
     assert.deepEqual(autoCases,['26-A5.png','26-A4.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
 
+    assert.equal(await page.evaluate(()=>state.module),'bulletin');
+    assert.equal(await page.locator('[data-home-module="bulletin"]').getAttribute('aria-current'),'page');
+    await page.locator('[data-bulletin-close]').click();
+    await page.locator('[data-home-module="bulletin"]').click();
+    await page.waitForFunction(()=>state.module==='bulletin'&&!state.presenterBulletinServiceId);
+    assert.match(await page.locator('#detailPane').textContent(),/왼쪽 목록에서 주보를 선택/);
+    await page.locator('[data-bulletin-open]').first().click();
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.evaluate(()=>linkStateFromParams(readLinkParams()).module),'bulletin');
+    console.log('PASS independent bulletin navigation, date list, selection and module route');
     assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Bulletin opens a separate app tab');
-    assert.match(await page.locator('.page-tab.active').textContent(),/청년부 주보 · 2026-09-20/);
+    assert.match(await page.locator('.page-tab.active').textContent(),/청년부 주보/);
     assert.equal(await page.evaluate(()=>linkStateFromParams(readLinkParams()).presenterBulletinServiceId),await page.evaluate(()=>bulletinTest.id));
     await page.locator('[data-bulletin-field="news"]').fill('탭 전환 전 편집');
     await page.evaluate(()=>activatePageTab(0));

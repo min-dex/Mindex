@@ -427,6 +427,7 @@
       q("[data-bulletin-local]").hidden=!doc?.localDraft;
       q("[data-bulletin-local]").disabled=loading||!!doc?.saving;
       root.querySelectorAll(".bulletin-properties input,.bulletin-properties select,.bulletin-properties textarea,.bulletin-properties button").forEach(el=>el.disabled=loading||(!doc?.dbLoaded&&!!error));
+      options.onStateChange?.();
     }
     function preview(){
       if(!doc||!assetLoaded){status();return;}

@@ -413,7 +413,7 @@ const TITLE_COLLATOR = new Intl.Collator("ko-KR", {
 });
 
 const HANGUL_INITIALS = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-const CONTENT_MODULES = ["service", "presenter", "scripture", "praise", "calendar", "references", "manuals"];
+const CONTENT_MODULES = ["service", "presenter", "bulletin", "scripture", "praise", "calendar", "references", "manuals"];
 const ROUTE_MODULES = ["home", ...CONTENT_MODULES];
 const SERVICE_FILTERS = ["all", "public", "ministry", "special"];
 const PRAISE_LIST_FILTERS = [
@@ -952,7 +952,7 @@ function loadInitialData() {
 
 function isServiceDataModule(moduleName = state.module) {
   // The home screen is the weekly worship board, so it needs the same data.
-  return moduleName === "home" || moduleName === "service" || moduleName === "presenter";
+  return moduleName === "home" || moduleName === "service" || moduleName === "presenter" || moduleName === "bulletin";
 }
 
 function isOperationsModule(moduleName = state.module) {
@@ -970,7 +970,8 @@ function renderCurrentServiceModuleDetail() {
 }
 
 function renderCurrentServiceModuleDetailUnscoped() {
-  if (state.module === "presenter") renderPresenterDetail();
+  if (state.module === "bulletin") renderBulletinDetail();
+  else if (state.module === "presenter") renderPresenterDetail();
   else renderServiceDetail();
 }
 
@@ -1310,6 +1311,9 @@ function bindStaticEvents() {
   refs.songList.addEventListener("dblclick", handleServiceOutlineSlideDoubleClick);
 
   refs.songList.addEventListener("click", async (event) => {
+    const bulletin = event.target.closest("[data-bulletin-open]");
+    if (bulletin) {await runServiceBulletinAction("open", bulletin.dataset.bulletinOpen);return;}
+
     if (handleSidebarPresenterActionClick(event)) return;
     if (handleServiceOutlineSlideEvent(event)) return;
 
@@ -2491,7 +2495,7 @@ function currentBrowserHistorySnapshot() {
     selectedBibleVerseEnd: state.selectedBibleVerses?.at(-1) || state.selectedBibleVerse,
     selectedServiceTypeId: state.selectedServiceTypeId,
     selectedServiceId,
-    presenterBulletinServiceId: state.module === "presenter" ? state.presenterBulletinServiceId : null,
+    presenterBulletinServiceId: ["presenter", "bulletin"].includes(state.module) ? state.presenterBulletinServiceId : null,
     bibleTextSearchQuery: state.bibleTextSearchQuery,
     bibleTextSearchPage: state.bibleTextSearchPage,
   };
@@ -2521,6 +2525,7 @@ async function handleBrowserHistoryPop(event) {
 }
 
 async function applyBrowserHistorySnapshot(snapshot) {
+  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) snapshot={...snapshot,module:"bulletin"};
   state.applyingBrowserHistory = true;
   try {
     state.module = ROUTE_MODULES.includes(snapshot.module) ? snapshot.module : "home";
@@ -2540,7 +2545,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
     state.lastSelectedBibleVerse = state.selectedBibleVerse || null;
     state.selectedServiceTypeId = snapshot.selectedServiceTypeId || null;
     state.selectedServiceId = snapshot.selectedServiceId || null;
-    state.presenterBulletinServiceId = snapshot.module === "presenter" ? snapshot.presenterBulletinServiceId || null : null;
+    state.presenterBulletinServiceId = ["presenter", "bulletin"].includes(snapshot.module) ? snapshot.presenterBulletinServiceId || (snapshot.module === "bulletin" ? snapshot.selectedServiceId : null) || null : null;
     if (state.module === "presenter" && state.selectedServiceId) {
       state.presenter.viewServiceId = state.selectedServiceId;
     }
@@ -2578,7 +2583,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
       await loadBibleBookVerses({ silent: true });
       focusSelectedBibleVerseAfterRender();
     }
-    if (isServiceDataModule() && state.selectedServiceId && !state.presenterBulletinServiceId) {
+    if (isServiceDataModule() && state.module !== "bulletin" && state.selectedServiceId && !state.presenterBulletinServiceId) {
       markWorshipServiceExplicitlyRequested(state.selectedServiceId);
       await loadServiceItems(state.selectedServiceId);
     }
@@ -2688,7 +2693,7 @@ function linkStateFromParams(params) {
   const snapshot = {};
   const moduleName = firstParam(params, ["module"]);
   if (ROUTE_MODULES.includes(moduleName)) snapshot.module = moduleName;
-  if (moduleName === "presenter") snapshot.presenterBulletinServiceId = firstParam(params, ["bulletin"]) || null;
+  if (["presenter", "bulletin"].includes(moduleName)) snapshot.presenterBulletinServiceId = firstParam(params, ["bulletin"]) || (moduleName === "bulletin" ? firstParam(params, ["service"]) : null) || null;
   const search = firstParam(params, ["search"]);
   if (search) snapshot.search = search;
 
@@ -2722,6 +2727,7 @@ function linkStateFromParams(params) {
 function applyLinkState(params) {
   const snapshot = linkStateFromParams(params);
   if (!snapshot) return;
+  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) snapshot.module="bulletin";
   if (ROUTE_MODULES.includes(snapshot.module)) state.module = snapshot.module;
   state.presenterBulletinServiceId = snapshot.presenterBulletinServiceId || null;
   if (typeof snapshot.search === "string") state.search = snapshot.search;
@@ -2789,7 +2795,7 @@ function canShareConfigAsPreset() {
 function appendRouteParams(params, snapshot) {
   if (!snapshot) return;
   if (snapshot.module && snapshot.module !== "home") params.set("module", snapshot.module);
-  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) params.set("bulletin", snapshot.presenterBulletinServiceId);
+  if (["presenter", "bulletin"].includes(snapshot.module) && snapshot.presenterBulletinServiceId) params.set("bulletin", snapshot.presenterBulletinServiceId);
   if (snapshot.search) params.set("search", snapshot.search);
   if (snapshot.module === "praise") {
     if (snapshot.praiseFilter && snapshot.praiseFilter !== "all") params.set("praiseFilter", snapshot.praiseFilter);
@@ -4491,6 +4497,7 @@ async function loadWorshipData() {
   });
   if (
     state.selectedServiceId
+    && state.module !== "bulletin"
     && (state.module === "presenter" || isServiceDataModule())
     && !shouldDeferPastWorshipServiceLoad(state.selectedServiceId)
   ) {
@@ -6159,7 +6166,7 @@ async function saveAll() {
     bulletin.dispatchEvent(new CustomEvent("mindex-bulletin-save",{detail}));
     return detail.result ? await detail.result : false;
   }
-  if (state.module === "home") return;
+  if (state.module === "home" || state.module === "bulletin") return;
   const saveState = currentSaveButtonState();
   if (!saveState.available) return false;
   if (isServiceDataModule()) {
@@ -14824,11 +14831,11 @@ function presenterViewServiceId() {
 
 function bulletinPageTabTitle(serviceId) {
   const service = state.services.find(s => s.id === serviceId);
-  return service ? `청년부 주보 · ${service.date}` : "주보";
+  return service ? "청년부 주보" : "주보";
 }
 
 function currentPageTabTitle() {
-  if (state.module === "presenter" && state.presenterBulletinServiceId) return bulletinPageTabTitle(state.presenterBulletinServiceId);
+  if (state.module === "bulletin" || (state.module === "presenter" && state.presenterBulletinServiceId)) return bulletinPageTabTitle(state.presenterBulletinServiceId);
   if (state.module === "presenter") {
     const service = state.services.find((svc) => svc.id === presenterViewServiceId());
     return service ? serviceDisplayTypeName(service) : "예배";
@@ -14907,7 +14914,7 @@ function normalizePageTabsState(tabs = [], activeIndex = 0) {
 }
 
 function pageTabTitleForSnapshot(snapshot = {}) {
-  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) return bulletinPageTabTitle(snapshot.presenterBulletinServiceId);
+  if (snapshot.module === "bulletin" || (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId)) return bulletinPageTabTitle(snapshot.presenterBulletinServiceId);
   const moduleName = snapshot.module || "home";
   if (moduleName === "presenter") {
     const serviceId = snapshot.selectedServiceId || state.presenter.serviceId;
@@ -15114,7 +15121,7 @@ async function closePageTab(index) {
       if (tab.snapshot?.module !== "home") await goHome();
       return;
     }
-    if (closingActive && !tab.snapshot?.presenterBulletinServiceId && !(await confirmSaveBeforeLeaving())) return;
+    if (closingActive && tab.snapshot?.module !== "bulletin" && !tab.snapshot?.presenterBulletinServiceId && !(await confirmSaveBeforeLeaving())) return;
     if (state.pageTabs[state.pageTabIndex]?.id !== activeId) return;
     index = state.pageTabs.findIndex((candidate) => candidate.id === tab.id);
     if (index < 0) return;
@@ -15136,7 +15143,7 @@ async function closePageTab(index) {
 async function activatePageTab(index, { force = false } = {}) {
   if (!Number.isInteger(index) || index < 0 || index >= state.pageTabs.length) return;
   if (!force && index === state.pageTabIndex) return;
-  if (!(state.module === "presenter" && state.presenterBulletinServiceId) && !(await confirmSaveBeforeLeaving())) return;
+  if (!(state.module === "bulletin" || (state.module === "presenter" && state.presenterBulletinServiceId)) && !(await confirmSaveBeforeLeaving())) return;
   syncActivePageTabState();
   state.pageTabIndex = index;
   await applyPageTabSnapshot(index);
@@ -15169,6 +15176,16 @@ function renderNavigationSidebarState() {
 
 async function handleNavigationRailClick(button) {
   const moduleName = button.dataset.homeModule;
+  if (moduleName === "bulletin") {
+    const existing = state.pageTabs.findIndex(tab => tab.snapshot?.module === "bulletin");
+    if (existing >= 0) {
+      syncActivePageTabState();state.pageTabIndex = existing;await applyPageTabSnapshot(existing);
+    } else {
+      await openNewPageTab({...homePageTabSnapshot(), module:"bulletin", selectedServiceId:null, presenterBulletinServiceId:null},
+        {openerTabId:state.pageTabs[state.pageTabIndex]?.id || ""});
+    }
+    return;
+  }
   if (moduleName === "home") {
     await goHome();
     return;
@@ -15212,6 +15229,26 @@ function serviceSupportsBulletin(service = null) {
     && !serviceIsNoGathering(service));
 }
 
+function renderBulletinList() {
+  refs.songCount.textContent = "";
+  if (!state.client || state.connectionError) {refs.songList.innerHTML=renderConnectionList(state.connectionError);return;}
+  if (state.serviceError || !state.serviceTypes.length) {refs.songList.innerHTML=state.serviceError?renderListEmptyState("주보 목록을 불러오지 못했습니다",state.serviceError):renderLoadingList();return;}
+  const query=normalizeSearchValue(state.search);
+  const services=state.services.filter(serviceSupportsBulletin).filter(service=>!query||normalizeSearchValue(`${service.date} 청년부 주보 ${service.title||""}`).includes(query)).sort((a,b)=>b.date.localeCompare(a.date));
+  refs.songList.innerHTML=`<div class="service-sidebar"><section class="service-sidebar-section"><div class="service-sidebar-head"><span>청년부 주보</span></div><div class="service-sidebar-stack service-sidebar-stack--navigation">${services.map(service=>`<button type="button" class="service-type-row${state.presenterBulletinServiceId===service.id?" active":""}" data-bulletin-open="${escapeAttr(service.id)}"><span>${escapeHtml(formatServiceDate(service))}</span></button>`).join("")||'<p class="muted">표시할 주보가 없습니다.</p>'}</div></section></div>`;
+  finishListRender();
+}
+
+function renderBulletinDetail() {
+  setRightSidebarContent("");
+  if (!state.client) {refs.detailPane.innerHTML=renderConnectionEmptyDetail();return;}
+  if (state.serviceError) {refs.detailPane.innerHTML=renderUnavailableDetail("service","주보",state.serviceError);return;}
+  if (!state.serviceTypes.length) {refs.detailPane.innerHTML=renderLoadingDetail();return;}
+  const service=state.services.find(s=>s.id===state.presenterBulletinServiceId);
+  if (service && serviceSupportsBulletin(service)) {mountServiceBulletinWorkbench(service);refreshIcons();return;}
+  refs.detailPane.innerHTML='<div class="empty-state"><h2>주보</h2><p>왼쪽 목록에서 주보를 선택해 주세요.</p></div>';
+}
+
 const bulletinTabSessions = new Map();
 
 async function runServiceBulletinAction(action = "", serviceId = "") {
@@ -15219,14 +15256,18 @@ async function runServiceBulletinAction(action = "", serviceId = "") {
   if (!service || !serviceSupportsBulletin(service)) return;
   if (action === "close") return closePageTab(state.pageTabIndex);
   if (action !== "open") return;
-  const existing = state.pageTabs.findIndex(tab => tab.snapshot?.module === "presenter" && tab.snapshot?.presenterBulletinServiceId === serviceId);
+  const existing = state.pageTabs.findIndex(tab => ["presenter", "bulletin"].includes(tab.snapshot?.module) && tab.snapshot?.presenterBulletinServiceId === serviceId);
   if (existing >= 0) {
     syncActivePageTabState();
     state.pageTabIndex = existing;
     await applyPageTabSnapshot(existing);
     return;
   }
-  await openNewPageTab({...currentBrowserHistorySnapshot(), module:"presenter", selectedServiceId:serviceId,
+  if (state.module === "bulletin" && !state.presenterBulletinServiceId) {
+    state.selectedServiceId=serviceId;state.presenterBulletinServiceId=serviceId;
+    render();syncBrowserHistory();return;
+  }
+  await openNewPageTab({...currentBrowserHistorySnapshot(), search:"", module:"bulletin", selectedServiceId:serviceId,
     selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId},
     {openerTabId:state.pageTabs[state.pageTabIndex]?.id || ""});
 }
@@ -15304,6 +15345,7 @@ function mountServiceBulletinWorkbench(service) {
   if (!bulletinTabSessions.has(tabId)) bulletinTabSessions.set(tabId, new Map());
   window.MindexBulletin.mount(host, {
     documents: bulletinTabSessions.get(tabId),
+    onStateChange: () => syncSaveButtonChrome(),
     serviceId: service.id,
     services: state.services.filter(serviceSupportsBulletin).sort((a,b) => b.date.localeCompare(a.date))
       .map(s => ({id:s.id, label:`${formatServiceDate(s)} · ${serviceDisplayTypeName(s)}`})),
@@ -15322,7 +15364,8 @@ function mountServiceBulletinWorkbench(service) {
       }
       state.presenterBulletinServiceId = id;
       state.selectedServiceId = id;
-      state.presenter.viewServiceId = id;
+      if (state.module === "presenter") state.presenter.viewServiceId = id;
+      renderBulletinList();
       host.dataset.bulletinOwner = id;
       syncBrowserHistory({replace:true});
     },
@@ -16092,6 +16135,8 @@ function renderSongList() {
     refs.songList.innerHTML = renderConnectionList("로그인이 필요합니다.");
     return;
   }
+
+  if (state.module === "bulletin") {renderBulletinList();return;}
 
   if (isGlobalSearchActive()) {
     renderGlobalSearchList();
@@ -17074,6 +17119,7 @@ function renderDetail() {
     renderScriptureDetail();
     return;
   }
+  if (state.module === "bulletin") {renderBulletinDetail();return;}
   if (state.module === "service") {
     renderServiceDetail();
     return;
@@ -20176,6 +20222,7 @@ function hasDirtyChanges({ reconcile = false } = {}) {
 
 // ─── Save state, conflict handling, and user feedback ────────────────────────
 function currentSaveButtonState() {
+  if (state.module === "bulletin") return {label:"주보 저장",dirty:Boolean(refs.detailPane?.querySelector("[data-bulletin-save]:not(:disabled)")),available:Boolean(refs.detailPane?.querySelector(".bulletin-workbench"))};
   if (state.saving) return { label: "저장 중", dirty: true, available: true, busy: true };
   if (state.module === "home") return { label: "저장", dirty: false, available: false };
   if (state.module === "calendar") return { label: "교회력 자동 저장", dirty: false, available: false };
