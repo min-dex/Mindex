@@ -74,6 +74,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator('[data-bulletin-field="issue"]').inputValue(),'26');
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));
     await page.locator('[data-bulletin-field="church"]').fill('샘플 교회');
+    assert.equal(await page.locator('[data-frame-id="insideChurch"]').textContent(),'샘플 교회');
     await page.locator('[data-bulletin-field="news"]').fill('이번 주 소식\n다음 주 소식');
     await page.locator('[data-bulletin-field="news"]').press('Control+s');
     await page.evaluate(()=>saveAll());

@@ -91,7 +91,8 @@
       if(settings.compactOrder)label=label.replace(/^(찬양|찬송)\s*\d+(?:\s*[–~-]\s*\d+)?$/, "$1");
       const linked = songById.get(el.song_id);
       const scripture = scriptureById.get(el.scripture_id);
-      let content = linked ? [linked.hymn_no,linked.title].filter(Boolean).join(" ") : clean(el.title);
+      let content = linked ? [linked.hymn_no,linked.title].filter(Boolean).join(" ")
+        : clean(["body","plain_text","editable"].includes(type)?el.body||el.title:el.title);
       const reference = clean(el.scripture_reference||config.scriptureReference||config.scripture_reference||scripture?.reference);
       if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&settings.compactOrder)continue;}
       if (reference && /scripture|성경|본문/.test([type,slot,label].join(" "))) {
@@ -146,7 +147,7 @@
     frames.push({id:"outline",page:1,x:158.5,y:100,w:128.5,h:35,size:12.5,type:"list",binding:"field:outline"});
     text("notesTitle",1,158.5,142.5,128.5,10,17.5,"label:설교 노트","left",700);
     frames.push({id:"notes",page:1,x:158.5,y:157.5,w:128.5,h:30,size:10,type:"rules",binding:""});
-    text("insideChurch",1,10,2.5,128.5,5,10,"label:검단우리교회");
+    text("insideChurch",1,10,2.5,128.5,5,10,"field:church");
     text("insideBrand",1,158.5,202.5,128.5,5,10,"label:RIA 청년부","right");
     return frames;
   }

@@ -23,7 +23,7 @@ assert.equal(result.prayers.find(r=>r.date==="2026-09-27").next,true);
 assert.equal(JSON.stringify(fixture),before,'Resolver must not mutate saved aggregates');
 fixture.calendar[0].young_adult_prayer='';
 assert.equal(c.window.MindexBulletin.resolveSource(fixture).order[1].person,'예배 담당자');
-fixture.elements.push({id:'creed',section_id:'s',sort_order:9,element_type:'body',title:'송출용 신앙고백 전문',source_ref:{label:'사도신경',slotKey:'faith.creed'}},
+fixture.elements.push({id:'creed',section_id:'s',sort_order:9,element_type:'body',title:'사도신경',body:'송출용 신앙고백 전문',source_ref:{label:'사도신경',slotKey:'faith.creed'}},
   {id:'citation',section_id:'w',sort_order:9,element_type:'scripture_body',scripture_reference:'요한복음 1:1',source_ref:{label:'인용 구절',slotKey:'sermon.citation'}});
 const fullCopy=c.window.MindexBulletin.resolveSource(fixture);
 assert.equal(fullCopy.order.find(r=>r.label==='사도신경').content,'송출용 신앙고백 전문');
