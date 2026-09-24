@@ -33439,6 +33439,10 @@ function presenterElementTrailingBlankSlide(slide, index, service = null) {
     // This keeps fullscreen services clean even when the preceding item has an explicit
     // chromakey context (for example a special-song element).
     outputContext: serviceChromakey ? "chromakey" : "clean",
+    // Hiding an element hides its content, not its required transition blank.
+    hiddenInPresentation: false,
+    hidden_in_presentation: false,
+    hidden: false,
     autoTrailingBlank: true,
     readyServiceName: "",
     sort: (Number(slide.sort) || index) + 0.009,
