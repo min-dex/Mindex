@@ -13,7 +13,7 @@ try:
               const check=(v,m)=>{if(!v)throw Error(m)};
               songCatalogLoaded=true;state.search='많은 사람들';
               const results={praise:[{id:'song',title:'난 예수가 좋다오',versions:[]}],scripture:[{kind:'text',query:state.search}],service:[]};
-              for(const module of ['calendar','home','scripture','praise','service','presenter']) {
+              for(const module of ['calendar','home','scripture','praise','service','presenter','manuals']) {
                 state.module=module;document.body.dataset.module=module;
                 refs.songCount.textContent='1개 표시';refs.songList.innerHTML=renderGlobalSearchSections(results);
                 const sections=refs.songList.querySelectorAll('.global-search-section');
@@ -22,6 +22,16 @@ try:
                 check(!refs.songList.querySelector('.global-search-result--primary'),'action overemphasized');
                 if(['calendar','home'].includes(module)) check(getComputedStyle(refs.songCount.parentElement).display==='none','empty count space '+module);
               }
+              state.module='manuals';document.body.dataset.module='manuals';
+              state.search='많은 사람들';
+              const originalGlobalList=renderGlobalSearchList;
+              renderGlobalSearchList=()=>{refs.songList.innerHTML=renderGlobalSearchSections(results)};
+              state.auth.session={user:{id:'search-fixture'}};
+              renderModuleSwitcher();renderSongList();renderDetail();
+              check(!refs.searchInput.disabled && refs.searchInput.placeholder==='검색...','manual search chrome changed');
+              check(refs.songList.querySelector('.global-search-section'),'manual global search list missing');
+              check(refs.detailPane.querySelector('.home-search-screen'),'manual global search detail missing');
+              renderGlobalSearchList=originalGlobalList;
               state.module='scripture';
               check(getGlobalSearchSectionOrder()[0].id==='scripture','current tab priority changed');
               state.module='calendar';document.body.dataset.module='calendar';document.body.dataset.theme='dark';

@@ -1924,13 +1924,13 @@ async function handleSearchKeydown(event) {
 
   const scriptureShortcut = await getScriptureSearchShortcut(query);
   if (state.search !== query || state.module !== moduleName) return;
-  if (!['references', 'manuals'].includes(state.module) && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
+  if (state.module !== "references" && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
     event.preventDefault();
     await runScriptureSearchShortcut(scriptureShortcut);
     return;
   }
 
-  if (["home", "praise", "service", "presenter"].includes(state.module)) {
+  if (["home", "praise", "service", "presenter", "manuals"].includes(state.module)) {
     const results = getGlobalSearchResults();
     for (const section of getGlobalSearchSectionOrder()) {
       const firstResult = results[section.id]?.[0];
@@ -14807,10 +14807,9 @@ function renderModuleSwitcher() {
   renderPageTabTitle();
   renderNavigationSidebarState();
   syncSidebarCollapsedState();
-  const manualsOpen = state.module === "manuals";
-  refs.searchInput.placeholder = manualsOpen ? "매뉴얼" : "검색...";
-  refs.searchInput.setAttribute("aria-label", manualsOpen ? "예배 매뉴얼" : "검색");
-  refs.searchInput.disabled = manualsOpen;
+  refs.searchInput.placeholder = "검색...";
+  refs.searchInput.setAttribute("aria-label", "검색");
+  refs.searchInput.disabled = false;
   syncPraiseCreateControls();
   syncSaveButtonChrome();
   updatePresenterRightSidebarToggleButtons();
@@ -16056,13 +16055,10 @@ function renderSearchResultsForCurrentModule() {
   if (state.module === "home") renderDetail();
   if (state.module === "scripture") renderDetail();
   if (state.module === "references") renderDetail();
+  if (state.module === "manuals") renderDetail();
 }
 
 function renderSongList() {
-  if (state.module === "manuals") {
-    renderModuleSidebarContext();
-    return;
-  }
   if (isAuthRequired() && !state.auth.session) {
     refs.songCount.textContent = "";
     refs.songList.innerHTML = renderConnectionList("로그인이 필요합니다.");
@@ -16071,6 +16067,11 @@ function renderSongList() {
 
   if (isGlobalSearchActive()) {
     renderGlobalSearchList();
+    return;
+  }
+
+  if (state.module === "manuals") {
+    renderModuleSidebarContext();
     return;
   }
 
@@ -16153,7 +16154,7 @@ function renderSongList() {
 }
 
 function isGlobalSearchActive() {
-  return Boolean(normalizeSearchValue(state.search)) && !["references", "manuals"].includes(state.module);
+  return Boolean(normalizeSearchValue(state.search)) && state.module !== "references";
 }
 
 let globalPraiseSearchLoad = null;
@@ -17017,18 +17018,19 @@ function scrollListItemIntoView(item) {
 
 function renderDetail() {
   if (state.module !== "presenter") setRightSidebarContent("");
-  if (state.module === "manuals") {
-    renderManualsDetail();
-    return;
-  }
   if (isAuthRequired() && !state.auth.session) {
     refs.detailPane.innerHTML = renderAuthRequiredDetail();
     refreshIcons(refs.detailPane);
     return;
   }
 
-  if (isGlobalSearchActive() && (state.module === "home" || state.module === "calendar")) {
+  if (isGlobalSearchActive() && ["home", "calendar", "manuals"].includes(state.module)) {
     renderHomeSearchDetail();
+    return;
+  }
+
+  if (state.module === "manuals") {
+    renderManualsDetail();
     return;
   }
 
