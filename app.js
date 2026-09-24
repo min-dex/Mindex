@@ -31546,6 +31546,7 @@ function renderPresenterSlideThumb(slide, slideIndex, activeIndex, serviceId, fo
         data-presenter-slide-id="${escapeAttr(slideId)}"
         data-service-id="${escapeAttr(serviceId)}"
         aria-pressed="${selected ? "true" : "false"}"
+        ${active ? 'aria-current="step"' : ""}
         aria-label="${escapeAttr(`${ariaPrefix}: ${presenterSlideTitle(slide)}`)}"
         title="${escapeAttr(ariaPrefix)}">
         <span class="svc-slide-thumb-frame svc-slide-thumb-frame--${escapeAttr(presenterSlideRenderClass(slide))}" data-element-type="${escapeAttr(presenterSlideElementType(slide))}" data-slide-layout="${escapeAttr(presenterSlideLayout(slide))}">
@@ -32700,11 +32701,12 @@ function patchPresenterBoardActiveState(root, serviceId, active, index) {
   if (!root) return;
   const activeIndex = presenterBoardActiveIndex(state.presenter.slides, active, index);
   root.querySelectorAll(".svc-slide-thumb[data-presenter-index][data-service-id]").forEach((thumb) => {
-    const selected = activeIndex >= 0
+    const active = activeIndex >= 0
       && thumb.dataset.serviceId === serviceId
       && Number(thumb.dataset.presenterIndex) === activeIndex;
-    thumb.classList.toggle("active", selected);
-    thumb.closest(".svc-slide-thumb-wrap")?.classList.toggle("active", selected);
+    thumb.classList.toggle("active", active);
+    thumb.toggleAttribute("aria-current", active);
+    thumb.closest(".svc-slide-thumb-wrap")?.classList.toggle("active", active);
   });
   root.querySelectorAll(".svc-board-subgroup").forEach((subgroup) => {
     subgroup.classList.toggle("active", Boolean(subgroup.querySelector(".svc-slide-thumb.active")));
