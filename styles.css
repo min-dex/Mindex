@@ -1651,6 +1651,9 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   align-items: center;
   gap: 2px;
 }
+.reference-disabled-control {
+  display: inline-flex;
+}
 .reference-group-actions .icon-btn {
   width: var(--ui-icon-btn-dense);
   height: var(--ui-icon-btn-dense);

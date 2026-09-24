@@ -17292,6 +17292,24 @@ function renderReferenceSetupNotice() {
   `;
 }
 
+function renderReferenceMoveButton(options = {}) {
+  const direction = options.direction === "down" ? "down" : "up";
+  const disabled = Boolean(options.disabled);
+  const subject = String(options.subject || "링크");
+  const label = `${subject} ${direction === "up" ? "위로" : "아래로"} 이동`;
+  const unavailable = direction === "up"
+    ? `${subject}의 첫 항목입니다`
+    : `${subject}의 마지막 항목입니다`;
+  const stateLabel = disabled ? unavailable : label;
+  const button = `<button class="icon-btn quiet" type="button"
+    ${options.actionAttr}="${escapeAttr(options.action)}"
+    ${options.keyAttr}="${escapeAttr(options.key)}"
+    ${disabled ? "disabled" : ""}
+    aria-label="${escapeAttr(stateLabel)}"
+    title="${escapeAttr(stateLabel)}"><i data-lucide="arrow-${direction}"></i></button>`;
+  return disabled ? `<span class="reference-disabled-control" title="${escapeAttr(stateLabel)}">${button}</span>` : button;
+}
+
 function renderReferenceGroups(links) {
   const groups = [];
   for (const link of links) {
@@ -17322,25 +17340,14 @@ function renderReferenceGroups(links) {
             <div class="reference-group-tools">
               <span class="reference-group-count">${escapeHtml(formatCount(group.links.length))}</span>
               ${state.referenceGroupSupported ? `<div class="reference-group-actions" aria-label="링크 그룹 이동">
-                <button class="icon-btn quiet" type="button"
-                  data-reference-action="move-group-up"
-                  data-reference-group-key="${escapeAttr(group.key)}"
-                  ${index <= 0 ? "disabled" : ""}
-                  aria-label="그룹 위로 이동">
-                  <i data-lucide="arrow-up"></i>
-                </button>
-                <button class="icon-btn quiet" type="button"
-                  data-reference-action="move-group-down"
-                  data-reference-group-key="${escapeAttr(group.key)}"
-                  ${index >= groups.length - 1 ? "disabled" : ""}
-                  aria-label="그룹 아래로 이동">
-                  <i data-lucide="arrow-down"></i>
-                </button>
+                ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-group-up", keyAttr: "data-reference-group-key", key: group.key, direction: "up", disabled: index <= 0, subject: "그룹" })}
+                ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-group-down", keyAttr: "data-reference-group-key", key: group.key, direction: "down", disabled: index >= groups.length - 1, subject: "그룹" })}
               </div>
               <button class="icon-btn quiet reference-group-edit" type="button"
                 data-reference-action="${state.editingReferenceGroupKey === group.key ? "done-group" : "edit-group"}"
                 data-reference-group-key="${escapeAttr(group.key)}"
-                aria-label="${state.editingReferenceGroupKey === group.key ? "그룹 편집 완료" : "그룹 이름 변경"}">
+                aria-label="${state.editingReferenceGroupKey === group.key ? "그룹 편집 완료" : "그룹 이름 변경"}"
+                title="${state.editingReferenceGroupKey === group.key ? "그룹 편집 완료" : "그룹 이름 변경"}">
                 <i data-lucide="${state.editingReferenceGroupKey === group.key ? "check" : "pencil"}"></i>
                 <span>${state.editingReferenceGroupKey === group.key ? "완료" : "이름 변경"}</span>
               </button>` : ""}
@@ -17375,12 +17382,8 @@ function renderReferenceEditorRow(link, index = 0, total = 1) {
       <div class="reference-editor-actions">
         <div class="reference-editor-action-group">
           <div class="reference-move-actions" aria-label="링크 이동">
-            <button class="icon-btn quiet" type="button" data-reference-action="move-up" data-reference-id="${escapeAttr(link.id)}" ${index <= 0 ? "disabled" : ""} aria-label="위로 이동">
-              <i data-lucide="arrow-up"></i>
-            </button>
-            <button class="icon-btn quiet" type="button" data-reference-action="move-down" data-reference-id="${escapeAttr(link.id)}" ${index >= total - 1 ? "disabled" : ""} aria-label="아래로 이동">
-              <i data-lucide="arrow-down"></i>
-            </button>
+            ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-up", keyAttr: "data-reference-id", key: link.id, direction: "up", disabled: index <= 0 })}
+            ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-down", keyAttr: "data-reference-id", key: link.id, direction: "down", disabled: index >= total - 1 })}
           </div>
           <label class="reference-active-toggle">
             <input type="checkbox" data-reference-id="${escapeAttr(link.id)}" data-reference-field="is_active" ${link.is_active !== false ? "checked" : ""} />
@@ -17388,13 +17391,13 @@ function renderReferenceEditorRow(link, index = 0, total = 1) {
           </label>
         </div>
         <div class="reference-editor-action-group">
-          <button class="icon-btn quiet" type="button" data-reference-action="open" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 열기">
+          <button class="icon-btn quiet" type="button" data-reference-action="open" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 열기" title="링크 열기">
             <i data-lucide="external-link"></i>
           </button>
-          <button class="icon-btn quiet" type="button" data-reference-action="done" data-reference-id="${escapeAttr(link.id)}" aria-label="편집 완료">
+          <button class="icon-btn quiet" type="button" data-reference-action="done" data-reference-id="${escapeAttr(link.id)}" aria-label="편집 완료" title="편집 완료">
             <i data-lucide="check"></i>
           </button>
-          <button class="icon-btn danger" type="button" data-reference-action="delete" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 삭제">
+          <button class="icon-btn danger" type="button" data-reference-action="delete" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 삭제" title="링크 삭제">
             <i data-lucide="trash-2"></i>
           </button>
         </div>
@@ -17416,16 +17419,12 @@ function renderReferenceCard(link, allLinks = getReferenceEditorLinks()) {
         </span>
       </a>
       <div class="reference-card-actions">
-        <button class="icon-btn quiet" type="button" data-reference-action="move-up" data-reference-id="${escapeAttr(link.id)}" ${index <= 0 ? "disabled" : ""} aria-label="위로 이동">
-          <i data-lucide="arrow-up"></i>
-        </button>
-        <button class="icon-btn quiet" type="button" data-reference-action="move-down" data-reference-id="${escapeAttr(link.id)}" ${index >= allLinks.length - 1 ? "disabled" : ""} aria-label="아래로 이동">
-          <i data-lucide="arrow-down"></i>
-        </button>
-        <button class="icon-btn quiet" type="button" data-reference-action="edit" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 편집">
+        ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-up", keyAttr: "data-reference-id", key: link.id, direction: "up", disabled: index <= 0 })}
+        ${renderReferenceMoveButton({ actionAttr: "data-reference-action", action: "move-down", keyAttr: "data-reference-id", key: link.id, direction: "down", disabled: index >= allLinks.length - 1 })}
+        <button class="icon-btn quiet" type="button" data-reference-action="edit" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 편집" title="링크 편집">
           <i data-lucide="pencil"></i>
         </button>
-        <button class="icon-btn quiet" type="button" data-reference-action="open" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 열기">
+        <button class="icon-btn quiet" type="button" data-reference-action="open" data-reference-id="${escapeAttr(link.id)}" aria-label="링크 열기" title="링크 열기">
           <i data-lucide="external-link"></i>
         </button>
       </div>
