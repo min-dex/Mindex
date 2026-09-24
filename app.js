@@ -270,6 +270,7 @@ const PRESENTER_OUTPUT_WARMUP_BATCH_SIZE = 2;
 const PRESENTER_OUTPUT_WARMUP_IDLE_TIMEOUT_MS = 900;
 const PRESENTER_OUTPUT_VIDEO_WARMUP_LOOKAHEAD = 12;
 const PRESENTER_OUTPUT_VIDEO_WARMUP_LIMIT = 2;
+const PRESENTER_SERVICE_ASSET_PRELOAD_LIMIT = 12;
 const PRESENTER_CONTROLLER_RESTORE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 const presenterOutputImagePreloadCache = new Map();
 const presenterOutputVideoWarmupCache = new Map();
@@ -12841,6 +12842,11 @@ async function preloadPresenterServiceScripturesBeforeOutput(serviceId = state.s
   return results.some(Boolean);
 }
 
+function preloadPresenterServiceAssetsBeforeOutput(serviceId = state.selectedServiceId) {
+  if (!serviceId || typeof warmPresenterServiceAssets !== "function") return false;
+  return warmPresenterServiceAssets(serviceId);
+}
+
 async function hydratePresenterServiceData(serviceId = state.selectedServiceId) {
   const targetServiceId = String(serviceId || "").trim();
   if (!targetServiceId || !canUseClientData()) return false;
@@ -12865,6 +12871,10 @@ async function hydratePresenterServiceData(serviceId = state.selectedServiceId) 
       }
     }
     refreshPresenterForService(targetServiceId, { renderControls: false });
+    // Asset warmup stays read-only and does not delay preparation or output.
+    void Promise.resolve(preloadPresenterServiceAssetsBeforeOutput(targetServiceId)).catch((error) => {
+      console.warn("Could not warm presenter assets in background.", error);
+    });
     void preloadPresenterServiceScripturesBeforeOutput(targetServiceId).then((loaded) => {
       if (loaded) schedulePresenterRefreshForService(targetServiceId);
     }).catch((error) => {

@@ -4626,6 +4626,36 @@ function warmPresenterOutputNextVideo(payload = {}, activeSlide = null) {
   if (source) warmPresenterOutputVideoMetadata(source);
 }
 
+function warmPresenterServiceAssets(serviceId = state.selectedServiceId) {
+  const service = state.services.find((candidate) => candidate.id === serviceId);
+  if (!service) return { images: 0, videos: 0 };
+  const slides = buildServicePresenterSlides(serviceId);
+  if (!slides.length) return { images: 0, videos: 0 };
+  const index = presenterFirstNavigableIndex(slides);
+  const activeSlide = slides[index] || null;
+  const chromakey = presenterServiceUsesChromakey(service);
+  const hasCleanSlides = slides.some((slide) => presenterSlideOutputContext(slide, chromakey) === "clean");
+  const payload = {
+    serviceId,
+    serviceType: service.type_id || "",
+    chromakey,
+    slides,
+    index,
+    backgroundImages: presenterBackgroundSourcesForService(service, { includeChromakeyCleanSlides: hasCleanSlides }),
+  };
+  const images = presenterOutputImageSourcesForPreload(payload, activeSlide)
+    .slice(0, PRESENTER_SERVICE_ASSET_PRELOAD_LIMIT);
+  images.forEach((source) => preloadPresenterOutputImage(source, { priority: "low" }));
+
+  const videoSources = [
+    presenterOutputVideoSource(activeSlide),
+    ...slides.slice(index + 1, index + PRESENTER_OUTPUT_VIDEO_WARMUP_LOOKAHEAD + 1).map(presenterOutputVideoSource),
+  ].filter(Boolean).filter((source, sourceIndex, sources) => sources.indexOf(source) === sourceIndex)
+    .slice(0, PRESENTER_OUTPUT_VIDEO_WARMUP_LIMIT);
+  videoSources.forEach(warmPresenterOutputVideoMetadata);
+  return { images: images.length, videos: videoSources.length };
+}
+
 function presenterOutputVideoSource(slide = null) {
   if (!slide || presenterSlideIsHidden(slide)) return "";
   if (presenterSlideLayout(slide) !== PRESENTER_SLIDE_LAYOUTS.MEDIA

@@ -63,6 +63,26 @@ def main():
                   const current=signature('audit');state.bibleVerseCache.set(bibleVerseCacheKey('translation','JHN',1),[{verse:1,text:'다른 장'}]);state.bibleVerseCacheVersion++;
                   assert(signature('audit')===current,'unrelated scripture invalidated service');
                   state.bibleTranslations=[{id:'new-translation',name:'개역개정'}];assert(signature('audit')!==current,'translation change missed');
+                  const preloadService={id:'preload',type_id:'sunday-afternoon'};
+                  state.services=[preloadService];
+                  const originalBuild=buildServicePresenterSlides;
+                  const originalImagePreload=preloadPresenterOutputImage;
+                  const originalVideoWarmup=warmPresenterOutputVideoMetadata;
+                  const imageWarmups=[];const videoWarmups=[];
+                  buildServicePresenterSlides=()=>[
+                    {id:'first-image',type:'image',elementType:'image',layout:'media',imageSrc:'first.png'},
+                    {id:'first-video',type:'video',elementType:'video',layout:'media',videoSrc:'first.mp4'},
+                    {id:'second-video',type:'video',elementType:'video',layout:'media',videoSrc:'second.mp4'},
+                    {id:'third-video',type:'video',elementType:'video',layout:'media',videoSrc:'third.mp4'},
+                  ];
+                  preloadPresenterOutputImage=(source,options)=>{imageWarmups.push({source,options});return Promise.resolve()};
+                  warmPresenterOutputVideoMetadata=source=>{videoWarmups.push(source);return null};
+                  const warmed=warmPresenterServiceAssets('preload');
+                  assert(warmed.images===imageWarmups.length&&warmed.images<=PRESENTER_SERVICE_ASSET_PRELOAD_LIMIT,'asset image warmup limit missed');
+                  assert(JSON.stringify(videoWarmups)===JSON.stringify(['first.mp4','second.mp4']),'asset video warmup scope missed');
+                  buildServicePresenterSlides=originalBuild;
+                  preloadPresenterOutputImage=originalImagePreload;
+                  warmPresenterOutputVideoMetadata=originalVideoWarmup;
                   return {cases,oldComparisons,newComparisons,cacheReads:40,signatures:calls,dependencyChecks:true};
                 }''')
                 print('PASS structural cache and board tests', engine, result)
