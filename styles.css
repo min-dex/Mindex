@@ -1041,35 +1041,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
 
 .detail-pane { width: 100%; height: 100%; min-width: 0; background: var(--bg); padding: var(--content-pad-y) var(--content-pad-x); }
 .empty-detail, .editor-shell { width: 100%; max-width: none; }
-.operations-sidebar {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-.operations-sidebar-section {
-  display: grid;
-  gap: 2px;
-  align-content: start;
-  padding-top: var(--sidebar-section-label-gap);
-}
-.operations-sidebar-head {
-  display: flex;
-  min-height: 28px;
-  align-items: center;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 56%, transparent);
-  color: var(--sidebar-label);
-  font-size: var(--sidebar-section-size);
-  font-weight: var(--sidebar-section-weight);
-  line-height: 20px;
-  margin-bottom: 5px;
-  padding: 0 var(--sidebar-section-label-x);
-}
-.operations-sidebar-item {
-  min-height: 38px;
-  border-radius: calc(var(--r) - 1px);
-}
-.operations-sidebar-item.active .song-title { font-weight: 700; }
 .empty-detail { position: relative; display: grid; min-height: calc(100vh - 96px); place-items: center; text-align: center; }
 .empty-detail-actions { position: absolute; top: 0; right: 0; }
 .empty-detail h2 { color: var(--ink-2); font-size: 20px; letter-spacing: .04em; text-transform: uppercase; }

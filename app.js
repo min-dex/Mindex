@@ -16465,14 +16465,16 @@ function renderHomeList() {
 function renderModuleSidebarContext() {
   refs.songCount.textContent = "";
   refs.songList.innerHTML = `
-    <div class="operations-sidebar">
-      <nav class="operations-sidebar-section" aria-label="운영">
-        <div class="operations-sidebar-head">운영</div>
+    <div class="service-sidebar">
+      <nav class="service-sidebar-section" aria-label="운영">
+        <div class="service-sidebar-head"><span>운영</span></div>
+        <div class="service-sidebar-stack">
         ${OPERATIONS_MODULES.map(([moduleName, label]) => `
-          <button class="song-item operations-sidebar-item${state.module === moduleName ? " active" : ""}" type="button" data-home-module="${moduleName}" aria-current="${state.module === moduleName ? "page" : "false"}">
-            <span class="song-title"><span class="song-title-text">${label}</span></span>
+          <button class="service-type-row${state.module === moduleName ? " active" : ""}" type="button" data-home-module="${moduleName}" aria-current="${state.module === moduleName ? "page" : "false"}">
+            <span>${label}</span>
           </button>
         `).join("")}
+        </div>
       </nav>
     </div>`;
   finishListRender();
