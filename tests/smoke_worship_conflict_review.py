@@ -22,8 +22,6 @@ def main():
                       let release, reads = 0, saves = 0, resumes = 0;
                       saveAll = async () => { saves++; };
                       scheduleServiceMusicResume = () => { resumes++; };
-                      const exported = [];
-                      downloadTextFile = text => exported.push(JSON.parse(text));
                       worshipAtomicClient = async () => ({inspectConflict: async (id, draft) => {
                         reads++;
                         const frozen = structuredClone(draft);
@@ -47,14 +45,12 @@ def main():
                       release(); await opening;
                       check(items[0].raw_title === '저장 이후 새 입력', 'review overwrote active draft');
                       check(!dialog.querySelector('[data-conflict-keep]').disabled && !dialog.querySelector('[data-conflict-reopen]').disabled, 'loaded conflict choices remain disabled');
-                      dialog.querySelector('[data-conflict-export]').click();
-                      check(exported[0].draft.items[0].raw_title === '입력 중', 'export not frozen at review start');
                       check(dialog.querySelector('[aria-label="내 입력"]').value.includes('<script>'), 'text not preserved');
                       check(!dialog.querySelector('script'), 'user text interpreted as HTML');
                       check(dialog.querySelector('[data-conflict-server-summary]').textContent.includes('기준 3') && dialog.querySelector('[data-conflict-server-summary]').textContent.includes('저장본 4'), 'server revision summary missing');
-                      check(dialog.querySelector('[data-conflict-export]').textContent.includes('내 초안 다운로드'), 'draft download action unclear');
+                      check(!dialog.querySelector('[data-conflict-export]'), 'unnecessary draft download action remains');
                       check(dialog.querySelector('[data-conflict-keep]').textContent.includes('내 입력 계속 사용'), 'keep choice unclear');
-                      check(dialog.querySelector('[data-conflict-reopen]').textContent.includes('초안 보관 후 최신본으로 전환'), 'latest choice unclear');
+                      check(dialog.querySelector('[data-conflict-reopen]').textContent.includes('내 입력 보관 후 최신본 열기'), 'latest choice unclear');
                       const button = dialog.querySelector('[data-conflict-close]');
                       button.dispatchEvent(new KeyboardEvent('keydown',{key:'s',code:'KeyS',metaKey:true,bubbles:true,cancelable:true}));
                       button.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));
@@ -145,6 +141,11 @@ def main():
                       try {await reopenWorshipConflict(review);throw Error('storage failure accepted')}
                       catch(e){check(e.message === 'DRAFT_NOT_PRESERVED',e.message)}
                       check(state.services[0] === original && atomic.baseline(id).revision === '1','storage failure altered state');
+                      await openWorshipConflictReview(id);
+                      let storageDialog = document.querySelector('.worship-conflict-dialog');
+                      const storageKeepClosed = new Promise(resolve=>storageDialog.addEventListener('close',resolve,{once:true}));
+                      storageDialog.querySelector('[data-conflict-keep]').click(); await storageKeepClosed;
+                      check(state.services[0] === original && state.serviceItems[id][0].raw_title === '미저장','keep choice lost draft when recovery storage failed');
                       failStorage = false;
                       let release;
                       waitRead = () => new Promise(resolve => {release = resolve});

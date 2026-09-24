@@ -6660,10 +6660,9 @@ async function openWorshipConflictReview(serviceId) {
       <label data-conflict-pending hidden>저장 직전에 입력한 내용<textarea readonly aria-label="미반영 입력"></textarea></label>
     </details>
     <footer class="worship-conflict-actions">
-      <button class="btn subtle" type="button" data-conflict-export>내 초안 다운로드</button>
       <div>
         <button class="btn primary" type="button" data-conflict-keep disabled>내 입력 계속 사용</button>
-        <button class="btn primary" type="button" data-conflict-reopen disabled>초안 보관 후 최신본으로 전환</button>
+        <button class="btn secondary" type="button" data-conflict-reopen disabled>내 입력 보관 후 최신본 열기</button>
       </div>
     </footer>`;
   dialog.setAttribute("aria-label", "저장 충돌 원문 비교");
@@ -6683,20 +6682,18 @@ async function openWorshipConflictReview(serviceId) {
   };
   keep.addEventListener("click", () => {
     setChoiceBusy(true);
+    let serverSnapshotPreserved = true;
     try {
       preserveWorshipConflictServerSnapshot(review);
     } catch (error) {
-      dialog.querySelector("[data-conflict-status]").textContent = error.message === "DRAFT_NOT_PRESERVED"
-        ? "서버 최신본을 보관하지 못했습니다. 초안을 내려받은 뒤 다시 시도해 주세요."
-        : "서버 최신본을 보관할 수 없습니다. 연결을 확인한 뒤 다시 비교해 주세요.";
-      keep.disabled = false;
-      reopen.disabled = !review.latest || Boolean(review.pending);
-      return;
+      serverSnapshotPreserved = false;
     }
     dialog.close();
     showToast(toastLines(
       "내 입력을 계속 사용합니다.",
-      "서버 최신본은 예배 원문의 로컬 복구본에 보관했습니다.",
+      serverSnapshotPreserved
+        ? "서버 최신본은 예배 원문의 로컬 복구본에 보관했습니다."
+        : "서버 최신본 복구본은 보관하지 못했지만, 현재 입력은 그대로 유지됩니다.",
     ), "info");
   });
   reopen.addEventListener('click', async () => {
@@ -6707,7 +6704,7 @@ async function openWorshipConflictReview(serviceId) {
       const messages = {
         REVIEW_OUTDATED:'서버 내용이 다시 변경됐습니다. 닫고 다시 비교해 주세요.',
         LOCAL_DRAFT_CHANGED:'내 입력이 변경됐습니다. 닫고 다시 비교해 주세요.',
-        DRAFT_NOT_PRESERVED:'초안을 보관하지 못해 전환하지 않았습니다. 초안을 내려받아 주세요.',
+        DRAFT_NOT_PRESERVED:'내 입력을 보관하지 못해 최신본으로 전환하지 않았습니다. 현재 입력은 그대로 유지됩니다.',
         PENDING_REQUEST_REQUIRES_RESOLUTION:'이전 저장 결과를 먼저 확인해야 합니다. 내 입력을 유지합니다.',
         SERVICE_NOT_FOUND:'서버에서 삭제된 예배입니다. 내 입력을 유지합니다.',
       };
@@ -6731,9 +6728,6 @@ async function openWorshipConflictReview(serviceId) {
   worshipConflictReview = dialog;
   const close = () => dialog.close();
   dialog.querySelectorAll("[data-conflict-close]").forEach(button => button.addEventListener("click", close));
-  dialog.querySelector("[data-conflict-export]").addEventListener("click", () => {
-    downloadTextFile(JSON.stringify(review, null, 2), `mindex-conflict-${serviceId}.json`, "application/json");
-  });
   dialog.addEventListener("close", () => {
     dialog.remove();
     if (worshipConflictReview === dialog) worshipConflictReview = null;
