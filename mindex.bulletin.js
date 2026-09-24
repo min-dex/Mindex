@@ -363,7 +363,7 @@
   function mount(host,options) {
     const controller=new AbortController(),signal=controller.signal;
     let doc,mode="content",selected="news",loading=false,assetLoaded=false,error="",serial=0,saveError="",printError="",printing=false,issues=new Set();
-    const documents=new Map();
+    const documents=options.documents||new Map();
     const on=(target,event,fn)=>target.addEventListener(event,fn,{signal});
     host.innerHTML=`<section class="bulletin-workbench" aria-label="주보 편집">
       <header class="bulletin-toolbar"><button class="bulletin-back" type="button" data-bulletin-close title="예배로 돌아가기" aria-label="예배로 돌아가기"><i data-lucide="arrow-left"></i></button>
@@ -514,7 +514,7 @@
         void load(q("[data-bulletin-service]").value);return;
       }
       if(t.matches("[data-bulletin-hidden]")){remember();doc.frames.find(f=>f.id===selected).hidden=!t.checked;persist();preview();return;}
-      if(t.matches("[data-bulletin-service]")){void load(t.value);return;}
+      if(t.matches("[data-bulletin-service]")){options.onServiceChange?.(t.value);void load(t.value);return;}
       if(t.matches("[data-bulletin-frame]")){selected=t.value;properties();preview();return;}
       const f=doc.frames.find(f=>f.id===selected);
       if(t.dataset.bulletinDimension){const n=Number(t.value);if(!Number.isFinite(n)){properties();return;}remember();setDimension(f,t.dataset.bulletinDimension,n);persist();properties();preview();}

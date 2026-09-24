@@ -26,7 +26,7 @@ const server=http.createServer((req,res)=>{
     await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
     await page.goto(base);
     await page.waitForFunction(()=>typeof window.MindexBulletin?.mount==='function'&&typeof state!=='undefined');
-    await page.evaluate(()=>{
+    await page.evaluate(async()=>{
       const id='11111111-1111-4111-8111-111111111111';
       window.bulletinTest={id,reads:0,writes:0,fail:false,prayer:'교회력 기도자',sermon:'DB에서 읽은 설교'};
       const b=window.bulletinTest;
@@ -60,12 +60,12 @@ const server=http.createServer((req,res)=>{
       }};
       state.module='presenter';state.serviceTypes=[{id:'young-adult',name:'청년부',display_name:'청년부'}];
       state.services=[normalizeWorshipService(service)];state.selectedServiceId=id;state.selectedServiceTypeId='young-adult';
-      state.serviceError='';state.serviceItems[id]=[{id:'unsaved',service_id:id,label:'설교',raw_title:'UNSAVED PRESENTER DRAFT',assignee:'담당자',sort_order:1,memo:JSON.stringify({elementType:'title_person',inputMode:'text'})}];state.dirty.service=true;
+      state.connectionError='';state.serviceError='';state.loadedWorshipPresenterServiceIds.add(id);state.serviceItems[id]=[{id:'unsaved',service_id:id,label:'설교',raw_title:'UNSAVED PRESENTER DRAFT',assignee:'담당자',sort_order:1,memo:JSON.stringify({elementType:'title_person',inputMode:'text'})}];state.dirty.service=true;
       state.loadedWorshipServiceIds.add(id);
       if(!renderServicePresenterControls(state.services[0],[],false,0).includes('data-service-bulletin-action="open"'))throw new Error('Missing entry');
-      runServiceBulletinAction('open',id);
+      await runServiceBulletinAction('open',id);
     });
-    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]')?.disabled);
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
     const sheetBox=await page.locator('.bulletin-sheet').first().boundingBox();
     assert.ok(Math.abs(sheetBox.width/sheetBox.height-297/210)<.01,'Preview must retain A4 aspect ratio despite global icon CSS');
     assert.match(await page.locator('.bulletin-canvas').textContent(),/연결된 DB 찬양/);
@@ -78,6 +78,20 @@ const server=http.createServer((req,res)=>{
       return [pick('young-adult','2026-09-20'),pick('young-adult','2026-07-05'),pick('friday','2026-09-25'),pick('children','2026-09-20'),pick('young-adult','2026-05-24','성령강림주일'),pick('young-adult','2026-03-29','종려주일'),pick('young-adult','2026-04-05','부활주일')];
     });
     assert.deepEqual(autoCases,['26-A5.png','26-A4.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
+
+    assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Bulletin opens a separate app tab');
+    assert.match(await page.locator('.page-tab.active').textContent(),/청년부 주보 · 2026-09-20/);
+    assert.equal(await page.evaluate(()=>linkStateFromParams(readLinkParams()).presenterBulletinServiceId),await page.evaluate(()=>bulletinTest.id));
+    await page.locator('[data-bulletin-field="news"]').fill('탭 전환 전 편집');
+    await page.evaluate(()=>activatePageTab(0));
+    assert.equal(await page.locator('.bulletin-workbench').count(),0,'Presenter tab remains separate');
+    await page.evaluate(()=>runServiceBulletinAction('open',bulletinTest.id));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Repeated opening reuses the bulletin tab');
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 전환 전 편집');
+    await page.locator('[data-bulletin-undo]').click();
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'');
+    console.log('PASS independent bulletin tab, route, reuse, unsaved text and undo across tab switches');
 
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));
     await page.locator('[data-bulletin-field="church"]').fill('샘플 교회');
@@ -107,14 +121,14 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-field="news"]').fill('이번 주 소식\n다음 주 소식');
     await page.locator('[data-bulletin-close]').click();
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
-    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]')?.disabled);
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
     assert.equal(await page.locator('[data-bulletin-field="church"]').inputValue(),'샘플 교회');
     assert.equal(await page.evaluate(()=>state.serviceItems[window.bulletinTest.id].find(item=>item.id==='unsaved')?.raw_title),'UNSAVED PRESENTER DRAFT');
     await page.evaluate(()=>{window.bulletinTest.fail=true;});await page.locator('[data-bulletin-refresh]').click();
     await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 연결 실패'));
     assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
     await page.evaluate(()=>{window.bulletinTest.fail=false;});await page.locator('[data-bulletin-refresh]').click();
-    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]')?.disabled);
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
     assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].content.fields.church),'샘플 교회');
     await page.locator('[data-bulletin-setting="rosterMonth"]').fill('2026-08');
     await page.locator('[data-bulletin-setting="rosterMonth"]').press('Tab');
@@ -317,7 +331,7 @@ const server=http.createServer((req,res)=>{
         return {orderRows:source.order.length,prayers:source.prayers.length,issues:[...rendered.issues]};
       },snapshot);
       assert.deepEqual(result.issues,[],'Real saved service must fit default frames');
-      await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]')?.disabled);
+      await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
       console.log('LIVE_READ:'+JSON.stringify(result));
     }
     if(process.env.BULLETIN_THEME_IMAGE){

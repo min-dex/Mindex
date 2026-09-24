@@ -2493,6 +2493,7 @@ function currentBrowserHistorySnapshot() {
     selectedBibleVerseEnd: state.selectedBibleVerses?.at(-1) || state.selectedBibleVerse,
     selectedServiceTypeId: state.selectedServiceTypeId,
     selectedServiceId,
+    presenterBulletinServiceId: state.module === "presenter" ? state.presenterBulletinServiceId : null,
     bibleTextSearchQuery: state.bibleTextSearchQuery,
     bibleTextSearchPage: state.bibleTextSearchPage,
   };
@@ -2541,6 +2542,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
     state.lastSelectedBibleVerse = state.selectedBibleVerse || null;
     state.selectedServiceTypeId = snapshot.selectedServiceTypeId || null;
     state.selectedServiceId = snapshot.selectedServiceId || null;
+    state.presenterBulletinServiceId = snapshot.module === "presenter" ? snapshot.presenterBulletinServiceId || null : null;
     if (state.module === "presenter" && state.selectedServiceId) {
       state.presenter.viewServiceId = state.selectedServiceId;
     }
@@ -2560,7 +2562,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
     if (isServiceDataModule() && !state.serviceTypes.length && !state.serviceError) {
       await loadServiceData({ silent: true });
     }
-    if (state.module === "presenter" && !state.serviceError) {
+    if (state.module === "presenter" && !state.presenterBulletinServiceId && !state.serviceError) {
       await loadWorshipPresenterSlides(presenterViewServiceId());
     }
     if (state.module === "calendar" && !state.calendarLoaded && !state.calendarLoading && !state.calendarError) {
@@ -2578,7 +2580,7 @@ async function applyBrowserHistorySnapshot(snapshot) {
       await loadBibleBookVerses({ silent: true });
       focusSelectedBibleVerseAfterRender();
     }
-    if (isServiceDataModule() && state.selectedServiceId) {
+    if (isServiceDataModule() && state.selectedServiceId && !state.presenterBulletinServiceId) {
       markWorshipServiceExplicitlyRequested(state.selectedServiceId);
       await loadServiceItems(state.selectedServiceId);
     }
@@ -2688,6 +2690,7 @@ function linkStateFromParams(params) {
   const snapshot = {};
   const moduleName = firstParam(params, ["module"]);
   if (ROUTE_MODULES.includes(moduleName)) snapshot.module = moduleName;
+  if (moduleName === "presenter") snapshot.presenterBulletinServiceId = firstParam(params, ["bulletin"]) || null;
   const search = firstParam(params, ["search"]);
   if (search) snapshot.search = search;
 
@@ -2722,6 +2725,7 @@ function applyLinkState(params) {
   const snapshot = linkStateFromParams(params);
   if (!snapshot) return;
   if (ROUTE_MODULES.includes(snapshot.module)) state.module = snapshot.module;
+  state.presenterBulletinServiceId = snapshot.presenterBulletinServiceId || null;
   if (typeof snapshot.search === "string") state.search = snapshot.search;
   if (snapshot.praiseFilter) state.praiseFilter = snapshot.praiseFilter;
   if (snapshot.scriptureFilter) state.scriptureFilter = snapshot.scriptureFilter;
@@ -2750,7 +2754,7 @@ function applyLinkState(params) {
 
 function buildMindexLink(snapshot = currentBrowserHistorySnapshot()) {
   const url = new URL(window.location.href);
-  for (const key of [...LINK_CONFIG_KEYS, ...LINK_ROUTE_KEYS]) {
+  for (const key of [...LINK_CONFIG_KEYS, ...LINK_ROUTE_KEYS, "bulletin"]) {
     url.searchParams.delete(key);
   }
   url.searchParams.delete("mindex-output");
@@ -2787,6 +2791,7 @@ function canShareConfigAsPreset() {
 function appendRouteParams(params, snapshot) {
   if (!snapshot) return;
   if (snapshot.module && snapshot.module !== "home") params.set("module", snapshot.module);
+  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) params.set("bulletin", snapshot.presenterBulletinServiceId);
   if (snapshot.search) params.set("search", snapshot.search);
   if (snapshot.module === "praise") {
     if (snapshot.praiseFilter && snapshot.praiseFilter !== "all") params.set("praiseFilter", snapshot.praiseFilter);
@@ -14825,7 +14830,13 @@ function presenterViewServiceId() {
   return String(state.presenter.viewServiceId || state.presenter.serviceId || state.selectedServiceId || "").trim();
 }
 
+function bulletinPageTabTitle(serviceId) {
+  const service = state.services.find(s => s.id === serviceId);
+  return service ? `청년부 주보 · ${service.date}` : "주보";
+}
+
 function currentPageTabTitle() {
+  if (state.module === "presenter" && state.presenterBulletinServiceId) return bulletinPageTabTitle(state.presenterBulletinServiceId);
   if (state.module === "presenter") {
     const service = state.services.find((svc) => svc.id === presenterViewServiceId());
     return service ? serviceDisplayTypeName(service) : "예배";
@@ -14904,6 +14915,7 @@ function normalizePageTabsState(tabs = [], activeIndex = 0) {
 }
 
 function pageTabTitleForSnapshot(snapshot = {}) {
+  if (snapshot.module === "presenter" && snapshot.presenterBulletinServiceId) return bulletinPageTabTitle(snapshot.presenterBulletinServiceId);
   const moduleName = snapshot.module || "home";
   if (moduleName === "presenter") {
     const serviceId = snapshot.selectedServiceId || state.presenter.serviceId;
@@ -15110,10 +15122,11 @@ async function closePageTab(index) {
       if (tab.snapshot?.module !== "home") await goHome();
       return;
     }
-    if (closingActive && !(await confirmSaveBeforeLeaving())) return;
+    if (closingActive && !tab.snapshot?.presenterBulletinServiceId && !(await confirmSaveBeforeLeaving())) return;
     if (state.pageTabs[state.pageTabIndex]?.id !== activeId) return;
     index = state.pageTabs.findIndex((candidate) => candidate.id === tab.id);
     if (index < 0) return;
+    bulletinTabSessions.delete(tab.id);
     state.pageTabs.splice(index, 1);
     const returnIndex = state.pageTabs.findIndex((candidate) => candidate.id === (closingActive ? tab.openerTabId : activeId));
     state.pageTabIndex = returnIndex >= 0 ? returnIndex : Math.max(0, Math.min(index, state.pageTabs.length - 1));
@@ -15131,7 +15144,7 @@ async function closePageTab(index) {
 async function activatePageTab(index, { force = false } = {}) {
   if (!Number.isInteger(index) || index < 0 || index >= state.pageTabs.length) return;
   if (!force && index === state.pageTabIndex) return;
-  if (!(await confirmSaveBeforeLeaving())) return;
+  if (!(state.module === "presenter" && state.presenterBulletinServiceId) && !(await confirmSaveBeforeLeaving())) return;
   syncActivePageTabState();
   state.pageTabIndex = index;
   await applyPageTabSnapshot(index);
@@ -15207,16 +15220,23 @@ function serviceSupportsBulletin(service = null) {
     && !serviceIsNoGathering(service));
 }
 
+const bulletinTabSessions = new Map();
+
 async function runServiceBulletinAction(action = "", serviceId = "") {
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service || !serviceSupportsBulletin(service)) return;
-  if (action === "close") {
-    state.presenterBulletinServiceId = null;
-    renderCurrentServiceModuleDetail();
-  } else if (action === "open") {
-    state.presenterBulletinServiceId = service.id;
-    renderCurrentServiceModuleDetail();
+  if (action === "close") return closePageTab(state.pageTabIndex);
+  if (action !== "open") return;
+  const existing = state.pageTabs.findIndex(tab => tab.snapshot?.module === "presenter" && tab.snapshot?.presenterBulletinServiceId === serviceId);
+  if (existing >= 0) {
+    syncActivePageTabState();
+    state.pageTabIndex = existing;
+    await applyPageTabSnapshot(existing);
+    return;
   }
+  await openNewPageTab({...currentBrowserHistorySnapshot(), module:"presenter", selectedServiceId:serviceId,
+    selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId},
+    {openerTabId:state.pageTabs[state.pageTabIndex]?.id || ""});
 }
 
 async function loadServiceBulletinSource(serviceId, settings = {}) {
@@ -15288,7 +15308,10 @@ function mountServiceBulletinWorkbench(service) {
   if (refs.detailPane.querySelector(`[data-bulletin-owner="${service.id}"]`)) return;
   refs.detailPane.innerHTML = `<div data-bulletin-owner="${escapeAttr(service.id)}" style="height:100%;min-height:0"></div>`;
   const host = refs.detailPane.firstElementChild;
+  const tabId = state.pageTabs[state.pageTabIndex]?.id;
+  if (!bulletinTabSessions.has(tabId)) bulletinTabSessions.set(tabId, new Map());
   window.MindexBulletin.mount(host, {
+    documents: bulletinTabSessions.get(tabId),
     serviceId: service.id,
     services: state.services.filter(serviceSupportsBulletin).sort((a,b) => b.date.localeCompare(a.date))
       .map(s => ({id:s.id, label:`${formatServiceDate(s)} · ${serviceDisplayTypeName(s)}`})),
@@ -15299,7 +15322,14 @@ function mountServiceBulletinWorkbench(service) {
     loadDraft: loadBulletinDraft,
     saveDraft: saveBulletinDraft,
     loadSource: loadServiceBulletinSource,
-    onClose: () => { state.presenterBulletinServiceId = null; renderCurrentServiceModuleDetail(); },
+    onServiceChange: id => {
+      state.presenterBulletinServiceId = id;
+      state.selectedServiceId = id;
+      state.presenter.viewServiceId = id;
+      host.dataset.bulletinOwner = id;
+      syncBrowserHistory({replace:true});
+    },
+    onClose: () => closePageTab(state.pageTabIndex),
   });
 }
 
@@ -25621,6 +25651,14 @@ function renderPresenterDetailUnscoped() {
     return;
   }
 
+  if (state.presenterBulletinServiceId === serviceId && serviceSupportsBulletin(svc)) {
+    setRightSidebarContent("");
+    mountServiceBulletinWorkbench(svc);
+    refreshIcons();
+    updateSaveState();
+    return;
+  }
+
   const items = state.serviceItems[serviceId];
   if (!items) {
     if (shouldDeferPastWorshipServiceLoad(serviceId)) {
@@ -25632,14 +25670,6 @@ function renderPresenterDetailUnscoped() {
     setRightSidebarContent("");
     refs.detailPane.innerHTML = renderLoadingDetail();
     loadServiceItems(serviceId);
-    return;
-  }
-
-  if (state.presenterBulletinServiceId === serviceId && serviceSupportsBulletin(svc)) {
-    setRightSidebarContent("");
-    mountServiceBulletinWorkbench(svc);
-    refreshIcons();
-    updateSaveState();
     return;
   }
 
