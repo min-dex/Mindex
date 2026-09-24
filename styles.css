@@ -5495,6 +5495,9 @@ body[data-theme="dark"] .service-week-card:hover {
   padding-top: 4px;
   padding-bottom: 14px;
 }
+.service-sidebar--presenter { gap: 10px; }
+.service-sidebar--presenter .service-sidebar-section--presenter-context { padding-bottom: 0; }
+.service-sidebar--presenter .service-sidebar-section--presenter-context + .service-sidebar-section--current { padding-top: 0; }
 .service-sidebar-presenter-context {
   display: grid;
   width: auto;
