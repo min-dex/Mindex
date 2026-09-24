@@ -15256,16 +15256,19 @@ async function runServiceBulletinAction(action = "", serviceId = "") {
   if (!service || !serviceSupportsBulletin(service)) return;
   if (action === "close") return closePageTab(state.pageTabIndex);
   if (action !== "open") return;
-  const existing = state.pageTabs.findIndex(tab => ["presenter", "bulletin"].includes(tab.snapshot?.module) && tab.snapshot?.presenterBulletinServiceId === serviceId);
+  // Dates are documents inside the bulletin workspace, not new page tabs.
+  const currentIsBulletin = state.module === "bulletin";
+  const existing = currentIsBulletin ? state.pageTabIndex : state.pageTabs.findIndex(tab =>
+    tab.snapshot?.module === "bulletin" || (tab.snapshot?.module === "presenter" && tab.snapshot?.presenterBulletinServiceId));
   if (existing >= 0) {
+    if (currentIsBulletin && state.presenterBulletinServiceId === serviceId) return;
     syncActivePageTabState();
+    const tab = state.pageTabs[existing];
+    tab.snapshot = {...tab.snapshot, module:"bulletin", selectedServiceId:serviceId,
+      selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId};
     state.pageTabIndex = existing;
     await applyPageTabSnapshot(existing);
     return;
-  }
-  if (state.module === "bulletin" && !state.presenterBulletinServiceId) {
-    state.selectedServiceId=serviceId;state.presenterBulletinServiceId=serviceId;
-    render();syncBrowserHistory();return;
   }
   await openNewPageTab({...currentBrowserHistorySnapshot(), search:"", module:"bulletin", selectedServiceId:serviceId,
     selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId},

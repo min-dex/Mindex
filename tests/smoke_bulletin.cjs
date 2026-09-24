@@ -116,11 +116,23 @@ const server=http.createServer((req,res)=>{
       await runServiceBulletinAction('open',id);
     });
     await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Different bulletin date reuses the same tab');
+    await page.locator('[data-bulletin-field="news"]').fill('다른 날짜의 미저장 소식');
     await page.locator('[data-bulletin-service]').selectOption(await page.evaluate(()=>bulletinTest.id));
     await page.waitForFunction(()=>state.pageTabIndex===1&&document.querySelector('[data-bulletin-print]')?.disabled===false);
     assert.equal(await page.evaluate(()=>state.pageTabs.filter(t=>t.snapshot.presenterBulletinServiceId===bulletinTest.id).length),1);
     assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 이동 중 저장');
-    await page.evaluate(()=>closePageTab(2));
+    await page.locator('[data-bulletin-open="22222222-2222-4222-8222-222222222222"]').click();
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'다른 날짜의 미저장 소식');
+    assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Sidebar date selection does not add tabs');
+    await page.locator('[data-bulletin-undo]').click();
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'');
+    await page.evaluate(()=>activatePageTab(0));
+    await page.evaluate(()=>runServiceBulletinAction('open',bulletinTest.id));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.evaluate(()=>state.pageTabs.length),2,'Worship entry reuses bulletin workspace across dates');
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 이동 중 저장');
     console.log('PASS save completion across tab switches and existing bulletin selection without duplicates');
     console.log('PASS independent bulletin tab, route, reuse, unsaved text and undo across tab switches');
 

@@ -132,7 +132,7 @@
   --ui-icon-btn-size: 35px; --ui-icon-btn-dense: 30px; --ui-icon-btn-inline: 28px;
   --topbar-btn-size: 40px;
   --shell-face-inset: 5px;
-  --sidebar-icon-size: var(--ui-icon-lg);
+  --sidebar-icon-size: var(--ui-icon-size);
   --rail-motion: 120ms cubic-bezier(.2, 0, .2, 1);
   --module-tab-w: 180px;
   --topbar-compact-w: calc((var(--topbar-btn-size) * 4) + (var(--shell-edge-inset) * 2));

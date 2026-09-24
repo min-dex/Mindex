@@ -26,7 +26,7 @@ shell, navigation, buttons, labels, and shared UI copy.
   `12/700` labels, `12/500` metadata, `14/600` rows and controls,
   `16/700` compact titles, `20/700` page titles.
 - Use shared icon sizes before adding local values: 14px helper, 16px normal,
-  20px large (navigation rail).
+  20px large. Navigation rail and tab-bar controls both use 16px.
 - Use the shared 1.5 stroke for Lucide controls. Scope icon defaults to `.lucide`,
   never all SVGs; document previews and illustrations own their dimensions.
 - Size both Lucide placeholders and rendered SVGs when styling an icon control.
