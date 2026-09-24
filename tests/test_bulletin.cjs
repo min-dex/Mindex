@@ -96,3 +96,11 @@ assert.throws(()=>c.window.MindexBulletin.applyStored({}, {revision:1,content:{}
 fixture.elements.find(e=>e.id==='citation').source_ref.slotKey='sermon.citation.1';
 assert.ok(!c.window.MindexBulletin.resolveSource({...fixture,settings:{compactOrder:true}}).order.some(r=>r.id==='citation'));
 console.log('PASS safe snapshots, invalid DB layout and canonical citation slot');
+
+const autoValue=c.window.MindexBulletin.storedValue({fields:{},settings:{},frames:[]});
+assert.equal(autoValue.layout.background,'auto');
+const autoRestored={};c.window.MindexBulletin.applyStored(autoRestored,{...autoValue,revision:1});
+assert.equal(autoRestored.settings.theme,'auto');
+const noBackground=c.window.MindexBulletin.storedValue({fields:{},settings:{theme:''},frames:[]});
+assert.equal(noBackground.layout.background,'');
+console.log('PASS automatic background selection and explicit no-background persistence');

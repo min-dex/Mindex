@@ -15251,12 +15251,21 @@ async function loadServiceBulletinSource(serviceId, settings = {}) {
   const [songs, scriptures, calendar, bulletinServices] = await Promise.all([
     songIds.length ? read(state.client.from("mindex_songs").select("id,title,hymn_no").in("id", songIds)) : [],
     scriptureIds.length ? read(state.client.from("mindex_scriptures").select("id,reference").in("id", scriptureIds)) : [],
-    read(state.client.from("mindex_sunday_calendar").select("date,liturgical,church_schedule,young_adult_prayer").gte("date", monthStart).lte("date", rangeEnd).order("date")),
+    read(state.client.from("mindex_sunday_calendar").select("date,liturgical,note,church_schedule,young_adult_prayer").gte("date", monthStart).lte("date", rangeEnd).order("date")),
     read(state.client.from("mindex_worship_services").select("id,service_type_id,service_date,title,service_alias,source_ref").gte("service_date", monthStart).lte("service_date", rangeEnd).order("service_date")),
   ]);
-  return window.MindexBulletin.resolveSource({...aggregate, songs: songs || [], scriptures: scriptures || [], calendar: calendar || [], settings,
+  const source = window.MindexBulletin.resolveSource({...aggregate, songs: songs || [], scriptures: scriptures || [], calendar: calendar || [], settings,
     services: (bulletinServices || []).map(normalizeWorshipService).filter(s => worshipAppServiceTypeId(s.type_id) === "young-adult")
       .map(s => ({date: s.date, noGathering: serviceIsNoGathering(s), label: s.alias || s.title || "집회 없음"}))});
+  source.autoBackground = bulletinBackgroundForService(normalized, (calendar || []).find(row => row.date === normalized.date));
+  return source;
+}
+
+function bulletinBackgroundForService(service, calendarRow) {
+  const url = presenterBackgroundSourcesForService(service, {includeChromakeyCleanSlides:true, calendarRow})[0];
+  if (!url) return null;
+  const registered = Object.entries(state.worshipBackgroundRegistry || {}).find(([,entry]) => entry.dataUrl === url);
+  return {key:registered?.[0] || (/^(data:|blob:)/.test(url) ? "예배 지정 이미지" : worshipBackgroundFileNameFromPath(url)), url};
 }
 
 async function loadBulletinDraft(serviceId) {
@@ -15523,7 +15532,7 @@ function presenterBackgroundSourcesForService(service, options = {}) {
   if (!service) return [];
   const includeChromakeyCleanSlides = Boolean(options.includeChromakeyCleanSlides);
   if (presenterServiceUsesChromakey(service) && !includeChromakeyCleanSlides) return [];
-  const seasonFileName = presenterSeasonBackgroundFileNameForService(service);
+  const seasonFileName = presenterSeasonBackgroundFileNameForService(service, options);
   if (seasonFileName) {
     const seasonSources = worshipBackgroundSourcesForFileName(seasonFileName);
     if (seasonSources.length) return seasonSources;
@@ -15576,13 +15585,13 @@ function presenterBackgroundValueIsReadyAsset(value) {
     || PRESENTER_READY_BACKGROUND_BLOCKLIST.has(fileName);
 }
 
-function presenterSeasonBackgroundFileNameForService(service) {
-  const code = presenterSeasonBackgroundCode(service);
+function presenterSeasonBackgroundFileNameForService(service, options = {}) {
+  const code = presenterSeasonBackgroundCode(service, options);
   return code ? worshipBackgroundFileName(code, "", service?.date || new Date()) : "";
 }
 
-function presenterSeasonBackgroundCode(service) {
-  const calendarRow = (state.calendarData || []).find((row) => String(row?.date || "").trim() === String(service?.date || "").trim());
+function presenterSeasonBackgroundCode(service, options = {}) {
+  const calendarRow = options.calendarRow || (state.calendarData || []).find((row) => String(row?.date || "").trim() === String(service?.date || "").trim());
   const haystack = [
     serviceDisplayTypeName(service),
     service?.alias,

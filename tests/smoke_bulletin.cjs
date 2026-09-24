@@ -72,6 +72,13 @@ const server=http.createServer((req,res)=>{
     assert.match(await page.locator('.bulletin-canvas').textContent(),/교회력 기도자/);
     assert.match(await page.locator('.bulletin-canvas').textContent(),/9월 27일.*NEXT.*연합예배/);
     assert.equal(await page.locator('[data-bulletin-field="issue"]').inputValue(),'26');
+    assert.match(await page.locator('.bulletin-sheet').first().locator(':scope > image').first().getAttribute('href'),/26-A5\.png$/);
+    const autoCases=await page.evaluate(()=>{
+      const pick=(type,date,liturgical='')=>bulletinBackgroundForService({type_id:type,date},{date,liturgical})?.key;
+      return [pick('young-adult','2026-09-20'),pick('young-adult','2026-07-05'),pick('friday','2026-09-25'),pick('children','2026-09-20'),pick('young-adult','2026-05-24','성령강림주일'),pick('young-adult','2026-03-29','종려주일'),pick('young-adult','2026-04-05','부활주일')];
+    });
+    assert.deepEqual(autoCases,['26-A5.png','26-A4.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
+
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));
     await page.locator('[data-bulletin-field="church"]').fill('샘플 교회');
     assert.equal(await page.locator('[data-frame-id="insideChurch"]').textContent(),'샘플 교회');
@@ -116,6 +123,14 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-setting="rosterMonth"]').press('Tab');
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     await page.locator('[data-bulletin-mode="layout"]').click();
+    assert.equal(await page.locator('[data-bulletin-setting="theme"]').inputValue(),'auto');
+    assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].layout.background),'auto');
+    await page.locator('[data-bulletin-setting="theme"]').selectOption('');
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.equal(await page.locator('.bulletin-sheet').first().locator(':scope > image').count(),1,'No-background keeps only the logo');
+    await page.locator('[data-bulletin-setting="theme"]').selectOption('auto');
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.match(await page.locator('.bulletin-sheet').first().locator(':scope > image').first().getAttribute('href'),/26-A5\.png$/);
     for(const file of ['26-A1.png','26-A2.png','26-A4.png','26-B1.png','26-S4.png','26-S6.png','26-A3.png']) {
       await page.locator('[data-bulletin-setting="theme"]').selectOption(file);
       await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
@@ -282,6 +297,7 @@ const server=http.createServer((req,res)=>{
     await page.evaluate(async()=>{
       const host=document.getElementById('detailPane');host.replaceChildren();
       const source=window.MindexBulletin.resolveSource({...window.bulletinSaved,service:{...window.bulletinSaved.service,id:'next-bulletin',service_date:'2026-10-04'}});
+      source.autoBackground=bulletinBackgroundForService({type_id:'young-adult',date:source.date},{date:source.date,liturgical:source.liturgical});
       window.MindexBulletin.mount(host,{serviceId:source.id,scope:'https://offline-bulletin.test',services:[{id:source.id,label:'다음 주보'}],loadSource:async()=>source,loadDraft:async()=>null,saveDraft:saveBulletinDraft,onClose(){}});
     });
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
@@ -292,6 +308,7 @@ const server=http.createServer((req,res)=>{
       const snapshot=JSON.parse(fs.readFileSync(0,'utf8'));
       const result=await page.evaluate(async data=>{
         const source=window.MindexBulletin.resolveSource(data);
+        source.autoBackground=bulletinBackgroundForService(normalizeWorshipService(data.service),data.calendar?.find(row=>row.date===source.date));
         const host=document.getElementById('detailPane');host.replaceChildren();
         window.MindexBulletin.mount(host,{serviceId:source.id,scope:'live-read-review',
           services:[{id:source.id,label:source.date+' · 청년부'}],loadSource:async()=>source,loadDraft:async()=>null,saveDraft:saveBulletinDraft,onClose(){}});

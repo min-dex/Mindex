@@ -26,9 +26,10 @@
   // Confirmed archive metadata only; never infer a future issue from week numbers.
   const archiveIssues={"2025-01-05":"1","2025-01-12":"2","2025-01-26":"3","2025-02-02":"4","2025-02-09":"5","2025-02-16":"6","2025-02-23":"7","2025-03-09":"8","2025-03-16":"9","2025-03-23":"10","2025-03-30":"11","2025-04-13":"12","2025-04-20":"13","2025-04-27":"14","2025-05-04":"15","2025-05-11":"16","2025-05-18":"17","2025-05-25":"18","2025-06-01":"19","2025-06-15":"20","2025-06-22":"21","2025-06-29":"22","2025-07-20":"23","2025-07-27":"24","2025-08-03":"25","2025-08-10":"26","2025-08-17":"27","2025-08-31":"28","2025-09-07":"29","2025-09-14":"30","2025-09-21":"31","2025-09-28":"32","2025-10-12":"33","2025-10-19":"34","2025-10-26":"35","2025-11-02":"36","2025-11-09":"37","2025-11-16":"38","2025-11-30":"39","2025-12-07":"40","2025-12-14":"41","2025-12-21":"42","2026-01-18":"1","2026-01-25":"2","2026-02-08":"3","2026-02-22":"4","2026-03-08":"5","2026-03-22":"6","2026-03-29":"7","2026-04-12":"8","2026-04-19":"9","2026-04-26":"10","2026-05-10":"11","2026-05-17":"12","2026-05-24":"13","2026-05-31":"14","2026-06-07":"15","2026-06-21":"16","2026-06-28":"17","2026-07-05":"18","2026-07-19":"19","2026-07-26":"20","2026-08-02":"21","2026-08-16":"22","2026-08-23":"23","2026-09-06":"24","2026-09-13":"25","2026-09-20":"26"};
   // Legacy keys decode saved drafts; current choices come from the shared registry.
-  const backgroundKey=value=>themeArtwork[value]||value||"";
+  const backgroundKey=value=>value===undefined?"auto":themeArtwork[value]||value||"";
   function backgroundFor(doc) {
     const key=backgroundKey(doc.settings?.theme);
+    if(key==="auto")return doc.source?.autoBackground||null;
     return (doc.backgrounds||[]).find(item=>item.key===key)
       || (Object.hasOwn(themeArtwork,doc.settings?.theme||"")?{key,url:artworkPath(doc.settings.theme)}:null);
   }
@@ -176,6 +177,7 @@
   async function readyBackground(doc) {
     await readyAssets();
     const background=backgroundFor(doc);
+    if(backgroundKey(doc.settings?.theme)==="auto"&&!background)throw new Error("날짜·부서에 맞는 배경이 없습니다. 민덱스 배경에 등록하거나 직접 선택해 주세요.");
     if(doc.settings?.theme&&!background&&!["paper","ink"].includes(doc.settings.theme))throw new Error("이 기기에 선택한 배경이 없습니다. 민덱스 배경 목록에 등록해 주세요.");
     if(background)await new Promise((resolve,reject)=>{
       const image=new Image();image.onload=resolve;image.onerror=()=>reject(new Error("선택한 배경을 불러오지 못했습니다. 배경 목록을 확인해 주세요."));
@@ -447,7 +449,7 @@
 
       } else {
         const f=doc.frames.find(f=>f.id===selected)||doc.frames[0];selected=f.id;
-        p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme"><option value="" ${!doc.settings.theme?"selected":""}>배경 없음</option>${(doc.backgrounds||[]).map(({key})=>`<option value="${escape(key)}" ${backgroundKey(doc.settings.theme)===key?"selected":""}>${escape(key)}</option>`).join("")}${doc.settings.theme&&!(doc.backgrounds||[]).some(b=>b.key===backgroundKey(doc.settings.theme))?`<option value="${escape(doc.settings.theme)}" selected>기존 초안: ${escape(backgroundKey(doc.settings.theme))}</option>`:""}</select></label><p class="bulletin-help">민덱스 배경 목록에 등록된 이미지를 사용합니다.</p><label><input type="checkbox" data-bulletin-setting="compactOrder" ${doc.settings.compactOrder?"checked":""}> 인쇄용 순서로 간추리기</label><p class="bulletin-help">선택하면 준비·마침·교제·보조 성구를 빼고, 고백 전문을 생략하며 같은 순서를 묶습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
+        p.innerHTML=`<button type="button" data-bulletin-reset-layout>원본형 양식 적용</button><p class="bulletin-help">문구는 유지하고 배치만 원본 기준으로 바꿉니다. 실행 취소할 수 있어요.</p><label>배경<select data-bulletin-setting="theme"><option value="auto" ${backgroundKey(doc.settings.theme)==="auto"?"selected":""}>자동 · 날짜/부서</option><option value="" ${doc.settings.theme===""?"selected":""}>배경 없음</option>${(doc.backgrounds||[]).map(({key})=>`<option value="${escape(key)}" ${backgroundKey(doc.settings.theme)===key?"selected":""}>${escape(key)}</option>`).join("")}${doc.settings.theme&&doc.settings.theme!=="auto"&&!(doc.backgrounds||[]).some(b=>b.key===backgroundKey(doc.settings.theme))?`<option value="${escape(doc.settings.theme)}" selected>기존 초안: ${escape(backgroundKey(doc.settings.theme))}</option>`:""}</select></label><p class="bulletin-help">${backgroundKey(doc.settings.theme)==="auto"?`자동 배경: ${escape(doc.source?.autoBackground?.key||"등록 필요")}`:"민덱스 배경 목록에 등록된 이미지를 사용합니다."}</p><label><input type="checkbox" data-bulletin-setting="compactOrder" ${doc.settings.compactOrder?"checked":""}> 인쇄용 순서로 간추리기</label><p class="bulletin-help">선택하면 준비·마침·교제·보조 성구를 빼고, 고백 전문을 생략하며 같은 순서를 묶습니다.</p><label>프레임<select data-bulletin-frame>${doc.frames.map(f=>`<option value="${f.id}" ${f.id===selected?"selected":""}>${escape(frameLabel(f.id))} · ${f.page?"안쪽":"겉면"}</option>`).join("")}</select></label>
           <label><input type="checkbox" data-bulletin-hidden ${f.hidden?"":"checked"}> 출력에 표시</label><p class="bulletin-help">${escape(frameLabel(f.id))}<br>이동·크기 2.5mm · 글자 2.5pt 단계</p><div class="bulletin-number-grid">`+
           [["x","가로 위치"],["y","세로 위치"],["w","너비"],["h","높이"]].map(([key,label])=>`<label>${label} (mm)<input type="number" step="2.5" data-bulletin-dimension="${key}" value="${f[key]}"></label>`).join("")+`</div>
           <label>글자 크기 (pt)<select data-bulletin-dimension="size">${TOKENS.fontSizes.map(n=>`<option ${f.size===n?"selected":""}>${n}</option>`).join("")}</select></label>
