@@ -17266,6 +17266,13 @@ function renderManualsDetail() {
     refreshIcons(refs.detailPane);
     return;
   }
+  const getSectionId = (index) => `manual-${escapeAttr(active.id)}-${index + 1}`;
+  const quickStart = [
+    { step: "01", label: "준비", detail: "예배 입력 · 예배 직전", target: 1 },
+    { step: "02", label: "시작", detail: "방송 전: ON · 카메라 조작", target: 5 },
+    { step: "03", label: "진행", detail: "예배 진행 · 진행 중 연락", target: 3 },
+    { step: "04", label: "마무리", detail: "방송 후: OFF · 마무리 확인", target: 13 },
+  ];
   refs.detailPane.innerHTML = `
     <div class="manuals-shell">
       <header class="manuals-head">
@@ -17275,17 +17282,39 @@ function renderManualsDetail() {
           ${active.summary ? `<p>${escapeHtml(active.summary)}</p>` : ""}
         </div>
       </header>
+      <section class="manuals-quickstart" aria-labelledby="manualQuickstartTitle">
+        <header>
+          <div>
+            <span id="manualQuickstartTitle">바로 시작</span>
+            <p>오늘 필요한 순서로 이동하세요.</p>
+          </div>
+        </header>
+        <ol>
+          ${quickStart.map((item) => `
+            <li>
+              <a href="#${getSectionId(item.target)}">
+                <span>${item.step}</span>
+                <strong>${escapeHtml(item.label)}</strong>
+                <small>${escapeHtml(item.detail)}</small>
+              </a>
+            </li>
+          `).join("")}
+        </ol>
+      </section>
       <nav class="manuals-index" aria-label="예배 매뉴얼 목차">
+        <span class="manuals-index-title">전체 항목</span>
+        <div>
         ${active.sections.map((section, index) => {
-          const sectionId = `manual-${escapeAttr(active.id)}-${index + 1}`;
+          const sectionId = getSectionId(index);
           return `<a href="#${sectionId}"><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(section.title)}</a>`;
         }).join("")}
+        </div>
       </nav>
       <article class="manual-guide" aria-labelledby="manualGuideTitle">
         <h3 id="manualGuideTitle" class="sr-only">${escapeHtml(active.title)}</h3>
         <div class="manual-guide-grid">
           ${active.sections.map((section, index) => {
-            const sectionId = `manual-${escapeAttr(active.id)}-${index + 1}`;
+            const sectionId = getSectionId(index);
             return `
             <section id="${sectionId}" class="manual-section${section.layout ? ` manual-section--${escapeAttr(section.layout)}` : ""}" aria-labelledby="${sectionId}-title">
               <header class="manual-section-head">
