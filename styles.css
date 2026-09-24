@@ -5961,6 +5961,14 @@ textarea.svc-presenter-input-control--multiline {
   background: transparent;
   color: var(--ink-3);
 }
+.svc-presenter-window-controls > .svc-presenter-disabled-control {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+}
+.svc-presenter-window-controls > .svc-presenter-disabled-control > .icon-btn {
+  width: 100%;
+}
 .svc-presenter-window-controls .svc-presenter-fullscreen {
   width: 100%;
   padding: 0 4px;
@@ -7701,7 +7709,7 @@ body.right-sidebar-open .svc-present-btn.svc-presenter-launch--sidebar:not(.svc-
   gap: 6px;
 }
 .svc-presenter-side-panel button :is(i, svg) { width: 16px; height: 16px; flex-shrink: 0; }
-.svc-presenter-window-controls > :is(button, label) { white-space: nowrap; padding-inline: 4px; }
+.svc-presenter-window-controls > :is(button, label, .svc-presenter-disabled-control) { white-space: nowrap; padding-inline: 4px; }
 .svc-board-subgroup-flow > .svc-board-subgroup-commit {
   order: 10;
   flex-shrink: 0;

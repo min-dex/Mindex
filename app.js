@@ -24035,6 +24035,8 @@ function renderPresenterSidebarServiceSummary(service) {
   const launchLabel = uiText(anyOutputOpen ? "presenter.action.stop" : "presenter.action.present");
   const launchIcon = anyOutputOpen ? "screen-share-off" : "screen-share";
   const launchTone = anyOutputOpen ? "stop" : "start";
+  const fullscreenLabel = anyOutputOpen ? "송출 화면 전체화면" : "송출을 시작하면 전체화면을 사용할 수 있습니다";
+  const fullscreenControl = `<button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="${escapeAttr(fullscreenLabel)}" title="${escapeAttr(fullscreenLabel)}" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i><span>전체화면</span></button>`;
   return `
     <section class="service-sidebar-section service-sidebar-section--presenter-context" aria-label="현재 예배">
       <div class="service-sidebar-presenter-context">
@@ -29303,7 +29305,7 @@ function renderPresenterControlsTop(service, slides, active, index) {
           </button>
           <div class="svc-presenter-window-controls">
           ${renderPresenterScreenControl()}
-          <button class="icon-btn svc-presenter-fullscreen" type="button" data-presenter-action="fullscreen" aria-label="송출 화면 전체화면" title="송출 화면 전체화면" ${anyOutputOpen ? "" : "disabled"}><i data-lucide="maximize"></i><span>전체화면</span></button>
+          ${anyOutputOpen ? fullscreenControl : `<span class="svc-presenter-disabled-control" title="${escapeAttr(fullscreenLabel)}">${fullscreenControl}</span>`}
           ${renderPresenterAlwaysOnTopControl()}
           </div>
         </div>
