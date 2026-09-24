@@ -16053,6 +16053,7 @@ function renderSearchResultsForCurrentModule() {
   }
   if (isServiceDataModule()) return;
   if (state.module === "home") renderDetail();
+  if (state.module === "calendar") renderDetail();
   if (state.module === "scripture") renderDetail();
   if (state.module === "references") renderDetail();
   if (state.module === "manuals") renderDetail();

@@ -31,6 +31,9 @@ try:
               check(!refs.searchInput.disabled && refs.searchInput.placeholder==='검색...','manual search chrome changed');
               check(refs.songList.querySelector('.global-search-section'),'manual global search list missing');
               check(refs.detailPane.querySelector('.home-search-screen'),'manual global search detail missing');
+              state.module='calendar';document.body.dataset.module='calendar';
+              refs.detailPane.innerHTML='';renderSearchResultsForCurrentModule();
+              check(refs.detailPane.querySelector('.home-search-screen'),'calendar global search detail missing');
               renderGlobalSearchList=originalGlobalList;
               state.module='scripture';
               check(getGlobalSearchSectionOrder()[0].id==='scripture','current tab priority changed');
