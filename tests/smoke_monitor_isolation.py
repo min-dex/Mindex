@@ -49,7 +49,7 @@ def main():
                     output.wait_for_selector('#presenterOutputRoot', state='attached')
                     assert output.locator('.monitor-panel').count() == 0
                     assert output.evaluate("typeof monitorTick==='undefined'")
-                    output.evaluate('''() => { window.fixture={serviceId:'video-isolation',index:0,chromakey:true,slides:[{id:'video',type:'video',elementType:'video',layout:'media',videoSrc:'assets/presenter/chromakey-ready-loop-fast.mp4',playback:{autoplay:true,muted:true}}]};renderPresenterOutput(fixture);window.firstVideo=document.querySelector('.is-active video'); }''')
+                    output.evaluate('''() => { window.fixture={serviceId:'video-isolation',index:0,chromakey:true,slides:[{id:'video',type:'video',elementType:'video',layout:'media',videoSrc:'assets/presenter/chromakey-ready-loop-pingpong.mp4',playback:{autoplay:true,muted:true}}]};renderPresenterOutput(fixture);window.firstVideo=document.querySelector('.is-active video'); }''')
                     output.wait_for_function('firstVideo.currentTime>.15')
                     output.evaluate('renderPresenterOutput(fixture)')
                     assert output.evaluate("firstVideo===document.querySelector('.is-active video')&&!firstVideo.paused")

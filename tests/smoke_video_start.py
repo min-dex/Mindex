@@ -17,7 +17,7 @@ def main():
                       window.calls=0;
                       // Model the browser refusing the first audible autoplay attempt.
                       HTMLMediaElement.prototype.play=function(){calls++;this.autoplay=false;return Promise.reject(new DOMException('blocked','NotAllowedError'))};
-                      window.payload={serviceId:'start-test',index:0,chromakey:true,slides:[{id:'first',type:'video',elementType:'video',layout:'media',videoSrc:'assets/presenter/chromakey-ready-loop-fast.mp4',playback:{autoplay:true,muted:false,controls:false}}]};
+                      window.payload={serviceId:'start-test',index:0,chromakey:true,slides:[{id:'first',type:'video',elementType:'video',layout:'media',videoSrc:'assets/presenter/chromakey-ready-loop-pingpong.mp4',playback:{autoplay:true,muted:false,controls:false}}]};
                       renderPresenterOutput(payload);
                       await Promise.resolve();await Promise.resolve();
                       window.video=document.querySelector('.is-active video');

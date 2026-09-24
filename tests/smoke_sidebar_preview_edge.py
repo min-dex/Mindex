@@ -12,7 +12,7 @@ def main():
                 browser = launch_chromium(p) if engine == 'chromium' else p.webkit.launch()
                 page = browser.new_page(viewport={"width": 1100, "height": 700}, device_scale_factor=dpr)
                 page.route('**/*supabase*/**', lambda r: r.abort())
-                page.route('**/chromakey-ready-loop-fast.mp4*', lambda r: r.abort())
+                page.route('**/chromakey-ready-loop-pingpong.mp4*', lambda r: r.abort())
                 page.goto(url, wait_until='domcontentloaded')
                 page.wait_for_function("typeof applyPresenterPreviewScales === 'function'")
                 page.evaluate('''() => {
@@ -34,7 +34,7 @@ def main():
                 print('PASS sidebar edge pixels', engine, 'DPR', dpr, flush=True)
                 page.evaluate('''() => {
                   const host=document.getElementById('edge-fixture');
-                  host.innerHTML='<div class="svc-presenter-live-preview"><span class="svc-slide-mini-output"><span class="svc-slide-mini-canvas presenter-output-root">'+renderPresenterSlideFrame({type:'ready',elementType:'video',layout:'media',presenterRole:'waiting_loop',videoSrc:'assets/presenter/chromakey-ready-loop-fast.mp4'}, {previewStage:true})+'</span></span></div>';
+                  host.innerHTML='<div class="svc-presenter-live-preview"><span class="svc-slide-mini-output"><span class="svc-slide-mini-canvas presenter-output-root">'+renderPresenterSlideFrame({type:'ready',elementType:'video',layout:'media',presenterRole:'waiting_loop',videoSrc:'assets/presenter/chromakey-ready-loop-pingpong.mp4'}, {previewStage:true})+'</span></span></div>';
                   // Model a fractional compositor seam without changing stage dimensions.
                   host.querySelector('.presenter-slide').style.transform='translateX(8px)';
                   applyPresenterPreviewScales(host);

@@ -60,7 +60,7 @@ The full row stays available through the existing `select("*").eq("id", ...)` re
 
 - `PretendardVariable.woff2` 2.0 MB is the UI font and is preloaded (a subset/dynamic-subset
   build would cut it; needs a font toolchain).
-- `chromakey-ready-loop-fast.mp4` 3.9 MB is `rel=prefetch` (idle priority) on every page.
+- `chromakey-ready-loop-pingpong.mp4` 26 MB is prefetched only when a presenter view is opened.
 - Three Freesentation weights ~1.4 MB are preloaded; lowering their priority with
   `fetchpriority="low"` was tried and showed no effect on the deployed site.
 

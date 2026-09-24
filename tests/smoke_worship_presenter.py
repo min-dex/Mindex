@@ -7675,7 +7675,7 @@ def main() -> int:
                         layout: PRESENTER_SLIDE_LAYOUTS.MEDIA,
                         type: 'video',
                         title: '영상',
-                        videoSrc: 'assets/presenter/chromakey-ready-loop-fast.mp4',
+                        videoSrc: 'assets/presenter/chromakey-ready-loop-pingpong.mp4',
                         outputContext: 'clean',
                       };
                       const audio = {
@@ -7695,7 +7695,7 @@ def main() -> int:
                         layout: PRESENTER_SLIDE_LAYOUTS.MEDIA,
                         type: 'ready',
                         title: '예배 전 영상',
-                        videoSrc: 'assets/presenter/chromakey-ready-loop-fast.mp4',
+                        videoSrc: 'assets/presenter/chromakey-ready-loop-pingpong.mp4',
                         presenterRole: 'waiting_loop',
                         outputContext: 'chromakey',
                       };

@@ -33,7 +33,7 @@ def run(browser, url, engine):
         if failed:
             route.abort()
         else:
-            route.fulfill(path=str(Path(__file__).resolve().parents[1] / 'assets/presenter/chromakey-ready-loop-fast.mp4'), content_type='video/mp4')
+            route.fulfill(path=str(Path(__file__).resolve().parents[1] / 'assets/presenter/chromakey-ready-loop-pingpong.mp4'), content_type='video/mp4')
 
     output.route('**/probe-health.mp4', media)
     output.goto(url+'?output=presenter', wait_until='domcontentloaded')
