@@ -5603,7 +5603,7 @@ body[data-theme="dark"] .service-week-card:hover {
   outline: 0;
   padding: 0 9px;
 }
-.svc-presenter-preparation-field-value::placeholder { color: var(--ink-4); opacity: 1; font-weight: var(--ui-meta-weight); }
+.svc-presenter-preparation-field-value::placeholder { color: color-mix(in srgb, var(--ink-5) 56%, transparent); opacity: 1; font-weight: var(--ui-meta-weight); }
 .svc-presenter-preparation-field-value:focus { background: color-mix(in srgb, var(--panel-2) 68%, transparent); }
 .svc-presenter-preparation-empty { margin: 2px 0; color: var(--ink-4); font-size: var(--ui-meta-size); font-weight: var(--ui-meta-weight); }
 .svc-presenter-preparation-actions {
