@@ -15292,6 +15292,11 @@ function mountServiceBulletinWorkbench(service) {
     saveDraft: saveBulletinDraft,
     loadSource: loadServiceBulletinSource,
     onServiceChange: id => {
+      const existing = state.pageTabs.findIndex(tab => tab.id !== tabId && tab.snapshot?.presenterBulletinServiceId === id);
+      if (existing >= 0) {
+        void activatePageTab(existing);
+        return false;
+      }
       state.presenterBulletinServiceId = id;
       state.selectedServiceId = id;
       state.presenter.viewServiceId = id;

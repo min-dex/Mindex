@@ -91,6 +91,27 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 전환 전 편집');
     await page.locator('[data-bulletin-undo]').click();
     assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'');
+    await page.locator('[data-bulletin-field="news"]').fill('탭 이동 중 저장');
+    await page.evaluate(()=>bulletinTest.delaySave=true);
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>!!bulletinTest.releaseSave);
+    await page.evaluate(()=>activatePageTab(0));
+    await page.evaluate(()=>runServiceBulletinAction('open',bulletinTest.id));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    await page.evaluate(()=>{bulletinTest.delaySave=false;bulletinTest.releaseSave();});
+    await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장됨'),{},{timeout:3000});
+    await page.evaluate(async()=>{
+      const id='22222222-2222-4222-8222-222222222222';
+      state.services.push({...state.services[0],id,date:'2026-09-27'});
+      await runServiceBulletinAction('open',id);
+    });
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    await page.locator('[data-bulletin-service]').selectOption(await page.evaluate(()=>bulletinTest.id));
+    await page.waitForFunction(()=>state.pageTabIndex===1&&document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.evaluate(()=>state.pageTabs.filter(t=>t.snapshot.presenterBulletinServiceId===bulletinTest.id).length),1);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 이동 중 저장');
+    await page.evaluate(()=>closePageTab(2));
+    console.log('PASS save completion across tab switches and existing bulletin selection without duplicates');
     console.log('PASS independent bulletin tab, route, reuse, unsaved text and undo across tab switches');
 
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));

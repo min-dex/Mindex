@@ -397,20 +397,21 @@
       target.localDraft=normalizeSnapshot(value);
       writeLocal(target,target.key+":recovery",{version:3,...target.localDraft,savedAt:Date.now()});
     }
-    function persist(){doc.dirty=true;saveError="";printError="";backup();}
+    function persist(){doc.dirty=true;doc.saveError="";saveError="";printError="";backup();}
     async function save(){
       const target=doc;if(!target||target.saving||loading||error||!target.dbLoaded)return false;
       endDrag();
       if(!target.dirty&&target.revision)return true;
-      const value=storedValue(target),before=JSON.stringify(snapshot(target));target.saving=true;saveError="";status();
+      const value=storedValue(target),before=JSON.stringify(snapshot(target));target.saving=true;target.saveError="";saveError="";status();
       try{
         if(!options.saveDraft)throw new Error("주보 DB 저장 연결이 필요합니다.");
         const row=await options.saveDraft(target.id,value,target.revision);
         target.revision=row.revision;target.dirty=JSON.stringify(snapshot(target))!==before;
         backup(target);return !target.dirty;
-      }catch(e){if(doc===target)saveError=e.message;target.dirty=true;return false;}
-      finally{target.saving=false;if(doc===target)status();}
+      }catch(e){target.saveError=e.message;if(doc===target)saveError=e.message;target.dirty=true;return false;}
+      finally{target.saving=false;window.dispatchEvent(new CustomEvent("mindex-bulletin-save-settled",{detail:target}));}
     }
+    on(window,"mindex-bulletin-save-settled",event=>{if(event.detail===doc){saveError=doc.saveError||"";status();}});
     on(root,"mindex-bulletin-save",event=>{const result=save();if(event.detail)event.detail.result=result;});
     function status(){
       const text=error||saveError||printError||(loading?"저장된 예배 자료를 불러오는 중…":!assetLoaded?"글꼴과 이미지를 준비하는 중…":
@@ -467,7 +468,7 @@
           &&(!fresh.hasLocal||(Number(recovery.savedAt)||0)>fresh.savedAt))fresh.localDraft=normalizeSnapshot(recovery);
         documents.set(id,fresh);
       }
-      doc=documents.get(id);const target=doc;q("[data-bulletin-service]").value=id;properties();status();
+      doc=documents.get(id);saveError=doc.saveError||"";const target=doc;q("[data-bulletin-service]").value=id;properties();status();
       try{
         if(!target.dbLoaded||force){
           if(!options.loadDraft)throw new Error("주보 DB 연결이 필요합니다.");
@@ -477,7 +478,7 @@
             if(target.localDraft&&!readLocal(target.key+":recovery"))retainRecovery(target,target.localDraft);
             applyStored(target,row);
           }else{target.dirty=true;target.revision=0;}
-          target.dbLoaded=true;
+          target.dbLoaded=true;target.saveError="";saveError="";
         }
         const source=await options.loadSource(id,target.settings);if(request!==serial||signal.aborted)return;
         target.source=source;target.profile=target.revision?{}:loadProfile(source.date);
@@ -514,7 +515,7 @@
         void load(q("[data-bulletin-service]").value);return;
       }
       if(t.matches("[data-bulletin-hidden]")){remember();doc.frames.find(f=>f.id===selected).hidden=!t.checked;persist();preview();return;}
-      if(t.matches("[data-bulletin-service]")){options.onServiceChange?.(t.value);void load(t.value);return;}
+      if(t.matches("[data-bulletin-service]")){if(options.onServiceChange?.(t.value)===false){t.value=doc.id;return;}void load(t.value);return;}
       if(t.matches("[data-bulletin-frame]")){selected=t.value;properties();preview();return;}
       const f=doc.frames.find(f=>f.id===selected);
       if(t.dataset.bulletinDimension){const n=Number(t.value);if(!Number.isFinite(n)){properties();return;}remember();setDimension(f,t.dataset.bulletinDimension,n);persist();properties();preview();}
