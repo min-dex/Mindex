@@ -959,3 +959,8 @@ Small visual polish that does not alter behavior does not need an entry.
 ### 2026-09-23 삭제한 인용 구절 저장 충돌 수정
 - 명시적인 순서 삭제 표시는 저장된 행과 ID가 달라도 같은 slotKey의 기존 내용을 복원하지 않는다. 이로써 삭제한 인용 구절이 보존 단계에서 다시 추가되어 중복 저장 키 검증에 실패하는 문제를 막는다.
 - 삭제 표시 없는 누락 내용은 계속 보존하며, 활성 항목끼리의 충돌은 기존 검증에서 차단한다. `tests/test_worship_deleted_slot.cjs`로 두 경우를 함께 검증한다.
+
+
+### 2026-09-24 Setlist hymn numbers from canonical songs
+- 역대 콘티의 연결된 곡은 DB `hymn_no`와 메인 제목으로 표시한다. 원문에 번호가 없어도 표시하고, 원문의 이전 번호는 표시용으로 재사용하지 않는다.
+- Explicit song IDs are authoritative. Unlinked title matching retains hymn-number validation; manual and excluded special-song titles remain unchanged.

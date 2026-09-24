@@ -20,7 +20,7 @@ assert.equal(resolve('동명곡',index).status,'ambiguous');
 assert.equal(resolve('38 동명곡',index).song.id,'hymn');
 assert.equal(resolve('256 찬송 제목',index).status,'hymn-number');
 assert.equal(resolve('259 찬송 제목 ⑴',index).text,'259 찬송 제목 ⑴');
-assert.equal(resolve('통 100 찬송 제목',index).text,'통 100 찬송 제목');
+assert.equal(resolve('통 100 찬송 제목',index).text,'259 찬송 제목');
 assert.equal(resolve('통 259 찬송 제목',index).status,'hymn-number');
 assert.equal(resolve('성령의 불로 (예수님 목마릅니다)',index).song.id,'s1');
 assert.equal(resolve('동명곡',index,'ccm').song.id,'ccm');
@@ -96,3 +96,9 @@ assert.deepEqual(reordered.candidates.slice(0,2).map(c=>c.raw_title), ['First','
 assert.equal(JSON.stringify(archivedRows), archivedBefore);
 assert.deepEqual(MindexSetlistLinks.mergeSundayEntries([reordered])[0].candidates, reordered.candidates);
 console.log('PASS: archived second-service specials lead, stable order and idempotent projection');
+
+assert.equal(resolve('찬송 제목', index, 'number').text, '259 찬송 제목');
+assert.equal(resolve('256 예전 제목', index, 'number').text, '259 찬송 제목');
+assert.equal(resolve('38 동명곡', index, 'ccm').text, '동명곡');
+assert.equal(resolve('동명곡', index, 'hymn').text, '38 동명곡');
+console.log('PASS DB hymn number and title override source text for linked songs');

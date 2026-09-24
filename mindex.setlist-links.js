@@ -60,11 +60,12 @@
     if (!ids?.size && !explicitId) ids = new Set(aliases(part.text).flatMap((alias) => [...(index.names.get(alias) || [])]));
     const candidates = [...(ids || [])].map((id) => index.byId.get(id)).filter(Boolean);
     if (!candidates.length) return { status: explicitId ? "broken-link" : "unmatched", text: value, candidates };
-    const numbered = part.number ? candidates.filter((song) => (part.oldHymnal ? song.oldNumbers : song.modernNumbers).has(part.number)) : candidates;
+    const numbered = part.number && !explicitId ? candidates.filter((song) => (part.oldHymnal ? song.oldNumbers : song.modernNumbers).has(part.number)) : candidates;
     if (!numbered.length) return { status: "hymn-number", text: value, candidates };
     if (numbered.length !== 1) return { status: "ambiguous", text: value, candidates: numbered };
     const song = numbered[0];
-    const prefix = part.number ? `${part.oldHymnal ? "통 " : ""}${part.number} ` : "";
+    const hymnNo = String(song.hymn_no || "").trim();
+    const prefix = hymnNo ? `${hymnNo} ` : "";
     const sameTitle = [...(index.titles.get(key(song.title)) || [])].map(id => index.byId.get(id));
     const needsSubtitle = sameTitle.some(other => other.id !== song.id
       && Boolean(other.modernNumbers.size || other.oldNumbers.size) === Boolean(song.modernNumbers.size || song.oldNumbers.size));
