@@ -24622,10 +24622,10 @@ function renderServiceSidebarItemEditor(service, items, selectedIndex) {
           </select>
         </label>
         <div class="service-sidebar-editor-actions">
-          <button class="icon-btn" type="button" data-service-item-action="up" data-service-item-index="${selectedIndex}" ${selectedIndex <= 0 ? "disabled" : ""} aria-label="항목 위로 이동"><i data-lucide="arrow-up"></i></button>
-          <button class="icon-btn" type="button" data-service-item-action="down" data-service-item-index="${selectedIndex}" ${selectedIndex >= items.length - 1 ? "disabled" : ""} aria-label="항목 아래로 이동"><i data-lucide="arrow-down"></i></button>
-          <button class="icon-btn" type="button" data-service-item-action="duplicate" data-service-item-index="${selectedIndex}" aria-label="항목 복제"><i data-lucide="copy"></i></button>
-          <button class="icon-btn danger" type="button" data-service-item-action="delete" data-service-item-index="${selectedIndex}" aria-label="항목 삭제"><i data-lucide="trash-2"></i></button>
+          ${renderServiceItemMoveButton({ actionAttr: "data-service-item-action", indexAttr: "data-service-item-index", index: selectedIndex, direction: "up", disabled: selectedIndex <= 0, label: "항목 위로 이동" })}
+          ${renderServiceItemMoveButton({ actionAttr: "data-service-item-action", indexAttr: "data-service-item-index", index: selectedIndex, direction: "down", disabled: selectedIndex >= items.length - 1, label: "항목 아래로 이동" })}
+          <button class="icon-btn" type="button" data-service-item-action="duplicate" data-service-item-index="${selectedIndex}" aria-label="항목 복제" title="항목 복제"><i data-lucide="copy"></i></button>
+          <button class="icon-btn danger" type="button" data-service-item-action="delete" data-service-item-index="${selectedIndex}" aria-label="항목 삭제" title="항목 삭제"><i data-lucide="trash-2"></i></button>
         </div>
       </div>
     </section>`;
