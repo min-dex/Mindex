@@ -2227,15 +2227,6 @@ body[data-module="calendar"] .detail-pane { overflow: hidden; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.taxonomy-book-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 7px;
-  color: var(--ink-4);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.25;
-}
 .taxonomy-empty {
   color: var(--ink-4);
   font-size: 13px;

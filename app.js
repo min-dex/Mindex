@@ -14170,6 +14170,11 @@ function defaultServiceOfferingPrayerLeader(typeId = "") {
   return serviceMinisterDefaults(typeId).offeringPrayer || "";
 }
 
+function serviceBulletinCalendarRow(service = null) {
+  const serviceDate = String(service?.date || service?.service_date || "").slice(0, 10);
+  return (state.calendarData || []).find((row) => String(row?.date || "").slice(0, 10) === serviceDate) || null;
+}
+
 function calendarAssigneeValueForService(service = null, fields = []) {
   const row = serviceBulletinCalendarRow(service);
   if (!row) return "";
@@ -16358,7 +16363,7 @@ function renderGlobalScriptureResult(result) {
     ? ` ${result.chapter}${result.verse ? `:${result.verse}${result.verseEnd ? `–${result.verseEnd}` : ""}` : ""}`
     : "";
   const marker = formatBookMarker(book.sortOrder);
-  const meta = [book.englishName, book.testament].filter(Boolean).join(META_SEPARATOR);
+  const meta = book.englishName || "";
   return `
     <button
       class="song-item global-search-result"
@@ -17622,7 +17627,6 @@ function renderScriptureDetail() {
 
   if (!scripture) {
     const titleMetaLine = selectedBook?.englishName || `전체 ${formatCount(getBibleBooks().length)}권`;
-    const supportMetaItems = scriptureBookSupportMetaItems(selectedBook);
     refs.detailPane.innerHTML = `
       <div class="editor-shell scripture-editor scripture-taxonomy-editor">
         <header class="editor-head">
@@ -17632,11 +17636,6 @@ function renderScriptureDetail() {
             ${renderScriptureBookMarker(selectedBook)}
           </h2>
           ${renderEditorMeta(titleMetaLine, [])}
-          </div>
-          <div class="editor-head-right">
-            <div class="song-header-meta-row">
-              ${renderSongHeaderMeta(supportMetaItems, { reserve: true })}
-            </div>
           </div>
         </header>
         <section class="panel scripture-panel">
@@ -18107,10 +18106,6 @@ function renderScriptureChapterBadge(book) {
   return `<span class="song-count-badge scripture-chapter-badge" aria-label="${escapeAttr(label)}">${escapeHtml(String(count))}</span>`;
 }
 
-function scriptureBookSupportMetaItems(book) {
-  return book?.testament ? [metaAttribute("구약/신약", book.testament)] : [];
-}
-
 function renderScriptureBookTaxonomy() {
   const groups = groupBibleBooksByTestament(getFilteredBibleBooks());
   if (!groups.length) return `<div class="taxonomy-empty">검색 결과가 없습니다.</div>`;
@@ -18373,14 +18368,12 @@ function renderBibleVerseList(verses) {
 }
 
 function renderScriptureBookCard(book) {
-  const details = scriptureBookSupportMetaItems(book);
   return `
     <article class="taxonomy-book-card">
       <div class="taxonomy-book-order">${String(book.sortOrder).padStart(2, "0")}</div>
       <div class="taxonomy-book-main">
         <div class="taxonomy-book-title">${escapeHtml(book.koreanName)}</div>
         <div class="taxonomy-book-subtitle">${escapeHtml(book.englishName)}</div>
-        <div class="taxonomy-book-meta">${details.map(renderMetaItem).join("")}</div>
       </div>
     </article>
   `;
