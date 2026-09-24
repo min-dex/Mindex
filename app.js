@@ -24102,7 +24102,7 @@ function renderPresenterSidebarPreparationInput(service) {
   return `
     <section class="service-sidebar-section service-sidebar-section--preparation-input" aria-label="예배 입력 붙여넣기">
       <div class="service-sidebar-head">
-        <span>예배 일괄 입력</span>
+        <span>예배 순서 입력</span>
       </div>
       <div class="svc-presenter-preparation-input svc-presenter-preparation-input--sidebar">
         ${renderPresenterPreparationFieldRows(service, draft, { sidebar: true })}

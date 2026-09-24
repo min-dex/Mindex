@@ -132,7 +132,7 @@ function renderPresenterServiceInputRail(service) {
   return `
     <aside class="svc-presenter-input-rail" aria-label="예배 입력">
       <header class="svc-presenter-input-rail-head">
-        <span>예배 일괄 입력</span>
+        <span>예배 순서 입력</span>
       </header>
       <section class="svc-presenter-preparation-input">
         ${renderPresenterPreparationFieldRows(service, draft)}
