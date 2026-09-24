@@ -35,7 +35,6 @@ def main():
                   state.presenter.liveScripture={active:false,draft:'',slide:null};
                   panel.innerHTML=renderPresenterControlsTop(service,slides,true,0);
                   refreshIcons(panel);
-                  const help=panel.querySelector('[data-presenter-help]');help.open=true;
                   const field=panel.querySelector('[data-live-scripture-input]');field.dataset.serviceId=service.id;
                   check(normalizeReferenceInput('창 1. 1')==='창 1:1','dotted chapter/verse was not normalized');
                   check(normalizeReferenceInput('창 1·1')==='창 1:1','middle-dot chapter/verse was not normalized');
@@ -56,7 +55,6 @@ def main():
                   for(let i=0;i<12;i++){
                     state.presenter.liveScripture={active:i%2===0,draft:'요한복음 3:16',slide:{type:'scripture',title:'요한복음 3:16',text:'본문'}};
                     patchPresenterControlsTop(panel,service,slides,true,0);
-                    check(panel.querySelector('[data-presenter-help]')===help && help.open,'help replaced/reset');
                     check(panel.querySelector('[data-live-scripture-input]')===field,'scripture field replaced');
                     check(document.activeElement===nextButton,'control focus lost');
                   }

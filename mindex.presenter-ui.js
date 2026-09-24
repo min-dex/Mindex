@@ -60,7 +60,7 @@ function renderPresenterHelpControl() {
   ];
   const inputRows = [
     ["인용 구절", "성경 주소 입력 후 Enter로 해당 절 이동. 범위는 첫 절로 이동"],
-    ["예배 입력", "Enter 2번 또는 반영 버튼"],
+    ["예배 입력", "반영 버튼 또는 Cmd/Ctrl+Enter"],
   ];
   return `
     <details class="svc-presenter-help" data-presenter-help>

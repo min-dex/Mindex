@@ -25685,6 +25685,10 @@ function renderServicePresenterControls(service, slides = [], active = false, in
         ${renderServiceSourcePanel(service)}
         ${renderPresenterThumbScaleControl()}
         ${serviceSupportsBulletin(service) ? `<button class="svc-output-action" type="button" data-service-bulletin-action="open" data-service-id="${escapeAttr(service.id)}"><i data-lucide="newspaper"></i><span>주보</span></button>` : ""}
+        <span class="svc-presenter-toolbar-utilities" aria-label="송출 보조 도구">
+          ${renderServiceMusicPlayer()}
+          ${renderPresenterHelpControl()}
+        </span>
       </div>
       <div class="svc-presenter-workspace">
         <div class="svc-presenter-board-column">
@@ -29423,14 +29427,8 @@ function renderPresenterControlsTop(service, slides, active, index) {
             outputOpen,
             outputOpenElsewhere,
           })}
-          <span class="svc-presenter-utility-actions" aria-label="송출 보조 도구">
-            <span class="svc-presenter-action-group svc-presenter-action-group--music">
-              ${renderServiceMusicPlayer()}
-            </span>
-              <span class="svc-presenter-action-group svc-presenter-action-group--scripture" ${showLiveScriptureControl ? "" : "hidden"}>
-                ${renderLiveScriptureControl(service.id)}
-              </span>
-            ${renderPresenterHelpControl()}
+          <span class="svc-presenter-action-group svc-presenter-action-group--scripture" ${showLiveScriptureControl ? "" : "hidden"}>
+            ${renderLiveScriptureControl(service.id)}
           </span>
         </div>
       </div>`;
