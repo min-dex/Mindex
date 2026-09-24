@@ -4,7 +4,7 @@
 
 const PRESENTER_SONG_NOTE = "♬";
 const PRESENTER_SONG_NOTE_PATTERN = /^[\u2669\u266A\u266B\u266C]\s*/u;
-const PRESENTER_DEFAULT_CHROMAKEY_READY_LOOP_VIDEO = "assets/presenter/chromakey-ready-loop-fast.mp4?v=source-quality-20260913";
+const PRESENTER_DEFAULT_CHROMAKEY_READY_LOOP_VIDEO = "assets/presenter/chromakey-ready-loop-pingpong.mp4?v=pingpong-20260925-001";
 
 function presenterSlidesWithIntroSlide(item = {}, section = {}, index = 0, memo = emptyServiceItemMemo(), slides = []) {
   const list = Array.isArray(slides) ? slides.filter(Boolean) : [];

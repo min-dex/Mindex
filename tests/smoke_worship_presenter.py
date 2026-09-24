@@ -8426,7 +8426,7 @@ def main() -> int:
                     and ready_output_state["layout"] == "media"
                     and ready_output_state["slidePresenterRole"] == "waiting_loop"
                     and ready_output_state["slideBackground"] == "rgb(0, 0, 0)"
-                    and ready_output_state["videoSrc"].split("?")[0].endswith("assets/presenter/chromakey-ready-loop-fast.mp4")
+                    and ready_output_state["videoSrc"].split("?")[0].endswith("assets/presenter/chromakey-ready-loop-pingpong.mp4")
                     and ready_output_state["autoplay"]
                     and ready_output_state["muted"]
                     and ready_output_state["loop"]
