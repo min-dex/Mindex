@@ -15251,12 +15251,6 @@ const bulletinTabSessions = new Map();
 async function runServiceBulletinAction(action = "", serviceId = "") {
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service || !serviceSupportsBulletin(service)) return;
-  if (action === "close") {
-    bulletinTabSessions.delete(state.pageTabs[state.pageTabIndex]?.id);
-    await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(),module:"presenter",
-      selectedServiceId:serviceId,presenterBulletinServiceId:null});
-    syncBrowserHistory();return;
-  }
   if (action !== "open") return;
   if (state.module === "bulletin" && state.presenterBulletinServiceId === serviceId) return;
   await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(), module:"bulletin", search:"",
@@ -15356,7 +15350,6 @@ function mountServiceBulletinWorkbench(service) {
       host.dataset.bulletinOwner = id;
       syncBrowserHistory({replace:true});
     },
-    onClose: () => runServiceBulletinAction("close",state.presenterBulletinServiceId),
   });
 }
 

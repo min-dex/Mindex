@@ -29,6 +29,11 @@ const server=http.createServer((req,res)=>{
     await page.evaluate(async()=>{
       const id='11111111-1111-4111-8111-111111111111';
       window.bulletinTest={id,reads:0,writes:0,fail:false,prayer:'교회력 기도자',sermon:'DB에서 읽은 설교'};
+      window.leaveBulletinForTest=async()=>{
+        bulletinTabSessions.delete(state.pageTabs[state.pageTabIndex]?.id);
+        await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(),module:'presenter',presenterBulletinServiceId:null});
+        syncBrowserHistory();
+      };
       const b=window.bulletinTest;
       b.drafts={};b.saves=0;
       loadBulletinDraft=async sid=>structuredClone(b.drafts[sid]||null);
@@ -79,10 +84,11 @@ const server=http.createServer((req,res)=>{
     });
     assert.deepEqual(autoCases,['26-A5.png','26-A4.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
 
+    assert.equal(await page.locator('[data-bulletin-close]').count(),0,'Bulletin has no special back button');
     const originalTab=await page.evaluate(()=>state.pageTabs[state.pageTabIndex].id);
     assert.equal(await page.evaluate(()=>state.pageTabs.length),1,'Opening bulletin must not create a tab');
     assert.equal(await page.evaluate(()=>state.module),'bulletin');
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.waitForFunction(()=>state.module==='presenter');
     await page.locator('[data-home-module="bulletin"]').click();
     await page.waitForFunction(()=>state.module==='bulletin'&&!state.presenterBulletinServiceId);
@@ -143,7 +149,7 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-field="news"]').fill('넘침 검사 문구 '.repeat(200));
     assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
     await page.locator('[data-bulletin-field="news"]').fill('이번 주 소식\n다음 주 소식');
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
     await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
     assert.equal(await page.locator('[data-bulletin-field="church"]').inputValue(),'샘플 교회');
@@ -211,7 +217,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.evaluate(()=>window.bulletinTest.drafts[window.bulletinTest.id].layout.background),'26-S6.png');
     // A clean browser-local state still loads the same content and layout from DB.
     await page.evaluate(()=>localStorage.clear());
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'내가 수정한 원문 ③');
@@ -252,7 +258,7 @@ const server=http.createServer((req,res)=>{
       window.bulletinTest.saveFail=false;
       Storage.prototype.getItem=function(key){if(key.startsWith('mindex.bulletin'))throw new DOMException('blocked','SecurityError');return window.bulletinStorage.get.call(this,key);};
     });
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'복구 공간이 없어도 DB 저장');
@@ -263,7 +269,7 @@ const server=http.createServer((req,res)=>{
       localStorage.setItem(key,JSON.stringify({version:3,fields:{news:'로컬'},frames:{},settings:{},savedAt:1}));
       localStorage.setItem(key+':recovery',JSON.stringify({fields:{news:'복구된 문구'},frames:[null,{id:'news',x:999}],settings:{},id:'wrong-id',revision:999,key:'wrong-key',savedAt:2}));
     });
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     await page.locator('[data-bulletin-local]').click();
@@ -278,7 +284,7 @@ const server=http.createServer((req,res)=>{
       localStorage.setItem(key,JSON.stringify({version:3,fields:{news:'최신 로컬 수정'},frames:[],settings:{},savedAt:200}));
       localStorage.setItem(key+':recovery',JSON.stringify({fields:{news:'오래된 복구본'},frames:[],settings:{},savedAt:100}));
     });
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>runServiceBulletinAction('open',window.bulletinTest.id));
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
     await page.locator('[data-bulletin-local]').click();
@@ -324,7 +330,7 @@ const server=http.createServer((req,res)=>{
     });
     await page.waitForFunction(()=>window.printAudit.releases.length===3);
     assert.equal(await page.evaluate(()=>window.printAudit.created),1);
-    await page.locator('[data-bulletin-close]').click();
+    await page.evaluate(()=>leaveBulletinForTest());
     await page.evaluate(()=>{window.printAudit.releases.forEach(resolve=>resolve([]));window.printAudit.restore();});
     await page.waitForTimeout(50);
     assert.equal(await page.evaluate(()=>window.printAudit.calls),0);
