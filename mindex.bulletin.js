@@ -10,7 +10,7 @@
   const logoPath="assets/bulletin/ria-mark.webp";
   const assets = [logoPath];
   const fields = {eventsText:"교회 일정 (주보용)",issue:"호수", church:"교회명", news:"청년부 소식", welcome:"환영 문구", notices:"상시 안내", staff:"섬김이 명단",
-    motto:"공동체 표어", verse:"표어 성구", website:"웹사이트", address:"주소", meeting:"예배 시간·장소", outline:"설교 요점"};
+    motto:"공동체 표어", verse:"표어 성구", website:"웹사이트", address:"주소", meeting:"예배 시간·장소", outline:"설교 요점", leader:"인도자"};
   const frameLabels={eventsMonth:"일정 월",prayersMonth:"위원표 월",insideChurch:"안쪽 교회명",insideBrand:"안쪽 공동체명",eventsTitle:"교회 일정 제목",events:"교회 일정",newsTitle:"청년부 소식 제목",liturgical:"교회력 명칭",
     orderTitle:"예배 순서 제목",order:"예배 순서",leader:"인도자",prayersTitle:"예배 위원 제목",prayers:"예배 위원",
     sermon:"설교 제목·본문",notesTitle:"설교 노트 제목",notes:"노트 줄"};
@@ -68,13 +68,29 @@
       .sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${shortDate(r.date)}  ${clean(r.church_schedule)}`).join("\n")};
   }
 
+  // The printed archive separates the welcome, weekly news and recurring notices.
+  // Only recognize explicit paragraphs; unknown wording stays in the news field.
+  function announcementParts(raw) {
+    const parts={news:[],welcome:[],notices:[]};
+    for(const paragraph of raw.split(/\n(?=\s*(?:\d+[.)]|[①-⑳◈])\s*)|\n\s*\n/)) {
+      const lines=paragraph.trim().split("\n");
+      if(/^오늘도 청년부 예배에 오신 여러분을/.test(lines[0])&&/환영.*축복/.test(lines[0]))parts.welcome.push(lines.shift());
+      const text=lines.join("\n").trim();if(!text)continue;
+      const body=text.replace(/^(?:\d+[.)]|[①-⑳◈])\s*/,"");
+      if(/^(?:청년부\s*기도 모임\s*\(매주|검단우리교회는 신천지)/.test(body))parts.notices.push(`◈ ${body}`);
+      else parts.news.push(text);
+    }
+    return Object.fromEntries(Object.entries(parts).map(([key,lines])=>[key,lines.join("\n")]));
+  }
+
   function resolveSource({service, sections=[], elements=[], songs=[], scriptures=[], calendar=[], settings={}, services=[]}) {
+    const compactOrder=settings.compactOrder!==false;
     const songById = new Map(songs.map(s=>[s.id,s]));
     const scriptureById = new Map(scriptures.map(s=>[s.id,s]));
     const sectionById = new Map(sections.map(s=>[s.id,s]));
     const date = service.service_date;
     const today = calendar.find(r=>r.date===date) || {};
-    const source = {id:service.id, date, leader:clean(service.worship_leader), liturgical:clean(today.liturgical),
+    const source = {id:service.id, date, leader:clean(service.worship_leader), liturgical:[clean(today.liturgical),clean(today.note)].filter(Boolean).join(" / "),
       sermon:"", scripture:"", news:"", order:[], prayers:[], events:"", loadedAt:new Date().toISOString()};
     const hasReading=elements.some(e=>sectionById.get(e.section_id)?.section_key==="scripture_reading");
     const ordered = elements.filter(e=>sectionById.has(e.section_id)).sort((a,b)=>
@@ -84,22 +100,22 @@
       const type=config.elementType||config.element_type||el.element_type;
       const slot=clean(ref.slotKey||config.slotKey);
       let label=clean(ref.label||section.title);
-      if ((settings.compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation(?:\.|$)/.test(slot)
+      if ((compactOrder && (/^(ready|preparation|closing|fellowship)(\.|$)/.test(slot) || /^sermon\.citation(?:\.|$)/.test(slot)
         || /^(ready|preparation|closing|fellowship)$/.test(section.section_key)
         || /^(준비|폐회|실시간 성구 송출)$/.test(label)))
         || ["blank","image","video","audio","file","ppt","pdf","live_scripture"].includes(type)
         || config.templateSuppressed || el.content_state?.status==="suppressed") continue;
-      if(settings.compactOrder)label=label.replace(/^(찬양|찬송)\s*\d+(?:\s*[–~-]\s*\d+)?$/, "$1");
+      if(compactOrder)label=label.replace(/^(찬양|찬송)\s*\d+(?:\s*[–~-]\s*\d+)?$/, "$1");
       const linked = songById.get(el.song_id);
       const scripture = scriptureById.get(el.scripture_id);
       let content = linked ? [linked.hymn_no,linked.title].filter(Boolean).join(" ")
         : clean(["body","plain_text","editable"].includes(type)?el.body||el.title:el.title);
-      const reference = clean(el.scripture_reference||config.scriptureReference||config.scripture_reference||scripture?.reference);
-      if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&settings.compactOrder)continue;}
+      const reference = clean(el.scripture_reference||config.scriptureReference||config.scripture_reference||(Array.isArray(config.scriptureReferences)?config.scriptureReferences.map(clean).filter(Boolean).join(" / "):"")||scripture?.reference);
+      if(slot==="sermon.scripture") {if(reference)source.scripture=reference;if(hasReading&&compactOrder)continue;}
       if (reference && /scripture|성경|본문/.test([type,slot,label].join(" "))) {
         content=reference;
         if (!source.scripture&&!/^sermon\.citation(?:\.|$)/.test(slot)) source.scripture=reference;
-        if(settings.compactOrder)label="성경봉독";
+        if(compactOrder)label="성경봉독";
       }
       if (slot==="sermon.title" || label==="설교") {source.sermon=content;label="설교";}
       if (/announcements/.test(section.section_key) && ["body","plain_text","editable"].includes(type)) {
@@ -109,12 +125,15 @@
       }
       let person=clean(el.person);
       if (label.replace(/\s/g,"")==="대표기도") person=clean(today.young_adult_prayer)||person;
+      if(compactOrder&&!person&&["사도신경","찬양","찬송","기도","성경봉독","결단찬양","결단기도","봉헌찬양","봉헌","파송찬양"].includes(label))person="다같이";
       if (content===label) content="";
-      if(settings.compactOrder&&["사도신경","주기도문","공동체 고백"].includes(label))content="";
+      if(compactOrder&&["사도신경","주기도문","공동체 고백"].includes(label))content="";
       const last=source.order[source.order.length-1];
-      if (settings.compactOrder && last && last.label===label && last.person===person && content) last.content=[last.content,content].filter(Boolean).join("\n");
+      if (compactOrder && last && last.label===label && last.person===person && content) last.content=[last.content,content].filter(Boolean).join("\n");
       else source.order.push({id:el.id,label,content,person});
     }
+    source.announcements=source.news;
+    Object.assign(source,announcementParts(source.news));
     Object.assign(source,monthlyView(calendar,date,settings,services));
     return source;
   }
@@ -131,7 +150,7 @@
     frames.push({id:"notices",page:0,x:10,y:145,w:128.5,h:17.5,size:12.5,type:"list",binding:"field:notices"});
     frames.push({id:"staff",page:0,x:10,y:170,w:128.5,h:25,size:10,type:"staff",binding:"field:staff"});
     text("church",0,158.5,20,128.5,12.5,20,"field:church","center",700);
-    text("liturgical",0,158.5,30,128.5,15,15,"source:liturgical","center",700);
+    text("liturgical",0,158.5,30,128.5,15,15,"source:liturgical","center",500);
     text("motto",0,158.5,170,128.5,10,20,"field:motto","center",700);
     text("verse",0,158.5,180,128.5,15,12.5,"field:verse","center");
     text("website",0,10,2.5,128.5,5,10,"field:website");
@@ -147,7 +166,7 @@
     text("sermon",1,158.5,85,128.5,17.5,12.5,"sermon","right",700);
     frames.push({id:"outline",page:1,x:158.5,y:100,w:128.5,h:35,size:12.5,type:"list",binding:"field:outline"});
     text("notesTitle",1,158.5,142.5,128.5,10,17.5,"label:설교 노트","left",700);
-    frames.push({id:"notes",page:1,x:158.5,y:157.5,w:128.5,h:30,size:10,type:"rules",binding:""});
+    frames.push({id:"notes",page:1,x:158.5,y:160,w:128.5,h:30,size:10,type:"rules",binding:""});
     text("insideChurch",1,10,2.5,128.5,5,10,"field:church");
     text("insideBrand",1,158.5,202.5,128.5,5,10,"label:RIA 청년부","right");
     return frames;
@@ -208,7 +227,7 @@
     if (!text) return 0;
     if(box.w<=0||box.h<=0){issues.add(id);return 0;}
     const size=box.size||12.5,weight=box.weight||500;
-    const leading=snap(size*1.4,TOKENS.baseline);
+    const leading=box.leading||snap(size*1.2,TOKENS.baseline);
     const lines=wrap(text,box.w,size,weight);
     if(lines.some(line=>wrap.context.measureText(line).width/MM>box.w+.01))issues.add(id);
     const first=Math.ceil((box.y*MM+size)/TOKENS.baseline)*TOKENS.baseline/MM;
@@ -222,7 +241,7 @@
   }
   function fieldValue(doc,key) {
     if(Object.hasOwn(doc.fields,key))return doc.fields[key];
-    if(key==="news")return doc.source?.news||"";
+    if(["news","welcome","notices","leader"].includes(key))return doc.source?.[key]||doc.profile?.[key]||"";
     if(key==="eventsText")return doc.source?.events||"";
     if(key==="issue")return archiveIssues[doc.source?.date]||"";
     return doc.profile?.[key]??"";
@@ -234,7 +253,7 @@
     if(kind==="month"){const [y,m]=(doc.source?.[key]||"").split("-");return y&&m?`${y}년\n${Number(m)}월`:"";}
     if(kind==="field")return fieldValue(doc,key);
     if(kind==="source")return doc.source?.[key]||"";
-    if(kind==="leader")return doc.source?.leader?`인도자\n${doc.source.leader}`:"";
+    if(kind==="leader")return fieldValue(doc,"leader")?`인도자\n${fieldValue(doc,"leader")}`:"";
     if(kind==="sermon")return [doc.source?.sermon,doc.source?.scripture].filter(Boolean).join("\n");
     if(kind==="issue")return [dateLabel(doc.source?.date),fieldValue(doc,"issue")?`제${fieldValue(doc,"issue")}호`:""].filter(Boolean).join(" · ");
     return "";
@@ -244,7 +263,7 @@
     for(let page=0;page<2;page++) {
       const root=svg("svg",{viewBox:"0 0 297 210",class:"bulletin-sheet",role:"img","aria-label":page?"주보 안쪽":"주보 겉면"});
       const theme=doc.settings?.theme||"",background=backgroundFor(doc);
-      if(background)root.append(svg("image",{href:new URL(background.url,document.baseURI).href,width:297,height:210,preserveAspectRatio:"xMidYMid slice"}));
+      if(background)root.append(svg("image",{href:new URL(background.url,document.baseURI).href,width:297,height:210,preserveAspectRatio:"xMidYMid slice",...(page?{transform:"translate(297 0) scale(-1 1)"}:{})}));
       else root.append(svg("rect",{width:297,height:210,fill:theme==="ink"?"#202b35":"#fff"}));
       for(const x of [5,153.5])root.append(svg("rect",{x,y:10,width:138.5,height:190,fill:"white","fill-opacity":1}));
       if(page===0)root.append(svg("image",{href:new URL(logoPath,document.baseURI).href,x:170,y:67.5,width:105,height:72.5}));
@@ -252,8 +271,14 @@
         const group=svg("g",{"data-frame-id":f.id}),frameIssues=f.hidden?new Set():issues;
         if(f.type==="rules") {
           for(let y=0;y<=f.h;y+=7.5)group.append(svg("line",{x1:f.x,y1:f.y+y,x2:f.x+f.w,y2:f.y+y,stroke:"#555","stroke-width":.15}));
+        } else if(f.binding==="sermon") {
+          writeText(group,doc.source?.sermon,{...f,h:7.5},frameIssues,f.id);
+          writeText(group,doc.source?.scripture,{...f,y:f.y+7.5,h:f.h-7.5,size:Math.max(7.5,f.size-2.5),weight:500},frameIssues,f.id);
         } else if(f.type==="list") {
-          writeText(group,boundText(doc,f),f,frameIssues,f.id);
+          let y=f.y;
+          for(const paragraph of String(boundText(doc,f)).split("\n").filter(Boolean)) {
+            y+=writeText(group,paragraph,{...f,y,h:f.y+f.h-y},frameIssues,f.id)+(f.id==="news"?5:2.5);
+          }
         } else if(f.type==="staff") {
           const value=boundText(doc,f),pairs=value.split(/\n|\s*·\s*/).filter(Boolean);
           const parsed=pairs.map(t=>t.match(/^(위임목사|담당 교역자|회장|총무|서기|회계)\s+(.+)$/));
@@ -267,7 +292,7 @@
           for(const line of String(boundText(doc,f)).split("\n").filter(Boolean)) {
             const parts=line.match(/^(\d+월 \d+일)\s+(.+)$/);
             if(!parts){y+=writeText(group,line,{...f,y,h:f.y+f.h-y},frameIssues,f.id)+2.5;continue;}
-            const body=parts[2],h=Math.max(7.5,wrap(body,f.w-35,f.size).length*snap(f.size*1.4)/MM+2.5);
+            const body=parts[2],h=Math.max(7.5,wrap(body,f.w-35,f.size).length*snap(f.size*1.2)/MM+2.5);
             writeText(group,parts[1],{...f,y,w:30,h},frameIssues,f.id);
             writeText(group,body,{...f,x:f.x+35,y,w:f.w-35,h,align:"right"},frameIssues,f.id);y+=h;
             if(y>f.y+f.h+.01)frameIssues.add(f.id);
@@ -275,19 +300,22 @@
         } else if(f.type==="order") {
           const list=doc.source?.order||[],inner=f.w-60;
           if(inner<10){frameIssues.add(f.id);root.append(group);continue;}
-          const leading=snap(f.size*1.4)/MM;
+          const leading=snap(f.size*1.2)/MM;
           const counts=list.map(row=>Math.max(wrap(row.label,30,f.size).length,wrap(row.content,inner,f.size,700).length,wrap(row.person,30,f.size).length));
-          const used=counts.reduce((sum,n)=>sum+n*leading,0),gap=list.length>1?Math.max(2.5,(f.h-used)/(list.length-1)):0;
+          const rowLeading=list.map(row=>["찬양","찬송"].includes(row.label)&&row.content.includes("\n")?Math.max(leading,25/MM):leading);
+          const used=counts.reduce((sum,n,i)=>sum+n*rowLeading[i],0),gap=list.length>1?Math.max(2.5,(f.h-2.5-used)/(list.length-1)):0;
           let y=f.y;
           list.forEach((row,i)=>{
-            const height=counts[i]*leading,base={...f,y,h:height+1};
-            const centered=y+Math.max(0,(counts[i]-1)*leading/2);
+            const height=counts[i]*rowLeading[i],base={...f,y,h:height+2.5,leading:rowLeading[i]*MM};
+            const centered=y+Math.max(0,(counts[i]-1)*rowLeading[i]/2);
             const printLabel=row.label==="봉헌찬양"?"봉헌":row.label;
             const letters=printLabel.replace(/\s/g,"");
             if(letters.length>1&&letters.length<=5) [...letters].forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+j*27.5/(letters.length-1),w:6},frameIssues,f.id));
             else writeText(group,row.label,{...base,y:centered,w:30},frameIssues,f.id);
             writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},frameIssues,f.id);
-            writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},frameIssues,f.id);
+            const personLetters=Array.from(row.person.replace(/\s/g,""));
+            if(personLetters.length>1&&personLetters.length<=6)personLetters.forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+f.w-30+j*25/(personLetters.length-1),w:5},frameIssues,f.id));
+            else writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},frameIssues,f.id);
             y+=height+(i<list.length-1?gap:0);
           });
           if(y>f.y+f.h+.01)frameIssues.add(f.id);
@@ -322,7 +350,7 @@
     for(const key of Object.keys(fields))if(typeof value.fields?.[key]==="string")values[key]=value.fields[key];
     for(const key of ["eventsMonth","rosterMonth"])if(validMonth(value.settings?.[key]))settings[key]=value.settings[key];
     if(typeof value.settings?.theme==="string")settings.theme=value.settings.theme;
-    settings.compactOrder=value.settings?.compactOrder===true;
+    settings.compactOrder=value.settings?.compactOrder!==false;
     for(const f of frames){
       const patch=Array.isArray(value.frames)?value.frames.find(p=>isRecord(p)&&p.id===f.id):null;
       if(!patch)continue;
@@ -350,7 +378,7 @@
 
   function storedValue(doc) {
     const {theme,compactOrder,eventsMonth,rosterMonth}=doc.settings;
-    return {content:{fields:clone(doc.fields),eventsMonth,rosterMonth,compactOrder:compactOrder===true},
+    return {content:{fields:clone(doc.fields),eventsMonth,rosterMonth,compactOrder:compactOrder!==false},
       layout:{background:backgroundKey(theme),frames:clone(doc.frames)}};
   }
   function applyStored(doc,row) {
@@ -442,7 +470,7 @@
         const field=key=>`<label>${escape(fields[key])}${["issue","church","website"].includes(key)?
           `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
           `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`;
-        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3><p class="bulletin-help">광고 원문과 입력한 번호를 그대로 표시합니다.</p>${["issue","news","eventsText","outline","welcome"].map(field).join("")}</section>
+        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3><p class="bulletin-help">예배 광고에서 환영 문구와 상시 안내를 나눠 담습니다. 직접 편집한 내용은 유지합니다.</p>${["issue","leader","news","eventsText","outline","welcome"].map(field).join("")}</section>
           <section class="bulletin-property-section"><h3>일정과 위원표</h3><div class="bulletin-number-grid">
           <label>교회 일정<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
           <label>예배 위원<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label></div></section>

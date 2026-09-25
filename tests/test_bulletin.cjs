@@ -25,7 +25,7 @@ fixture.calendar[0].young_adult_prayer='';
 assert.equal(c.window.MindexBulletin.resolveSource(fixture).order[1].person,'예배 담당자');
 fixture.elements.push({id:'creed',section_id:'s',sort_order:9,element_type:'body',title:'사도신경',body:'송출용 신앙고백 전문',source_ref:{label:'사도신경',slotKey:'faith.creed'}},
   {id:'citation',section_id:'w',sort_order:9,element_type:'scripture_body',scripture_reference:'요한복음 1:1',source_ref:{label:'인용 구절',slotKey:'sermon.citation'}});
-const fullCopy=c.window.MindexBulletin.resolveSource(fixture);
+const fullCopy=c.window.MindexBulletin.resolveSource({...fixture,settings:{compactOrder:false}});
 assert.equal(fullCopy.order.find(r=>r.label==='사도신경').content,'송출용 신앙고백 전문');
 assert.ok(fullCopy.order.some(r=>r.id==='citation'));
 const printOnly=c.window.MindexBulletin.resolveSource({...fixture,settings:{compactOrder:true}});
@@ -71,10 +71,11 @@ for (const person of ['', '   ']) {
 console.log('PASS section assignees are never inherited');
 
 const split=c.window.MindexBulletin.resolveSource({service:{id:'copy',service_date:'2026-09-20'},sections:[{id:'ann',section_key:'announcements'}],elements:[{id:'ann1',section_id:'ann',element_type:'body',body:'오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 셀 모임입니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시)에 참여 바랍니다.\n3. 검단우리교회는 신천지 출입을 금지합니다.'}]});
-assert.match(split.news,/^오늘도.*환영/);
-assert.match(split.news,/2\. 청년부 기도 모임/);
-assert.match(split.news,/3\. 검단우리교회/);
-assert.equal(split.notices,undefined);assert.equal(split.welcome,undefined);
+assert.equal(split.news,'1. 오늘 셀 모임입니다.');
+assert.match(split.notices,/◈ 청년부 기도 모임/);
+assert.match(split.notices,/◈ 검단우리교회/);
+assert.match(split.welcome,/^오늘도.*환영/);
+assert.match(split.announcements,/2\. 청년부 기도 모임/);
 console.log('PASS raw announcements and optional print-order compaction');
 const doc={fields:{news:'① 그대로'},settings:{theme:'aurora',eventsMonth:'2026-09',compactOrder:true},frames:c.window.MindexBulletin.defaultFrames()};
 const stored=c.window.MindexBulletin.storedValue(doc);
@@ -104,3 +105,20 @@ assert.equal(autoRestored.settings.theme,'auto');
 const noBackground=c.window.MindexBulletin.storedValue({fields:{},settings:{theme:''},frames:[]});
 assert.equal(noBackground.layout.background,'');
 console.log('PASS automatic background selection and explicit no-background persistence');
+
+const actual=require('./fixtures/bulletin-20260920.json');
+const actualBefore=JSON.stringify(actual);
+const reference=c.window.MindexBulletin.resolveSource(actual);
+assert.equal(reference.scripture,'사무엘상 22:1–5');
+assert.match(reference.liturgical,/순교자기념주일/);
+assert.equal(reference.order.length,12,'The DB lacks the printed post-praise prayer; never invent a stored element');
+assert.equal(reference.order.filter(r=>r.label==='성경봉독').length,1);
+assert.equal(reference.order.find(r=>r.label==='찬양').content.split('\n').length,4);
+assert.equal(reference.order.find(r=>r.label==='사도신경').content,'');
+assert.equal(reference.order.find(r=>r.label==='광고').person,'');
+assert.equal(reference.news.split('\n').length,2);
+assert.equal(reference.notices.split('\n').length,2);
+assert.equal(JSON.stringify(actual),actualBefore);
+assert.equal(c.window.MindexBulletin.normalizeSnapshot({}).settings.compactOrder,true);
+assert.equal(c.window.MindexBulletin.normalizeSnapshot({settings:{compactOrder:false}}).settings.compactOrder,false);
+console.log('PASS actual September 20 source: print grouping, array references, calendar note and separate copy');
