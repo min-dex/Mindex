@@ -15177,13 +15177,10 @@ function renderNavigationSidebarState() {
 async function handleNavigationRailClick(button) {
   const moduleName = button.dataset.homeModule;
   if (moduleName === "bulletin") {
-    const existing = state.pageTabs.findIndex(tab => tab.snapshot?.module === "bulletin");
-    if (existing >= 0) {
-      syncActivePageTabState();state.pageTabIndex = existing;await applyPageTabSnapshot(existing);
-    } else {
-      await openNewPageTab({...homePageTabSnapshot(), module:"bulletin", selectedServiceId:null, presenterBulletinServiceId:null},
-        {openerTabId:state.pageTabs[state.pageTabIndex]?.id || ""});
-    }
+    if (state.module === "bulletin") return;
+    await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(), module:"bulletin", search:"",
+      selectedServiceId:null, presenterBulletinServiceId:null});
+    syncBrowserHistory();
     return;
   }
   if (moduleName === "home") {
@@ -15254,25 +15251,17 @@ const bulletinTabSessions = new Map();
 async function runServiceBulletinAction(action = "", serviceId = "") {
   const service = state.services.find(candidate => candidate.id === serviceId);
   if (!service || !serviceSupportsBulletin(service)) return;
-  if (action === "close") return closePageTab(state.pageTabIndex);
-  if (action !== "open") return;
-  // Dates are documents inside the bulletin workspace, not new page tabs.
-  const currentIsBulletin = state.module === "bulletin";
-  const existing = currentIsBulletin ? state.pageTabIndex : state.pageTabs.findIndex(tab =>
-    tab.snapshot?.module === "bulletin" || (tab.snapshot?.module === "presenter" && tab.snapshot?.presenterBulletinServiceId));
-  if (existing >= 0) {
-    if (currentIsBulletin && state.presenterBulletinServiceId === serviceId) return;
-    syncActivePageTabState();
-    const tab = state.pageTabs[existing];
-    tab.snapshot = {...tab.snapshot, module:"bulletin", selectedServiceId:serviceId,
-      selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId};
-    state.pageTabIndex = existing;
-    await applyPageTabSnapshot(existing);
-    return;
+  if (action === "close") {
+    bulletinTabSessions.delete(state.pageTabs[state.pageTabIndex]?.id);
+    await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(),module:"presenter",
+      selectedServiceId:serviceId,presenterBulletinServiceId:null});
+    syncBrowserHistory();return;
   }
-  await openNewPageTab({...currentBrowserHistorySnapshot(), search:"", module:"bulletin", selectedServiceId:serviceId,
-    selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId},
-    {openerTabId:state.pageTabs[state.pageTabIndex]?.id || ""});
+  if (action !== "open") return;
+  if (state.module === "bulletin" && state.presenterBulletinServiceId === serviceId) return;
+  await applyBrowserHistorySnapshot({...currentBrowserHistorySnapshot(), module:"bulletin", search:"",
+    selectedServiceId:serviceId, selectedServiceTypeId:service.type_id, presenterBulletinServiceId:serviceId});
+  syncBrowserHistory();
 }
 
 async function loadServiceBulletinSource(serviceId, settings = {}) {
@@ -15360,11 +15349,6 @@ function mountServiceBulletinWorkbench(service) {
     saveDraft: saveBulletinDraft,
     loadSource: loadServiceBulletinSource,
     onServiceChange: id => {
-      const existing = state.pageTabs.findIndex(tab => tab.id !== tabId && tab.snapshot?.presenterBulletinServiceId === id);
-      if (existing >= 0) {
-        void activatePageTab(existing);
-        return false;
-      }
       state.presenterBulletinServiceId = id;
       state.selectedServiceId = id;
       if (state.module === "presenter") state.presenter.viewServiceId = id;
@@ -15372,7 +15356,7 @@ function mountServiceBulletinWorkbench(service) {
       host.dataset.bulletinOwner = id;
       syncBrowserHistory({replace:true});
     },
-    onClose: () => closePageTab(state.pageTabIndex),
+    onClose: () => runServiceBulletinAction("close",state.presenterBulletinServiceId),
   });
 }
 
