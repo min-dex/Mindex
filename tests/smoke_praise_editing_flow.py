@@ -10,8 +10,11 @@ def check_flow(browser, url, engine, width, theme):
     page.wait_for_function("typeof renderSingleVersionForms === 'function'")
     page.evaluate('''({theme}) => {
       state.module='praise';state.selectedSongId='fixture';state.selectedVersionId='v1';
-      const forms=[1,2,3].map(n=>({id:'f'+n,song_id:'v1',part_type:'Verse',
-        part_number:n,sort_order:n-1,lyrics:'Line '+n}));
+      const forms=normalizeForms([
+        {id:'f1',song_id:'v1',part_type:'Verse',part_number:1,sort_order:0,lyrics:'Line 1'},
+        {id:'f2',song_id:'v1',part_type:'Verse',label:'Verse 2 A',sort_order:1,lyrics:'Line 2'},
+        {id:'f3',song_id:'v1',part_type:'Verse',label:'Verse 2 B',sort_order:2,lyrics:'Line 3'},
+      ]);
       state.songs=[{id:'fixture',title:'Editing fixture',versions:[
         {id:'v1',name:'Primary',forms}]}];
       state.forms=forms;state.dirty.forms=false;
@@ -24,6 +27,12 @@ def check_flow(browser, url, engine, width, theme):
         writeText:async value=>{window.copiedFixtureText=value;}
       }});
     }''', {'theme': theme})
+    assert page.evaluate("state.forms.map(displayLabel).join('|')") == 'Verse 1|Verse 2 A|Verse 2 B'
+    assert page.locator('.form-variant-input').nth(1).input_value() == 'A'
+    page.locator('.form-variant-input').nth(1).fill('C')
+    page.locator('.form-variant-input').nth(1).press('Tab')
+    page.wait_for_function("state.forms[1].part_variant === 'C'")
+    assert page.evaluate("displayLabel(state.forms[1])") == 'Verse 2 C'
     page.locator('.form-textarea').first.fill('Edited line\nSecond line')
     page.locator('.form-textarea').first.press('Tab')
     assert page.evaluate("state.forms[0].lyrics") == 'Edited line\nSecond line'
@@ -48,6 +57,7 @@ def check_flow(browser, url, engine, width, theme):
         {id:'other',song_id:'v2',part_type:'Chorus',sort_order:0,lyrics:'Other version'}]});
       render();
     }''')
+    assert page.evaluate("state.songs[0].versions[0].forms[1].label") == 'Verse 2 C'
     page.locator('.version-compare-column .version-picker[data-version-id="v2"]').first.click()
     page.wait_for_function("state.selectedVersionId==='v2' && state.forms.length===1")
     assert page.locator('.form-textarea').first.input_value() == 'Other version'

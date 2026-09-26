@@ -8761,6 +8761,8 @@ function writeFormsToSelectedVersion() {
     id: form.id || createLocalId(),
     part_type: form.part_type,
     part_number: form.part_number,
+    part_variant: form.part_variant || "",
+    label: displayLabel(form),
     lyrics: form.lyrics || "",
     sort_order: index + 1,
     ...(form.review_status && form.review_status !== "reviewed" ? { review_status: form.review_status } : {}),
@@ -10018,7 +10020,7 @@ function handleDetailChange(event) {
   const formField = event.target.closest("[data-form-field]");
   if (formField) {
     updateFormField(formField);
-    if (formField.dataset.formField === "part_type") {
+    if (["part_type", "part_variant"].includes(formField.dataset.formField)) {
       state.forms = normalizeForms(state.forms);
       renderDetail();
     }
@@ -10308,12 +10310,16 @@ function updateFormField(field) {
 
   const key = field.dataset.formField;
   form[key] = field.value;
-  if (key === "part_type" || key === "lyrics") {
+  if (key === "part_type" || key === "part_variant" || key === "lyrics") {
     delete form.review_status;
     delete form.import_source;
   }
   if (key === "part_type" && !PART_TYPES.includes(form.part_type)) {
     form.part_type = "Verse";
+  }
+  if (key === "part_variant") {
+    form.part_variant = normalizeFormPartVariant(field.value);
+    form.label = formatFormPartLabel(form.part_type, form.part_number, form.part_variant);
   }
   if (key === "lyrics") {
     resizeFormTextarea(field);
@@ -10399,6 +10405,8 @@ function addVersion(sourceVersionId = getSelectedVersionId()) {
       song_id: versionId,
       part_type: form.part_type,
       part_number: form.part_number,
+      part_variant: form.part_variant || "",
+      label: displayLabel(form),
       lyrics: form.lyrics || "",
       sort_order: index + 1,
     }),
@@ -11629,7 +11637,7 @@ function normalizeServiceFormPreset(value, fallbackHint = "", fallbackStrength =
 
 function canonicalServiceFormToken(value = "") {
   const raw = String(value || "").trim();
-  const part = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)([a-z])?$/i);
+  const part = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*([a-z])?$/i);
   if (part) {
     const type = part[1].toLowerCase();
     const prefix = /^(v|verse)$/.test(type) ? "V"
@@ -11669,31 +11677,33 @@ function normalizeSongFormPresetLabel(value = "") {
   const raw = String(value || "").trim();
   const compact = compactSearchValue(raw);
   if (/^(vl|마지막절|lastverse|last)$/i.test(compact)) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
-  const verse = raw.match(/^(?:v|verse)\s*(\d*)([a-z])?$/i) || raw.match(/^(\d+)\s*절$/u);
+  const verse = raw.match(/^(?:v|verse)\s*(\d*)\s*([a-z])?$/i) || raw.match(/^(\d+)\s*절$/u);
   if (verse) {
     const number = Number(verse[1]) || 0;
     const group = String(verse[2] || "").toLowerCase();
     const baseKey = number ? `verse:${number}` : "verse";
     return { key: group ? `${baseKey}:${group}` : baseKey, type: "verse", number, ...(group ? { group } : {}) };
   }
-  const chorus = raw.match(/^(?:c|chorus|후렴)\s*(\d*)([a-z])?$/i);
+  const chorus = raw.match(/^(?:c|chorus|후렴)\s*(\d*)\s*([a-z])?$/i);
   if (chorus) {
     const number = Number(chorus[1]) || 0;
     const group = String(chorus[2] || "").toLowerCase();
     const baseKey = number ? `chorus:${number}` : "chorus";
     return { key: group ? `${baseKey}:${group}` : baseKey, type: "chorus", number, ...(group ? { group } : {}) };
   }
-  const bridge = raw.match(/^(?:b|bridge)\s*(\d*)([a-z])?$/i);
+  const bridge = raw.match(/^(?:b|bridge)\s*(\d*)\s*([a-z])?$/i);
   if (bridge) {
     const number = Number(bridge[1]) || 0;
     const group = String(bridge[2] || "").toLowerCase();
     const baseKey = number ? `bridge:${number}` : "bridge";
     return { key: group ? `${baseKey}:${group}` : baseKey, type: "bridge", number, ...(group ? { group } : {}) };
   }
-  const preChorus = raw.match(/^(?:pc|prechorus|pre-chorus|p-c|p\.c\.)\s*([a-z])?$/i);
+  const preChorus = raw.match(/^(?:pc|prechorus|pre-chorus|p-c|p\.c\.)\s*(\d*)\s*([a-z])?$/i);
   if (preChorus) {
-    const group = String(preChorus[1] || "").toLowerCase();
-    return { key: group ? `pre-chorus:${group}` : "pre-chorus", type: "pre-chorus", ...(group ? { group } : {}) };
+    const number = Number(preChorus[1]) || 0;
+    const group = String(preChorus[2] || "").toLowerCase();
+    const baseKey = number ? `pre-chorus:${number}` : "pre-chorus";
+    return { key: group ? `${baseKey}:${group}` : baseKey, type: "pre-chorus", number, ...(group ? { group } : {}) };
   }
   const coda = raw.match(/^(?:coda|ending)\s*[a-z]?$/i);
   if (coda) {
@@ -18465,6 +18475,7 @@ function renderScriptureTextarea(label, field, value, className = "") {
 
 function renderFormBlock(form, index, options = {}) {
   const label = displayLabel(form);
+  const supportsVariant = ["Verse", "Chorus", "Pre-Chorus", "Bridge"].includes(form.part_type);
   return `
     <article class="form-block">
       <div class="form-head">
@@ -18472,9 +18483,10 @@ function renderFormBlock(form, index, options = {}) {
           <select class="form-type-select" data-form-field="part_type" data-index="${index}" aria-label="가사 블록 형식">
             ${PART_TYPES.map(
               (type) =>
-                `<option value="${type}" ${form.part_type === type ? "selected" : ""}>${escapeHtml(form.part_type === type ? label : type)}</option>`,
+                `<option value="${type}" ${form.part_type === type ? "selected" : ""}>${escapeHtml(form.part_type === type ? formatFormPartLabel(form.part_type, form.part_number) : type)}</option>`,
             ).join("")}
           </select>
+          ${supportsVariant ? `<input class="form-variant-input" type="text" inputmode="text" maxlength="1" data-form-field="part_variant" data-index="${index}" value="${escapeAttr(form.part_variant || "")}" placeholder="A" aria-label="${escapeAttr(label)} 분기" />` : ""}
         </div>
         <div class="form-actions">
           <button class="icon-btn" type="button" data-form-action="up" data-index="${index}" aria-label="블록 위로 이동" ${index === 0 ? "disabled" : ""}>
@@ -18510,26 +18522,46 @@ function renderReadonlyFormBlock(form, options = {}) {
 }
 
 function normalizeForms(forms) {
-  const next = forms.map((form, index) => ({
-    ...withLocalId(form),
-    part_type: normalizeFormPartType(form.part_type),
-    lyrics: form.lyrics || "",
-    review_status: form.review_status || null,
-    import_source: form.import_source || null,
-    sort_order: index + 1,
-  }));
+  const next = forms.map((form, index) => {
+    const partType = normalizeFormPartType(form.part_type);
+    const labelIdentity = formPartLabelIdentity(form.label, partType);
+    const partNumber = labelIdentity?.part_number || normalizeFormPartNumber(form.part_number);
+    const partVariant = labelIdentity?.part_variant || normalizeFormPartVariant(form.part_variant);
+    return {
+      ...withLocalId(form),
+      part_type: partType,
+      part_number: partNumber,
+      part_variant: partVariant,
+      lyrics: form.lyrics || "",
+      review_status: form.review_status || null,
+      import_source: form.import_source || null,
+      sort_order: index + 1,
+    };
+  });
 
   const counts = next.reduce((map, form) => {
     map.set(form.part_type, (map.get(form.part_type) || 0) + 1);
     return map;
   }, new Map());
+  const assignedNumbers = new Map();
   const seen = new Map();
   return next.map((form) => {
-    if (form.part_type === "Lyrics") return { ...form, part_number: null };
-    if ((counts.get(form.part_type) || 0) <= 1) return { ...form, part_number: null };
-    const partNumber = (seen.get(form.part_type) || 0) + 1;
-    seen.set(form.part_type, partNumber);
-    return { ...form, part_number: partNumber };
+    if (form.part_type === "Lyrics") return { ...form, part_number: null, part_variant: "", label: "Lyrics" };
+    const count = counts.get(form.part_type) || 0;
+    const hasExplicitNumber = Number(form.part_number) > 0;
+    let partNumber = hasExplicitNumber ? Number(form.part_number) : null;
+    if (!partNumber && count > 1) {
+      const used = assignedNumbers.get(form.part_type) || new Set();
+      partNumber = (seen.get(form.part_type) || 0) + 1;
+      while (used.has(partNumber)) partNumber += 1;
+      seen.set(form.part_type, partNumber);
+    }
+    if (partNumber) {
+      if (!assignedNumbers.has(form.part_type)) assignedNumbers.set(form.part_type, new Set());
+      if (!form.part_variant) assignedNumbers.get(form.part_type).add(partNumber);
+    }
+    const normalized = { ...form, part_number: partNumber, label: formatFormPartLabel(form.part_type, partNumber, form.part_variant) };
+    return normalized;
   });
 }
 
@@ -18538,14 +18570,47 @@ function normalizeFormPartType(value = "") {
   return PART_TYPES.includes(raw) ? raw : "Verse";
 }
 
+function normalizeFormPartNumber(value = "") {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function normalizeFormPartVariant(value = "") {
+  const match = String(value || "").trim().match(/^[a-z]$/i);
+  return match ? match[0].toUpperCase() : "";
+}
+
+function formPartLabelIdentity(value = "", partType = "") {
+  const label = String(value || "").trim();
+  if (!label || partType === "Lyrics") return null;
+  const target = normalizeSongFormPresetLabel(label);
+  const targetType = {
+    Verse: "verse",
+    Chorus: "chorus",
+    "Pre-Chorus": "pre-chorus",
+    Bridge: "bridge",
+    Coda: "coda",
+  }[partType] || "";
+  if (!targetType || target.type !== targetType) return null;
+  return {
+    part_number: normalizeFormPartNumber(target.number),
+    part_variant: normalizeFormPartVariant(target.group),
+  };
+}
+
+function formatFormPartLabel(partType = "Lyrics", partNumber = null, partVariant = "") {
+  const number = normalizeFormPartNumber(partNumber);
+  const variant = normalizeFormPartVariant(partVariant);
+  return [partType, number || "", variant].filter(Boolean).join(" ");
+}
+
 function computePartNumberSuggestion(forms, type) {
   const count = forms.filter((form) => form.part_type === type).length;
   return count + 1;
 }
 
 function displayLabel(form) {
-  if (form.part_number) return `${form.part_type} ${form.part_number}`;
-  return form.part_type;
+  return formatFormPartLabel(form?.part_type, form?.part_number, form?.part_variant);
 }
 
 function formLooksUnsplit(form) {
@@ -19164,6 +19229,8 @@ function serializeSongMemo(song, options = {}) {
             id: form.id || createLocalId(),
             part_type: form.part_type,
             part_number: form.part_number,
+            part_variant: form.part_variant || "",
+            label: displayLabel(form),
             lyrics: form.lyrics || "",
             sort_order: formIndex + 1,
             ...(form.review_status && form.review_status !== "reviewed" ? { review_status: form.review_status } : {}),

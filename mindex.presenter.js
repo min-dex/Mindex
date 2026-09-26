@@ -1159,7 +1159,7 @@ function normalizePresenterFormPresetLabel(value = "") {
   if (lastVerse) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
   const hymnVerse = raw.match(/^(\d+)\s*절$/u);
   if (hymnVerse) return { key: `verse:${hymnVerse[1]}`, type: "verse", number: Number(hymnVerse[1]) };
-  const shorthand = raw.match(/^(v|verse)\s*(\d*)([a-z])?$/i);
+  const shorthand = raw.match(/^(v|verse)\s*(\d*)\s*([a-z])?$/i);
   if (shorthand) {
     const number = shorthand[2] ? Number(shorthand[2]) : 0;
     const group = shorthand[3] ? shorthand[3].toUpperCase() : "";
@@ -1171,7 +1171,7 @@ function normalizePresenterFormPresetLabel(value = "") {
       ...(group ? { group, groupIndex: group.charCodeAt(0) - 64 } : {}),
     };
   }
-  const chorus = raw.match(/^(c|chorus|후렴)\s*(\d*)([a-z])?$/i);
+  const chorus = raw.match(/^(c|chorus|후렴)\s*(\d*)\s*([a-z])?$/i);
   if (chorus) {
     const number = chorus[2] ? Number(chorus[2]) : 0;
     const group = chorus[3] ? chorus[3].toUpperCase() : "";
@@ -1183,7 +1183,7 @@ function normalizePresenterFormPresetLabel(value = "") {
       ...(group ? { group, groupIndex: group.charCodeAt(0) - 64 } : {}),
     };
   }
-  const groupedType = raw.match(/^(pc|prechorus|pre-chorus|b|bridge|lyrics)\s*(\d*)([a-z])?$/i);
+  const groupedType = raw.match(/^(pc|prechorus|pre-chorus|b|bridge|lyrics)\s*(\d*)\s*([a-z])?$/i);
   if (groupedType) {
     const type = normalizePresenterFormType(groupedType[1]);
     const number = groupedType[2] ? Number(groupedType[2]) : 0;
