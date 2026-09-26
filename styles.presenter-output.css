@@ -470,9 +470,12 @@
 .presenter-slide--liturgical-body {
   align-items: stretch;
   justify-content: center;
-  /* Keep the fixed stage grid without consuming the output safe area. */
-  padding: calc(75 * var(--presenter-stage-unit)) calc(45 * var(--presenter-stage-unit));
   text-align: left;
+}
+.presenter-output-root.no-chromakey .presenter-slide--liturgical-body {
+  /* Fullscreen liturgical copy has a fixed stage-grid safe area. Chromakey
+     keeps the ordinary presenter slide padding. */
+  padding: calc(75 * var(--presenter-stage-unit)) calc(45 * var(--presenter-stage-unit));
 }
 .presenter-liturgical-body {
   display: block;

@@ -43,8 +43,9 @@ def main():
             }''')
             for r in result:
                 if r['type'] == 'liturgical-body':
-                    # Liturgical copy is one output role with a shared fixed safe area.
-                    expected_inset = 45
+                    # Only clean fullscreen liturgical copy has the fixed 45px inset.
+                    # Chromakey inherits the standard 2.5% slide inset (48px at 1920).
+                    expected_inset = 45 if r['clean'] else 48
                     assert abs(r['width'] - (1 - expected_inset * 2 / 1920)) < 0.001, r
                     assert abs(r['left'] - (expected_inset / 1920)) < 0.001, r
                 else:
