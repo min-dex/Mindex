@@ -43,9 +43,8 @@ def main():
             }''')
             for r in result:
                 if r['type'] == 'liturgical-body':
-                    # Liturgical copy keeps a fixed safe area: 45px in chromakey,
-                    # 145px for clean fullscreen output.
-                    expected_inset = 145 if r['clean'] else 45
+                    # Liturgical copy is one output role with a shared fixed safe area.
+                    expected_inset = 45
                     assert abs(r['width'] - (1 - expected_inset * 2 / 1920)) < 0.001, r
                     assert abs(r['left'] - (expected_inset / 1920)) < 0.001, r
                 else:
