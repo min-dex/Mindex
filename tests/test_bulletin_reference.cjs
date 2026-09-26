@@ -32,11 +32,16 @@ const server=http.createServer((req,res)=>{
       await Promise.all([...document.querySelectorAll('image')].map(el=>new Promise(resolve=>{const im=new Image();im.onload=im.onerror=resolve;im.src=el.getAttribute('href');})));
       const sermon=pages[1].querySelector('[data-frame-id="sermon"]');
       const news=pages[0].querySelector('[data-frame-id="news"]');
-      return {issues:[...issues],flip:pages[1].querySelector('image').getAttribute('transform'),
+      return {styles:{church:[...pages[0].querySelectorAll('[data-frame-id="church"] tspan')].map(t=>[t.textContent,t.getAttribute('font-weight')]),welcome:[...pages[0].querySelectorAll('[data-frame-id="welcome"] tspan')].map(t=>[t.textContent,Number(t.getAttribute('font-size')),t.getAttribute('font-weight')]),month:[...pages[0].querySelectorAll('[data-frame-id="eventsMonth"] tspan')].map(t=>[t.textContent,Number(t.getAttribute('font-size'))]),news:[...news.querySelectorAll('tspan')].map(t=>[t.textContent,t.getAttribute('font-weight')])},issues:[...issues],flip:pages[1].querySelector('image').getAttribute('transform'),
         sermon:[...sermon.querySelectorAll('text')].map(t=>({text:t.textContent,size:Number(t.getAttribute('font-size'))})),
         events:pages[0].querySelector('[data-frame-id="events"]').textContent,church:pages[0].querySelector('[data-frame-id="church"]').textContent,news:news.textContent,notes:[...pages[1].querySelectorAll('[data-frame-id="notes"] line')].map(l=>Number(l.getAttribute('y1')))};
     },fixture);
     assert.deepEqual(result.issues,[]);
+    assert.deepEqual(result.styles.church,[['기독교대한성결교회 ','500'],['검단우리교회','700']]);
+    assert.ok(result.styles.welcome.some(([text,,weight])=>text==='축복'&&weight==='800'));
+    assert.ok(result.styles.month[1][1]>result.styles.month[0][1]);
+    assert.ok(result.styles.news.some(([text,weight])=>text==='셀 모임'&&weight==='700'));
+    assert.match(result.news,/①.*②/);
     assert.equal(result.flip,'translate(297 0) scale(-1 1)');
     assert.equal(result.sermon[1].text,'사무엘상 22:1–5');
     assert.ok(result.sermon[1].size<result.sermon[0].size);

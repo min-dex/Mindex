@@ -297,6 +297,60 @@
       "font-family":"MindexBulletin","font-weight":weight,"text-anchor":anchor,fill:box.color||"#231f20"},line)));
     return end-box.y+size*.25/MM;
   }
+  // Preserve IDML character ranges through wrapping instead of flattening a frame.
+  function writeStyled(parent,runs,box,issues,id) {
+    const size=box.size||12.5,weight=box.weight||500,ctx=wrap.context||(wrap.context=document.createElement("canvas").getContext("2d"));
+    const groups=chars=>{
+      const result=[];for(const c of chars){const last=result.at(-1);if(last&&last.size===c.size&&last.weight===c.weight)last.text+=c.text;else result.push({...c});}return result;
+    };
+    const measure=chars=>groups(chars).reduce((sum,r)=>{ctx.font=`${r.weight} ${r.size}px MindexBulletin`;return sum+ctx.measureText(r.text).width/MM;},0);
+    if(box.w<=0||box.h<=0){issues.add(id);return 0;}
+    const chars=runs.flatMap(r=>Array.from(r.text||"").map(text=>({text,size:r.size||size,weight:r.weight||weight})));
+    const lines=[];let line=[];
+    const flush=()=>{while(line.at(-1)?.text===" ")line.pop();lines.push(line);line=[];};
+    for(const c of chars){
+      if(c.text==="\n"){flush();continue;}
+      if(line.length&&measure([...line,c])>box.w+.001){
+        const space=line.map(c=>c.text).lastIndexOf(" ");
+        if(space>0){const rest=line.slice(space+1);line=line.slice(0,space);flush();line=rest;}
+        if(line.length&&measure([...line,c])>box.w+.001)flush();
+        if(c.text===" "&&!line.length)continue;
+      }
+      line.push(c);
+    }
+    flush();
+    const leading=box.leading||snap(chars.reduce((max,c)=>Math.max(max,c.size),size)*1.2);
+    const first=Math.ceil((box.y*MM+Math.max(size,...(lines[0]||[]).map(c=>c.size)))/TOKENS.baseline)*TOKENS.baseline/MM;
+    let bottom=box.y;
+    lines.forEach((chars,i)=>{
+      if(measure(chars)>box.w+.01)issues.add(id);
+      const y=first+i*leading/MM,anchor=box.align==="right"?"end":box.align==="center"?"middle":"start";
+      const node=svg("text",{x:box.x+(anchor==="end"?box.w:anchor==="middle"?box.w/2:0),y,"text-anchor":anchor,"font-family":"MindexBulletin",fill:box.color||"#231f20","xml:space":"preserve"});
+      for(const r of groups(chars))node.append(svg("tspan",{"font-size":r.size/MM,"font-weight":r.weight},r.text));
+      parent.append(node);bottom=y+Math.max(size,...chars.map(c=>c.size))*.25/MM;
+    });
+    if(bottom>box.y+box.h+.01)issues.add(id);
+    return bottom-box.y;
+  }
+  function personRuns(value,size=12.5) {
+    const match=String(value||"").match(/^(.+?)( (?:청년|목사|전도사|집사|권사|장로|서기|선생님))$/);
+    return match?[{text:match[1],weight:700,size},{text:match[2],weight:500,size}]:[{text:value,size}];
+  }
+  function copyRuns(value,kind,size) {
+    if(kind==="church"&&value.startsWith("기독교대한성결교회 "))return [{text:"기독교대한성결교회 ",weight:500},{text:value.slice("기독교대한성결교회 ".length),weight:700}];
+    if(kind==="welcome"&&value.replace(/\s/g,"")==="오늘도청년부예배에오신여러분을환영하고축복합니다:)")return [
+      {text:"오늘도 ",size},{text:"청년부 예배",size,weight:700},{text:"에 오신 여러분을\n",size},
+      {text:"환영",size:size+2.5,weight:700},{text:"하고 ",size:size+2.5},{text:"축복",size:size+2.5,weight:800},{text:"합니다 ",size:size+2.5},{text:":)",size:size+2.5,weight:700}];
+    if(kind==="verse")return value.split("\n").flatMap((text,i)=>[{text:(i?"\n":"")+text,size:/^—/.test(text)?Math.max(7.5,size-2.5):size}]);
+    const emphasis={"오늘 2부 활동은 셀 모임으로 진행합니다.":"셀 모임","추석 이후, 다음 주일부터 셀 구성이 개편됩니다.":"셀 구성"}[value];
+    if(kind==="news"&&emphasis){const at=value.indexOf(emphasis);return [{text:value.slice(0,at)},{text:emphasis,weight:700},{text:value.slice(at+emphasis.length)}];}
+    if(kind==="notices"){
+      const match=value.match(/^(청년부 )(기도 모임)(\(매주[^)]+\))(.*)$/);
+      if(match)return [{text:match[1]},{text:match[2],weight:700},{text:match[3],size:Math.max(7.5,size-2.5)},{text:match[4]}];
+    }
+    return [{text:value}];
+  }
+
   function fieldValue(doc,key) {
     if(key==="eventsText") {
       const month=doc.settings.eventsMonth||doc.source?.eventsMonth;
@@ -337,13 +391,25 @@
         const group=svg("g",{"data-frame-id":f.id}),frameIssues=f.hidden?new Set():issues;
         if(f.type==="rules") {
           for(let y=0;y<=f.h;y+=7.5)group.append(svg("line",{x1:f.x,y1:f.y+y,x2:f.x+f.w,y2:f.y+y,stroke:"#555","stroke-width":.15}));
+        } else if(f.binding.startsWith("month:")) {
+          const [year,month]=boundText(doc,f).split("\n");
+          writeStyled(group,[{text:year||""},{text:month?"\n"+month:"",size:f.size+2.5,weight:700}],f,frameIssues,f.id);
+        } else if(f.binding==="leader") {
+          const leader=fieldValue(doc,"leader");
+          if(leader)writeStyled(group,[{text:"인도자\n",size:f.size},...personRuns(leader,f.size+2.5)],{...f,leading:15},frameIssues,f.id);
+        } else if(["church","welcome","verse"].includes(f.id)) {
+          writeStyled(group,copyRuns(boundText(doc,f),f.id,f.size),f,frameIssues,f.id);
         } else if(f.binding==="sermon") {
           writeText(group,doc.source?.sermon,{...f,h:7.5},frameIssues,f.id);
           writeText(group,doc.source?.scripture,{...f,y:f.y+7.5,h:f.h-7.5,size:Math.max(7.5,f.size-2.5),weight:500},frameIssues,f.id);
         } else if(f.type==="list") {
           let y=f.y;
           for(const paragraph of String(boundText(doc,f)).split("\n").filter(Boolean)) {
-            y+=writeText(group,paragraph,{...f,y,h:f.y+f.h-y},frameIssues,f.id)+(f.id==="news"?5:2.5);
+            const marker=paragraph.match(/^(?:([①-⑳◈])|(\d{1,2})[.)])\s*(.*)$/);
+            const body=marker?marker[3]:paragraph;
+            const label=marker?(marker[1]||(Number(marker[2])>=1&&Number(marker[2])<=20?String.fromCodePoint(0x2460+Number(marker[2])-1):marker[2]+".")):"";
+            if(marker)writeText(group,label,{...f,y,w:5,align:"center",h:f.y+f.h-y},frameIssues,f.id);
+            y+=writeStyled(group,copyRuns(body,f.id,f.size),{...f,x:f.x+(marker?7.5:0),w:f.w-(marker?7.5:0),y,h:f.y+f.h-y},frameIssues,f.id)+(f.id==="news"?5:2.5);
           }
         } else if(f.type==="staff") {
           const value=boundText(doc,f),pairs=value.split(/\n|\s*·\s*/).filter(Boolean);
@@ -362,7 +428,9 @@
             const body=parts[2],labelWidth=printed?65:30,bodyX=labelWidth+5,bodyWidth=f.w-bodyX;
             if(bodyWidth<10){frameIssues.add(f.id);continue;}
             const h=Math.max(7.5,Math.max(wrap(body,bodyWidth,f.size).length,wrap(parts[1],labelWidth,f.size).length)*snap(f.size*1.2)/MM+2.5);
-            writeText(group,parts[1],{...f,y,w:labelWidth,h},frameIssues,f.id);
+            const dateTime=printed?parts[1].match(/^(.*?\))\s+((?:평일 )?(?:오전|오후).*)$/):null;
+            if(dateTime)writeStyled(group,[{text:dateTime[1]+"   ",weight:700},{text:dateTime[2],size:Math.max(7.5,f.size-2.5)}],{...f,y,w:labelWidth,h},frameIssues,f.id);
+            else writeText(group,parts[1],{...f,y,w:labelWidth,h},frameIssues,f.id);
             writeText(group,body,{...f,x:f.x+bodyX,y,w:bodyWidth,h,align:"right",weight:700},frameIssues,f.id);y+=h;
             if(y>f.y+f.h+.01)frameIssues.add(f.id);
           }
@@ -381,7 +449,11 @@
             const letters=printLabel.replace(/\s/g,"");
             if(letters.length>1&&letters.length<=5) [...letters].forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+j*27.5/(letters.length-1),w:6},frameIssues,f.id));
             else writeText(group,row.label,{...base,y:centered,w:30},frameIssues,f.id);
-            writeText(group,row.content,{...base,x:f.x+30,w:inner,align:"center",weight:700},frameIssues,f.id);
+            const songRuns=row.content.split("\n").flatMap((text,i)=>{
+              const hymn=["찬양","찬송"].includes(row.label)?text.match(/^(\d+) (.+)$/):null;
+              return hymn?[{text:(i?"\n":"")+hymn[1],size:Math.max(7.5,f.size-2.5),weight:500},{text:" "+hymn[2],weight:700}]:[{text:(i?"\n":"")+text,weight:700}];
+            });
+            writeStyled(group,songRuns,{...base,x:f.x+30,w:inner,align:"center",weight:700},frameIssues,f.id);
             const personLetters=Array.from(row.person.replace(/\s/g,""));
             if(personLetters.length>1&&personLetters.length<=6)personLetters.forEach((letter,j)=>writeText(group,letter,{...base,y:centered,x:f.x+f.w-30+j*25/(personLetters.length-1),w:5},frameIssues,f.id));
             else writeText(group,row.person,{...base,y:centered,x:f.x+f.w-30,w:30,align:"right"},frameIssues,f.id);
@@ -396,7 +468,7 @@
             writeText(group,shortDate(r.date),{...f,x,y,w:27.5,h:10},frameIssues,f.id);
             if(r.next){group.append(svg("rect",{x:x+29,y:y+2,width:9,height:4,rx:2,fill:"white",stroke:"#555","stroke-width":.2}));
               writeText(group,"NEXT",{...f,x:x+29,y:y+1,w:9,h:7.5,size:7.5,align:"center"},frameIssues,f.id);}
-            writeText(group,r.person,{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},frameIssues,f.id);
+            writeStyled(group,personRuns(r.person,f.size),{...f,x:x+38.5,y,w:col-38.5,h:10,align:"right"},frameIssues,f.id);
             if(y+10>f.y+f.h+.01)frameIssues.add(f.id);
           });
         } else writeText(group,boundText(doc,f),{...f,color:(f.y<10||f.y>=200)&&(background||theme==="ink")?"#fff":"#231f20"},frameIssues,f.id);
