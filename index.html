@@ -18,6 +18,18 @@
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-7Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-8ExtraBold.woff2" as="font" type="font/woff2" crossorigin />
     <style>
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        background: #181816;
+        color: #f3f3ef;
+        color-scheme: dark;
+      }
+      body.ui-booting .app-shell,
+      body.ui-booting .toast-region {
+        visibility: hidden;
+      }
       html.presenter-output-document,
       html.presenter-output-document body,
       body.presenter-output-body {
@@ -35,11 +47,10 @@
       })();
     </script>
   </head>
-  <body>
+  <body class="ui-booting">
     <script>
       (() => {
         try {
-          document.body.classList.add("ui-booting");
           const moduleName = sessionStorage.getItem("mindex.ui.module");
           if (moduleName) {
             document.body.dataset.module = moduleName;
@@ -150,7 +161,7 @@
     </script>
     <script>
       (() => {
-        const fallbackVersion = "20260926-1810";
+        const fallbackVersion = "20260926-1830";
         const modules = [
           "mindex.constants.js", "mindex.design-tokens.js", "mindex.worship-model.js",
           "mindex.worship-persistence.js", "mindex.presenter.js", "mindex.worship-input.js",
