@@ -5,8 +5,11 @@ for(const [raw,expected] of [[' v - pc - c - 간주 ','V-PC-C-Int'],['v1a - v2b 
 assert.equal(c.normalizeServiceFormPresetForms(['v1a',' pc ','간주','C','C']).join('-'),'V1A-PC-Int-C-C');
 assert.equal(c.normalizeServiceFormHint('Verse 2 A - Chorus 1 B - Bridge A'),'V2A-C1B-BA');
 assert.equal(c.canonicalServiceFormToken('Chorus 1 A'),'C1A');
+assert.equal(c.normalizeServiceFormHint('V1@ - C@A - Bridge@B'),'V1@-C@A-B@B');
+assert.equal(c.canonicalServiceFormToken('Chorus @ A'),'C@A');
 assert.equal(c.normalizeServiceFormHint('  '),'');assert.match(src,/const formHint = normalizeServiceFormHint\(field.value\)/);assert.match(src,/const formHint = normalizeServiceFormHint\(value.formHint/);
 console.log('PASS input/save normalization, numbered parts, repeats, Korean hymn aliases, unknown labels, idempotence');
 c.document={};c.compactSearchValue=x=>String(x).replace(/\s+/g,'').toLowerCase();vm.runInContext(fs.readFileSync('mindex.presenter.js','utf8'),c);
 for(const token of ['1절','2절','후렴','마지막 절','간주','v1a','pc','c2','b','tags'])assert.equal(JSON.stringify(c.normalizePresenterFormPresetLabel(token)),JSON.stringify(c.normalizePresenterFormPresetLabel(c.canonicalServiceFormToken(token))),token+' must keep playback meaning');
 for(const [label,expected] of [['Verse 2 A','verse:2:a'],['Chorus 1 B','chorus:1:b'],['Bridge A','bridge:a']])assert.equal(c.normalizePresenterFormPresetLabel(label).key,expected,label+' must resolve as a stable presenter target');
+for(const [label,expected] of [['Verse 1@','verse:1:@'],['Chorus@','chorus:@'],['Chorus@A','chorus:@:a']])assert.equal(c.normalizePresenterFormPresetLabel(label).key,expected,label+' must keep variant identity');

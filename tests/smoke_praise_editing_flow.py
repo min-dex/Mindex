@@ -28,6 +28,20 @@ def check_flow(browser, url, engine, width, theme):
       }});
     }''', {'theme': theme})
     assert page.evaluate("state.forms.map(displayLabel).join('|')") == 'Verse 1|Verse 2 A|Verse 2 B'
+    at_labels = page.evaluate('''() => normalizeForms([
+      {part_type:'Chorus',lyrics:'Original chorus'},
+      {part_type:'Chorus',label:'Chorus@',lyrics:'Short chorus'},
+      {part_type:'Verse',label:'Verse 1@A',lyrics:'Variant verse'},
+    ]).map(displayLabel).join('|')''')
+    assert at_labels == 'Chorus|Chorus@|Verse 1@A', at_labels
+    at_variant_target = page.evaluate('''() => {
+      const forms=normalizeForms([
+        {id:'base',part_type:'Chorus',lyrics:'Original chorus'},
+        {id:'variant',part_type:'Chorus',label:'Chorus@A',lyrics:'Variant chorus'},
+      ]);
+      return findPresenterFormForPresetLabel(forms,'C@A')?.id || '';
+    }''')
+    assert at_variant_target == 'variant', at_variant_target
     assert page.locator('.form-variant-input').nth(1).input_value() == 'A'
     page.locator('.form-variant-input').nth(1).fill('C')
     page.locator('.form-variant-input').nth(1).press('Tab')

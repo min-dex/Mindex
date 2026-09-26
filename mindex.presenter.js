@@ -698,6 +698,7 @@ function presenterSpecialSongHymnDisplayPreset(preset = null) {
   const forms = cleanList(preset.forms).map((label) => {
     const target = normalizePresenterFormPresetLabel(label);
     if (target.lastVerse) return "VL";
+    if (target.variant) return String(label || "").trim();
     if (target.type === "verse" && target.number && !target.group) return `V${target.number}`;
     if (target.type === "chorus" && !target.group) return target.number ? `C${target.number}` : "C";
     if (target.type === "instrumental") return "Int";
@@ -764,7 +765,7 @@ function presenterFormPresetWithAvailableForms(preset = null, forms = []) {
   let sourceIndex = 0;
   base.forEach((label) => {
     const target = normalizePresenterFormPresetLabel(label);
-    if (target.groupIndex) {
+    if (target.groupIndex && !target.variant) {
       merged.push(label);
       return;
     }
@@ -869,6 +870,7 @@ function presenterRepeatableVerseChorusPresetForms(preset = null, source = []) {
 
 function presenterFormTargetsMatch(target = {}, candidate = {}) {
   if (target.key === candidate.key) return true;
+  if (target.variant || candidate.variant) return false;
   return Boolean(target.type && target.type === candidate.type && (!target.number || target.number === candidate.number));
 }
 
@@ -1060,7 +1062,7 @@ function findPresenterFormForPresetLabel(forms = [], label = "") {
       return best;
     }).form;
   }
-  if (target.groupIndex) {
+  if (target.groupIndex && !target.variant) {
     const form = findPresenterFormForPresetTarget(forms, target);
     return form ? presenterFormPresetGroupItem(label, target, form) : null;
   }
@@ -1101,13 +1103,13 @@ function findPresenterFormForPresetTarget(forms = [], target = {}) {
     const candidate = normalizePresenterFormPresetLabel(presenterFormDisplayLabel(form));
     if (target.type && target.type === candidate.type) sameType.push({ form, target: candidate });
     if (target.key === candidate.key) return form;
-    if (target.type && target.type === candidate.type && (!target.number || target.number === candidate.number)) return form;
+    if (!target.variant && !candidate.variant && target.type && target.type === candidate.type && (!target.number || target.number === candidate.number)) return form;
   }
   // A single verse is stored without a number; V1 still denotes that first verse.
   if (target.type === "verse" && target.number === 1 && sameType.length === 1 && !sameType[0].target.number) {
     return sameType[0].form;
   }
-  if (target.groupIndex && target.type) {
+  if (target.groupIndex && !target.variant && target.type) {
     const unnumbered = sameType.filter(({ target: candidate }) => !candidate.number);
     if (unnumbered.length === 1) return unnumbered[0].form;
   }
@@ -1159,6 +1161,24 @@ function normalizePresenterFormPresetLabel(value = "") {
   if (lastVerse) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
   const hymnVerse = raw.match(/^(\d+)\s*절$/u);
   if (hymnVerse) return { key: `verse:${hymnVerse[1]}`, type: "verse", number: Number(hymnVerse[1]) };
+  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|b|bridge|lyrics)\s*(\d*)\s*@\s*([a-z])?$/i);
+  if (atVariant) {
+    const token = atVariant[1].toLowerCase();
+    const type = /^(v|verse)$/.test(token) ? "verse"
+      : /^(c|chorus|후렴)$/.test(token) ? "chorus"
+        : /^(b|bridge)$/.test(token) ? "bridge"
+          : /^(pc|prechorus|pre-chorus)$/.test(token) ? "pre-chorus" : "lyrics";
+    const number = atVariant[2] ? Number(atVariant[2]) : 0;
+    const group = atVariant[3] ? atVariant[3].toUpperCase() : "";
+    const baseKey = number ? `${type}:${number}` : type;
+    return {
+      key: `${baseKey}:@${group ? `:${group.toLowerCase()}` : ""}`,
+      type,
+      number,
+      variant: true,
+      ...(group ? { group } : {}),
+    };
+  }
   const shorthand = raw.match(/^(v|verse)\s*(\d*)\s*([a-z])?$/i);
   if (shorthand) {
     const number = shorthand[2] ? Number(shorthand[2]) : 0;
@@ -1245,7 +1265,7 @@ function presenterFormPresetDisplayLabel(value = "") {
   if (!raw) return "";
   const target = normalizePresenterFormPresetLabel(raw);
   const group = String(target.group || "").trim().toUpperCase();
-  const suffix = target.number ? ` ${target.number}${group}` : group ? ` ${group}` : "";
+  const suffix = target.variant ? `${target.number ? ` ${target.number}` : ""}@${group}` : target.number ? ` ${target.number}${group}` : group ? ` ${group}` : "";
   if (target.lastVerse) return "Last Verse";
   if (target.type === "verse") return `Verse${suffix}`;
   if (target.type === "chorus") return `Chorus${suffix}`;

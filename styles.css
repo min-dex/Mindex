@@ -2928,8 +2928,8 @@ body[data-module="scripture"] .scripture-editor .meta-attribute-label {
   max-width: 100%;
 }
 .form-variant-input {
-  width: 40px;
-  min-width: 40px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
   text-align: center;
 }

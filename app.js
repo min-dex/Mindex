@@ -11614,6 +11614,14 @@ function normalizeServiceFormPreset(value, fallbackHint = "", fallbackStrength =
 
 function canonicalServiceFormToken(value = "") {
   const raw = String(value || "").trim();
+  const atVariant = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*@\s*([a-z])?$/i);
+  if (atVariant) {
+    const type = atVariant[1].toLowerCase();
+    const prefix = /^(v|verse)$/.test(type) ? "V"
+      : /^(c|chorus)$/.test(type) ? "C"
+        : /^(b|bridge)$/.test(type) ? "B" : "PC";
+    return `${prefix}${atVariant[2]}@${String(atVariant[3] || "").toUpperCase()}`;
+  }
   const part = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*([a-z])?$/i);
   if (part) {
     const type = part[1].toLowerCase();
@@ -11654,6 +11662,17 @@ function normalizeSongFormPresetLabel(value = "") {
   const raw = String(value || "").trim();
   const compact = compactSearchValue(raw);
   if (/^(vl|마지막절|lastverse|last)$/i.test(compact)) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
+  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*@\s*([a-z])?$/i);
+  if (atVariant) {
+    const token = atVariant[1].toLowerCase();
+    const type = /^(v|verse)$/.test(token) ? "verse"
+      : /^(c|chorus|후렴)$/.test(token) ? "chorus"
+        : /^(b|bridge)$/.test(token) ? "bridge" : "pre-chorus";
+    const number = Number(atVariant[2]) || 0;
+    const group = String(atVariant[3] || "").toLowerCase();
+    const baseKey = number ? `${type}:${number}` : type;
+    return { key: `${baseKey}:@${group ? `:${group}` : ""}`, type, number, variant: true, ...(group ? { group } : {}) };
+  }
   const verse = raw.match(/^(?:v|verse)\s*(\d*)\s*([a-z])?$/i) || raw.match(/^(\d+)\s*절$/u);
   if (verse) {
     const number = Number(verse[1]) || 0;
@@ -11707,7 +11726,7 @@ function songFormPresetDisplayLabel(value = "") {
   const target = normalizeSongFormPresetLabel(raw);
   if (target.lastVerse) return "VL";
   const group = String(target.group || "").trim().toUpperCase();
-  const suffix = target.number ? ` ${target.number}${group}` : group ? ` ${group}` : "";
+  const suffix = target.variant ? `${target.number ? ` ${target.number}` : ""}@${group}` : target.number ? ` ${target.number}${group}` : group ? ` ${group}` : "";
   if (target.type === "verse") return `Verse${suffix}`;
   if (target.type === "chorus") return `Chorus${suffix}`;
   if (target.type === "bridge") return `Bridge${suffix}`;
@@ -18463,7 +18482,7 @@ function renderFormBlock(form, index, options = {}) {
                 `<option value="${type}" ${form.part_type === type ? "selected" : ""}>${escapeHtml(form.part_type === type ? formatFormPartLabel(form.part_type, form.part_number) : type)}</option>`,
             ).join("")}
           </select>
-          ${supportsVariant ? `<input class="form-variant-input" type="text" inputmode="text" maxlength="1" data-form-field="part_variant" data-index="${index}" value="${escapeAttr(form.part_variant || "")}" placeholder="A" aria-label="${escapeAttr(label)} 분기" />` : ""}
+          ${supportsVariant ? `<input class="form-variant-input" type="text" inputmode="text" maxlength="2" data-form-field="part_variant" data-index="${index}" value="${escapeAttr(form.part_variant || "")}" placeholder="@" aria-label="${escapeAttr(label)} 변주" />` : ""}
         </div>
         <div class="form-actions">
           <button class="icon-btn" type="button" data-form-action="up" data-index="${index}" aria-label="블록 위로 이동" ${index === 0 ? "disabled" : ""}>
@@ -18516,18 +18535,21 @@ function normalizeForms(forms) {
     };
   });
 
-  const counts = next.reduce((map, form) => {
-    map.set(form.part_type, (map.get(form.part_type) || 0) + 1);
+  const baseCounts = next.reduce((map, form) => {
+    if (!String(form.part_variant || "").startsWith("@")) {
+      map.set(form.part_type, (map.get(form.part_type) || 0) + 1);
+    }
     return map;
   }, new Map());
   const assignedNumbers = new Map();
   const seen = new Map();
   return next.map((form) => {
     if (form.part_type === "Lyrics") return { ...form, part_number: null, part_variant: "", label: "Lyrics" };
-    const count = counts.get(form.part_type) || 0;
+    const isAtVariant = String(form.part_variant || "").startsWith("@");
+    const count = baseCounts.get(form.part_type) || 0;
     const hasExplicitNumber = Number(form.part_number) > 0;
     let partNumber = hasExplicitNumber ? Number(form.part_number) : null;
-    if (!partNumber && count > 1) {
+    if (!partNumber && !isAtVariant && count > 1) {
       const used = assignedNumbers.get(form.part_type) || new Set();
       partNumber = (seen.get(form.part_type) || 0) + 1;
       while (used.has(partNumber)) partNumber += 1;
@@ -18553,7 +18575,10 @@ function normalizeFormPartNumber(value = "") {
 }
 
 function normalizeFormPartVariant(value = "") {
-  const match = String(value || "").trim().match(/^[a-z]$/i);
+  const raw = String(value || "").trim().replace(/\s+/g, "");
+  const atVariant = raw.match(/^@([a-z])?$/i);
+  if (atVariant) return `@${String(atVariant[1] || "").toUpperCase()}`;
+  const match = raw.match(/^[a-z]$/i);
   return match ? match[0].toUpperCase() : "";
 }
 
@@ -18571,13 +18596,14 @@ function formPartLabelIdentity(value = "", partType = "") {
   if (!targetType || target.type !== targetType) return null;
   return {
     part_number: normalizeFormPartNumber(target.number),
-    part_variant: normalizeFormPartVariant(target.group),
+    part_variant: normalizeFormPartVariant(target.variant ? `@${target.group || ""}` : target.group),
   };
 }
 
 function formatFormPartLabel(partType = "Lyrics", partNumber = null, partVariant = "") {
   const number = normalizeFormPartNumber(partNumber);
   const variant = normalizeFormPartVariant(partVariant);
+  if (variant.startsWith("@")) return `${partType}${number ? ` ${number}` : ""}${variant}`;
   return [partType, number || "", variant].filter(Boolean).join(" ");
 }
 
@@ -18594,7 +18620,7 @@ function formLooksUnsplit(form) {
   if (form?.part_type === "Lyrics") return false;
   const lyrics = String(form?.lyrics || "").trim();
   if (!lyrics) return false;
-  if (/\[(?:Verse|Chorus|Pre-Chorus|Bridge|Coda|Lyrics)(?:\s+\d+)?\]/i.test(lyrics)) return true;
+  if (/\[(?:Verse|Chorus|Pre-Chorus|Bridge|Coda|Lyrics)(?:\s+\d+)?(?:@[A-Z]?)?\]/i.test(lyrics)) return true;
   return lyrics.split(/\n\s*\n/g).filter((block) => block.trim()).length >= 3;
 }
 
