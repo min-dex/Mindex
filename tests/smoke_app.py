@@ -580,6 +580,7 @@ def main() -> int:
 
             page.goto(app_url, wait_until="load")
             page.wait_for_selector(".app-shell", timeout=5000)
+            page.wait_for_function("() => typeof refs !== 'undefined' && typeof state !== 'undefined'", timeout=10000)
 
             pass_("document-title", page.title())
             if page.title() != "MINDEX":

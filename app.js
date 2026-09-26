@@ -844,7 +844,16 @@ const referenceInputNormalizationCache = {
   values: new Map(),
 };
 
-document.addEventListener("DOMContentLoaded", init);
+function startMindexRuntime() {
+  if (window.__mindexRuntimeStarted) return;
+  window.__mindexRuntimeStarted = true;
+  // Dynamic release loading can append app.js after DOMContentLoaded. Defer
+  // until this script has finished initializing its top-level constants.
+  queueMicrotask(() => void init());
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startMindexRuntime, { once: true });
+else startMindexRuntime();
 
 // ─── Runtime bootstrap and UI wiring ─────────────────────────────────────────
 async function init() {
@@ -3929,7 +3938,8 @@ async function worshipAtomicClient() {
   if (!state.client) throw new Error("DB 연결을 확인해 주세요.");
   if (!worshipAtomicRuntime || worshipAtomicRuntime.client !== state.client) {
     const client = state.client;
-    const promise = import("./mindex.worship-atomic-client.mjs?v=atomic-production-20260922-001").then(({ createWorshipAtomicClient }) =>
+    const release = encodeURIComponent(window.MINDEX_RELEASE || "atomic-production-20260922-001");
+    const promise = import(`./mindex.worship-atomic-client.mjs?v=${release}`).then(({ createWorshipAtomicClient }) =>
       createWorshipAtomicClient({ rpc: (name, args) => client.rpc(name, args),
         journal: sessionStorage, namespace: state.config.url }));
     worshipAtomicRuntime = { client, promise };

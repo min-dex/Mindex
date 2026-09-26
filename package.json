@@ -34,6 +34,7 @@
     ],
     "files": [
       "index.html",
+      "mindex-release.json",
       "app.js",
       "mindex.worship-week.js",
       "mindex.monitor.js",
@@ -48,6 +49,7 @@
       "mindex.setlist-links.js",
       "mindex.manuals.js",
       "mindex.bulletin.js",
+      "mindex.worship-source.js",
       "mindex.worship-atomic-client.mjs",
       "mindex.worship-store.mjs",
       "styles*.css",

@@ -17,11 +17,6 @@
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-6SemiBold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-7Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-8ExtraBold.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="./styles.css?v=sidebar-state-20260926-001" />
-    <link rel="stylesheet" href="./styles.presenter-output.css?v=liturgical-center-20260925-001" />
-    <link rel="stylesheet" href="./styles.bulletin.css?v=bulletin-content-20260926-001" />
-    <link rel="stylesheet" href="./styles.calendar.css?v=mindex-css-audit-20260905-001" />
-    <link rel="stylesheet" href="./styles.monitor.css?v=20260914-001" />
   </head>
   <body>
     <script>
@@ -136,20 +131,51 @@
       };
       window.MINDEX_WORSHIP_ATOMIC_PROTOCOL = 1;
     </script>
-    <script src="./mindex.constants.js?v=thumb-scale-20260920-001"></script>
-    <script src="./mindex.design-tokens.js?v=recent-services-20260919-001"></script>
-    <script src="./mindex.worship-model.js?v=citation-slot-cleanup-20260923-001"></script>
-    <script src="./mindex.worship-persistence.js?v=document-history-20260922-001"></script>
-    <script src="./mindex.presenter.js?v=pingpong-waiting-loop-20260925-001"></script>
-    <script src="./mindex.worship-input.js?v=preparation-enter-flow-20260925-001"></script>
-    <script src="./mindex.presenter-ui.js?v=toolbar-utilities-20260924-001"></script>
-    <script src="./mindex.worship-week.js?v=setlist-month-only-20260922-001"></script>
-    <script src="./mindex.setlist-links.js?v=setlist-audit-20260925-001"></script>
-    <script src="./mindex.manuals.js?v=20260922-001"></script>
-    <script src="./mindex.bulletin.js?v=bulletin-tabs-20260926-003"></script>
-    <script src="./mindex.worship-source.js?v=source-grammar-20260923-001"></script>
-    <script src="./app.js?v=sidebar-state-20260926-001"></script>
-    <script src="./mindex.db-refresh.js?v=20260916-003"></script>
-    <script src="./mindex.monitor.js?v=mindex-error-feedback-20260916-001"></script>
+    <script>
+      (() => {
+        const fallbackVersion = "20260926-1535";
+        const modules = [
+          "mindex.constants.js", "mindex.design-tokens.js", "mindex.worship-model.js",
+          "mindex.worship-persistence.js", "mindex.presenter.js", "mindex.worship-input.js",
+          "mindex.presenter-ui.js", "mindex.worship-week.js", "mindex.setlist-links.js",
+          "mindex.manuals.js", "mindex.bulletin.js", "mindex.worship-source.js", "app.js",
+          "mindex.db-refresh.js", "mindex.monitor.js",
+        ];
+        const styles = [
+          "styles.css", "styles.presenter-output.css", "styles.bulletin.css",
+          "styles.calendar.css", "styles.monitor.css",
+        ];
+        const load = (path, version) => new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = `./${path}?v=${encodeURIComponent(version)}`;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error(`${path}을 불러오지 못했습니다.`));
+          document.body.append(script);
+        });
+        const loadStyle = (path, version) => new Promise((resolve, reject) => {
+          const stylesheet = document.createElement("link");
+          stylesheet.rel = "stylesheet";
+          stylesheet.href = `./${path}?v=${encodeURIComponent(version)}`;
+          stylesheet.onload = resolve;
+          stylesheet.onerror = () => reject(new Error(`${path}을 불러오지 못했습니다.`));
+          document.head.append(stylesheet);
+        });
+        const resolveVersion = async () => {
+          try {
+            const response = await fetch(`./mindex-release.json?t=${Date.now()}`, { cache: "no-store" });
+            const release = await response.json();
+            return /^[0-9A-Za-z._-]{4,80}$/.test(String(release?.version || "")) ? release.version : fallbackVersion;
+          } catch {
+            return fallbackVersion;
+          }
+        };
+        void (async () => {
+          const version = await resolveVersion();
+          window.MINDEX_RELEASE = version;
+          void Promise.all(styles.map((style) => loadStyle(style, version))).catch((error) => console.error(error));
+          for (const module of modules) await load(module, version);
+        })();
+      })();
+    </script>
   </body>
 </html>
