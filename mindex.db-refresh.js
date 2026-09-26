@@ -68,7 +68,10 @@
       return { songs };
     }
     if (["home", "service", "presenter"].includes(module)) {
-      const serviceRows = await fetchSupabasePaged("mindex_worship_services", state.serviceAliasSupported ? WORSHIP_SERVICE_LIST_SELECT : WORSHIP_SERVICE_BASE_LIST_SELECT, worshipServiceListQuery);
+      // Keep manual refresh on the same compact list-view path as the initial
+      // loader. Reading source_ref directly pulls every archived service
+      // document and can make a harmless refresh fail in installed web apps.
+      const serviceRows = await fetchWorshipServiceListRows();
       const ids = serviceId ? [serviceId] : initialWorshipElementServiceIds(serviceRows.map(normalizeWorshipService));
       const fullServices = await fetchSupabaseBatches(ids, batch => fetchSupabasePaged("mindex_worship_services", "*", q => q.in("id", batch).order("id")));
       const sections = await fetchSupabaseBatches(ids, batch => fetchSupabasePaged("mindex_worship_sections", WORSHIP_SECTION_LIST_SELECT, q => q.in("service_id", batch).order("sort_order").order("id")));
@@ -177,7 +180,12 @@
       return true;
     } catch (error) {
       console.error("[DB refresh]", error);
-      showToast("DB를 불러오지 못했어요. 기존 내용은 유지됩니다.", "error");
+      const detail = [error?.code, error?.message || error?.details]
+        .filter(Boolean)
+        .join(": ");
+      showToast(detail
+        ? `DB를 불러오지 못했어요 (${detail}). 기존 내용은 유지됩니다.`
+        : "DB를 불러오지 못했어요. 기존 내용은 유지됩니다.", "error");
       return false;
     } finally {
       busy = false;
