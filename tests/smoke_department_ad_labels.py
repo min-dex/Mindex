@@ -41,7 +41,7 @@ def main():
               const prior={id:'10000000-0000-4000-8000-000000000001',type_id:'young-adult',date:'2026-09-13'};
               const created={id:'10000000-0000-4000-8000-000000000002',type_id:'young-adult',date:'2026-09-20'};
               const priorSection={id:'20000000-0000-4000-8000-000000000001',service_id:prior.id,section_key:'announcements',sort_order:9,title:'광고'};
-              const priorElement={id:'30000000-0000-4000-8000-000000000001',section_id:priorSection.id,sort_order:1,element_type:'body',title:'',body:'이번 주 청년부 광고',source_ref:{label:'광고',slotKey:'announcements.department'},config:{slides:['이번 주 청년부 광고']},input_mode:'text',content_state:{state:'filled'}};
+              const priorElement={id:'30000000-0000-4000-8000-000000000001',section_id:priorSection.id,sort_order:1,element_type:'body',title:'',body:'이번 주 청년부 광고',source_ref:{label:'광고',slotKey:'announcements.department'},config:{slides:['이번 주 청년부 광고'],outputMode:'custom'},input_mode:'text',content_state:{state:'filled'}};
               const oldServices=state.services,oldSections=state.worshipSections,oldElements=state.worshipElements,oldLoaded=state.loadedWorshipServiceIds;
               state.services=[prior,created];state.worshipSections=[priorSection];state.worshipElements=[priorElement];state.loadedWorshipServiceIds=new Set([prior.id]);
               const copied=await calendarAssigneeRowsForNewService(created);
@@ -49,7 +49,7 @@ def main():
               const copiedElements=copied.elements.filter(element=>element.section_id===copiedSection?.id);
               check(copiedElements.length===1,'department ad count not copied');
               check(copiedElements[0].id!==priorElement.id&&copiedElements[0].body===priorElement.body,'department ad body not copied safely');
-              check(copiedElements[0].config.slides[0]===priorElement.config.slides[0]&&copiedElements[0].template_modified,'department ad metadata not copied');
+              check(!copiedElements[0].config.slides&&!copiedElements[0].config.outputMode&&copiedElements[0].template_modified,'prior layout copied');
               check(copiedSection.source_ref.copied_from_service_id===prior.id,'department ad origin missing');
               const copiedItems=groupWorshipElements(copied.sections,copied.elements)[created.id]||[];
               const copiedRows=buildWorshipPersistenceRows(created,copiedItems,

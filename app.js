@@ -14269,30 +14269,41 @@ async function copyPreviousDepartmentAnnouncements(service, scaffold) {
       || String(a.id || "").localeCompare(String(b.id || "")));
   if (!sourceElements.length) return new Set();
 
+  const templateElements = scaffold.elements.filter((element) => element.section_id === targetSection.id);
   scaffold.elements = scaffold.elements.filter((element) => element.section_id !== targetSection.id);
   targetSection.template_modified = true;
   targetSection.source_ref = { ...targetSection.source_ref, placeholder: false, copied_from_service_id: previous.id };
-  const copied = sourceElements.map((source, index) => ({
+  const copied = sourceElements.map((source, index) => {
+    const template = templateElements[index] || null;
+    const sourceConfig = source.config && typeof source.config === "object" ? source.config : {};
+    const asset = normalizeServiceAsset(source.asset || sourceConfig.asset);
+    const config = cloneDepartmentAnnouncementValue(template?.config || {});
+    if (asset.url) config.asset = cloneDepartmentAnnouncementValue(asset);
+    const body = String(source.body || "").trim()
+      || (Array.isArray(sourceConfig.slides) ? sourceConfig.slides.map((slide) => String(slide || "").trim())
+        .filter(Boolean).join("\n\n") : "");
+    return {
     id: createUuid(),
     section_id: targetSection.id,
     sort_order: index + 1,
-    element_type: source.element_type,
+    element_type: template?.element_type || source.element_type,
     title: source.title || "",
     person: source.person || "",
-    body: source.body || "",
+    body,
     song_id: source.song_id || null,
     song_version_id: source.song_version_id || null,
     scripture_id: source.scripture_id || null,
     scripture_reference: source.scripture_reference || "",
-    asset: cloneDepartmentAnnouncementValue(source.asset),
+    asset: cloneDepartmentAnnouncementValue(asset),
     source_kind: "mindex",
-    source_ref: { ...cloneDepartmentAnnouncementValue(source.source_ref || {}), placeholder: false },
-    config: cloneDepartmentAnnouncementValue(source.config || {}),
+    source_ref: { ...cloneDepartmentAnnouncementValue(template?.source_ref || source.source_ref || {}), placeholder: false },
+    config,
     input_mode: source.input_mode || null,
     content_state: cloneDepartmentAnnouncementValue(source.content_state || {}),
     review_status: source.review_status || null,
     template_modified: true,
-  }));
+  };
+  });
   scaffold.elements.push(...copied);
   return new Set(copied.map((element) => element.id));
 }
