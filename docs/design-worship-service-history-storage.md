@@ -1,7 +1,9 @@
 # Design: worship service document history storage
 
-Status: option S (slim entries) is implemented in the client (2026-09-20, reads old and new entries). The data rewrite of
-existing rows and option T are not applied.
+Status: option S (slim entries) is implemented in the client (2026-09-20, reads old and new entries). A guarded,
+backup-first production compaction is prepared in
+`migrations/2026-09-26-worship-document-history-compaction.sql`; it is not applied until its SQL preflight is checked
+against the live project. Option T is not applied.
 Related: `handoff-worship-service-list-payload.md` (Data thread response, section 3),
 `worship-persistence-current.md` (Recovery row), `worship-data-contract.md`.
 
@@ -113,6 +115,11 @@ rollback from the backup table restored the full entries (27 KB -> 0.6 KB on the
 `sourceText`, so restore behaves the same. Rollback: copy `history` back from the backup table.
 Order of work: ship the client that reads both shapes first (done in the client change above), then run the data rewrite.
 Without the rewrite the stored history also shrinks by itself: each service is rewritten slim on its next save.
+
+The maintained migration is `migrations/2026-09-26-worship-document-history-compaction.sql` rather than the
+illustrative update above. It keeps a per-service backup, preserves order and `sourceText`, compacts only legacy
+history arrays, and deliberately leaves the current `mindexServiceDocument` alone. That distinction matters: the
+current document can still be a presenter fallback for old services with no usable canonical rows.
 
 Expected result: history 4.9 MB -> ~57 KB; opening a service with history costs the document only
 (~25 KB) instead of up to ~590 KB.

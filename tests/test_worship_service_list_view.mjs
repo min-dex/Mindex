@@ -112,5 +112,26 @@ try {
   const locked = await db.query('update public.mindex_worship_services set source_ref = $1::jsonb where id = $2 and source_ref = $3::jsonb', [JSON.stringify({ ...current, note: 1 }), withDoc, JSON.stringify(current)]);
   assert.equal(locked.affectedRows, 1);
   await db.exec('reset role');
+
+  // Legacy history holds rendered arrays even though recovery only reads sourceText.
+  // The compaction keeps the current document intact for presenter fallback, preserves
+  // history order/text/counts, retains a rollback copy, and remains idempotent.
+  const legacyHistory = [
+    { kind: 'worship-service-document', sourceText: 'older', slides: [{ id: 'old-slide' }, { id: 'old-slide-2' }], sourceRecords: [{ id: 'old-record' }], exceptions: [{ reason: 'legacy' }] },
+    { kind: 'worship-service-document', sourceText: 'oldest', slides: [{ id: 'oldest-slide' }], sourceRecords: [] },
+  ];
+  const legacyDoc = { kind: 'worship-service-document', slides: [{ id: 'fallback-slide', text: 'preserve me' }] };
+  const legacy = await scalar(`insert into public.mindex_worship_services (service_type_id, service_date, title, source_ref)
+    values ('sunday-main', '2026-09-27', 'Legacy history', $1::jsonb) returning id`, [JSON.stringify({ mindexServiceDocument: legacyDoc, mindexServiceDocumentHistory: legacyHistory })]);
+  const compactMigration = await read('../migrations/2026-09-26-worship-document-history-compaction.sql');
+  await db.exec(compactMigration);
+  await db.exec(compactMigration);
+  const compacted = (await rows('select source_ref from public.mindex_worship_services where id = $1', [legacy]))[0].source_ref;
+  assert.deepEqual(compacted.mindexServiceDocument, legacyDoc, 'current document stays available for legacy fallback');
+  assert.deepEqual(compacted.mindexServiceDocumentHistory.map((entry) => entry.sourceText), ['older', 'oldest']);
+  assert.deepEqual(compacted.mindexServiceDocumentHistory.map((entry) => [entry.slideCount, entry.sourceRecordCount]), [[2, 1], [1, 0]]);
+  assert(compacted.mindexServiceDocumentHistory.every((entry) => !('slides' in entry) && !('sourceRecords' in entry) && !('exceptions' in entry)), 'legacy rendering arrays are removed only from history');
+  const backup = (await rows('select history from public.mindex_worship_service_history_backup_20260926 where service_id = $1', [legacy]))[0].history;
+  assert.deepEqual(backup, legacyHistory, 'first full history is retained for rollback');
   console.log('PASS service list view (columns, stripped keys, flags, RLS/permissions, read-only) and source document guard (preserve, replace, explicit null, lock)');
 } finally { await db.close(); }
