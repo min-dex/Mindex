@@ -1161,13 +1161,14 @@ function normalizePresenterFormPresetLabel(value = "") {
   if (lastVerse) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
   const hymnVerse = raw.match(/^(\d+)\s*절$/u);
   if (hymnVerse) return { key: `verse:${hymnVerse[1]}`, type: "verse", number: Number(hymnVerse[1]) };
-  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|b|bridge|lyrics)\s*(\d*)\s*@\s*([a-z])?$/i);
+  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|b|bridge|coda|ending|lyrics)\s*(\d*)\s*@\s*([a-z])?$/i);
   if (atVariant) {
     const token = atVariant[1].toLowerCase();
     const type = /^(v|verse)$/.test(token) ? "verse"
       : /^(c|chorus|후렴)$/.test(token) ? "chorus"
         : /^(b|bridge)$/.test(token) ? "bridge"
-          : /^(pc|prechorus|pre-chorus)$/.test(token) ? "pre-chorus" : "lyrics";
+          : /^(pc|prechorus|pre-chorus)$/.test(token) ? "pre-chorus"
+            : /^(coda|ending)$/.test(token) ? "coda" : "lyrics";
     const number = atVariant[2] ? Number(atVariant[2]) : 0;
     const group = atVariant[3] ? atVariant[3].toUpperCase() : "";
     const baseKey = number ? `${type}:${number}` : type;
@@ -1271,7 +1272,7 @@ function presenterFormPresetDisplayLabel(value = "") {
   if (target.type === "chorus") return `Chorus${suffix}`;
   if (target.type === "bridge") return `Bridge${suffix}`;
   if (target.type === "pre-chorus") return `Pre-Chorus${suffix}`;
-  if (target.type === "coda") return "Coda";
+  if (target.type === "coda") return `Coda${suffix}`;
   if (target.type === "tag") return target.repeat > 1 ? "Tags" : "Tag";
   if (target.type === "instrumental") return "Instrumental";
   if (target.type === "lyrics") return "";
@@ -1286,7 +1287,7 @@ function normalizePresenterMissingFormLabel(value = "") {
   if (target.key === "chorus") return "C";
   if (target.key === "bridge") return "Bridge";
   if (target.key === "pre-chorus") return "Pre-Chorus";
-  if (target.key === "coda") return "Coda";
+  if (target.type === "coda") return `Coda${target.variant ? `@${String(target.group || "").toUpperCase()}` : ""}`;
   if (target.key === "tag") return "Tag";
   return raw || "송폼";
 }
@@ -2119,7 +2120,7 @@ function parsePresenterCustomSlideBlock(block) {
     return { marker: "간주", text: "", blank: true };
   }
   const markerCandidate = bracketed || first;
-  if (/^(Verse|Chorus|Pre[-\s]?Chorus|PC|Bridge|Coda|Tag|Lyrics)(?:\s+\d+)?$/i.test(markerCandidate)) {
+  if (/^(Verse|Chorus|Pre[-\s]?Chorus|PC|Bridge|Coda|Tag|Lyrics)(?:\s+\d+)?(?:@[A-Z]?)?$/i.test(markerCandidate)) {
     return { marker: normalizePresenterCustomMarker(markerCandidate), text: lines.slice(1).join("\n") };
   }
   return { marker: "", text: lines.join("\n") };

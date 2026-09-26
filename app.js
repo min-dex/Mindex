@@ -11614,12 +11614,13 @@ function normalizeServiceFormPreset(value, fallbackHint = "", fallbackStrength =
 
 function canonicalServiceFormToken(value = "") {
   const raw = String(value || "").trim();
-  const atVariant = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*@\s*([a-z])?$/i);
+  const atVariant = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge|coda|ending)\s*(\d*)\s*@\s*([a-z])?$/i);
   if (atVariant) {
     const type = atVariant[1].toLowerCase();
     const prefix = /^(v|verse)$/.test(type) ? "V"
       : /^(c|chorus)$/.test(type) ? "C"
-        : /^(b|bridge)$/.test(type) ? "B" : "PC";
+        : /^(b|bridge)$/.test(type) ? "B"
+          : /^(coda|ending)$/.test(type) ? "Coda" : "PC";
     return `${prefix}${atVariant[2]}@${String(atVariant[3] || "").toUpperCase()}`;
   }
   const part = raw.match(/^(v|verse|c|chorus|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*([a-z])?$/i);
@@ -11662,12 +11663,13 @@ function normalizeSongFormPresetLabel(value = "") {
   const raw = String(value || "").trim();
   const compact = compactSearchValue(raw);
   if (/^(vl|마지막절|lastverse|last)$/i.test(compact)) return { key: "last-verse", type: "verse", number: 0, lastVerse: true };
-  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge)\s*(\d*)\s*@\s*([a-z])?$/i);
+  const atVariant = raw.match(/^(v|verse|c|chorus|후렴|pc|prechorus|pre-chorus|p-c|p\.c\.|b|bridge|coda|ending)\s*(\d*)\s*@\s*([a-z])?$/i);
   if (atVariant) {
     const token = atVariant[1].toLowerCase();
     const type = /^(v|verse)$/.test(token) ? "verse"
       : /^(c|chorus|후렴)$/.test(token) ? "chorus"
-        : /^(b|bridge)$/.test(token) ? "bridge" : "pre-chorus";
+        : /^(b|bridge)$/.test(token) ? "bridge"
+          : /^(coda|ending)$/.test(token) ? "coda" : "pre-chorus";
     const number = Number(atVariant[2]) || 0;
     const group = String(atVariant[3] || "").toLowerCase();
     const baseKey = number ? `${type}:${number}` : type;
@@ -11731,7 +11733,7 @@ function songFormPresetDisplayLabel(value = "") {
   if (target.type === "chorus") return `Chorus${suffix}`;
   if (target.type === "bridge") return `Bridge${suffix}`;
   if (target.type === "pre-chorus") return `Pre-Chorus${suffix}`;
-  if (target.type === "coda") return "Coda";
+  if (target.type === "coda") return `Coda${suffix}`;
   if (target.type === "tag") return target.repeat > 1 ? "Tags" : "Tag";
   if (target.type === "instrumental") return "Instrumental";
   if (target.type === "lyrics") return "";
@@ -18471,7 +18473,7 @@ function renderScriptureTextarea(label, field, value, className = "") {
 
 function renderFormBlock(form, index, options = {}) {
   const label = displayLabel(form);
-  const supportsVariant = ["Verse", "Chorus", "Pre-Chorus", "Bridge"].includes(form.part_type);
+  const supportsVariant = ["Verse", "Chorus", "Pre-Chorus", "Bridge", "Coda"].includes(form.part_type);
   return `
     <article class="form-block">
       <div class="form-head">
