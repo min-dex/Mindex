@@ -14232,15 +14232,81 @@ function calendarAssigneeValueForService(service = null, fields = []) {
   return "";
 }
 
-function calendarAssigneeRowsForNewService(service) {
+function previousDepartmentServiceForNewService(service = null) {
+  const typeId = worshipAppServiceTypeId(service?.type_id || service?.service_type_id || "");
+  const date = serviceDateString(service);
+  if (!SERVICE_CATEGORIES.ministry.includes(typeId) || !date) return null;
+  return state.services
+    .filter((candidate) => candidate?.id !== service?.id
+      && worshipAppServiceTypeId(candidate?.type_id || candidate?.service_type_id || "") === typeId
+      && serviceDateString(candidate) < date
+      && !serviceIsNoGathering(candidate))
+    .sort((a, b) => serviceDateString(b).localeCompare(serviceDateString(a))
+      || String(b.created_at || "").localeCompare(String(a.created_at || "")))[0] || null;
+}
+
+function cloneDepartmentAnnouncementValue(value) {
+  if (!value || typeof value !== "object") return value;
+  if (typeof structuredClone === "function") return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+async function copyPreviousDepartmentAnnouncements(service, scaffold) {
+  const previous = previousDepartmentServiceForNewService(service);
+  const targetSection = scaffold.sections.find((section) => section.section_key === "announcements");
+  if (!previous || !targetSection) return new Set();
+
+  await ensureWorshipServiceRowsLoadedForPersistence(previous.id);
+  const sourceSectionIds = new Set(state.worshipSections
+    .filter((section) => section.service_id === previous.id && section.section_key === "announcements")
+    .map((section) => section.id));
+  if (!sourceSectionIds.size) return new Set();
+
+  const sourceElements = state.worshipElements
+    .filter((element) => sourceSectionIds.has(element.section_id))
+    .filter((element) => !element.config?.templateSuppressed && !element.config?.template_suppressed)
+    .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)
+      || String(a.id || "").localeCompare(String(b.id || "")));
+  if (!sourceElements.length) return new Set();
+
+  scaffold.elements = scaffold.elements.filter((element) => element.section_id !== targetSection.id);
+  targetSection.template_modified = true;
+  targetSection.source_ref = { ...targetSection.source_ref, placeholder: false, copied_from_service_id: previous.id };
+  const copied = sourceElements.map((source, index) => ({
+    id: createUuid(),
+    section_id: targetSection.id,
+    sort_order: index + 1,
+    element_type: source.element_type,
+    title: source.title || "",
+    person: source.person || "",
+    body: source.body || "",
+    song_id: source.song_id || null,
+    song_version_id: source.song_version_id || null,
+    scripture_id: source.scripture_id || null,
+    scripture_reference: source.scripture_reference || "",
+    asset: cloneDepartmentAnnouncementValue(source.asset),
+    source_kind: "mindex",
+    source_ref: { ...cloneDepartmentAnnouncementValue(source.source_ref || {}), placeholder: false },
+    config: cloneDepartmentAnnouncementValue(source.config || {}),
+    input_mode: source.input_mode || null,
+    content_state: cloneDepartmentAnnouncementValue(source.content_state || {}),
+    review_status: source.review_status || null,
+    template_modified: true,
+  }));
+  scaffold.elements.push(...copied);
+  return new Set(copied.map((element) => element.id));
+}
+
+async function calendarAssigneeRowsForNewService(service) {
   const scaffold = buildWorshipServiceScaffold(service.id, service.type_id, { service });
+  const copiedAnnouncementElementIds = await copyPreviousDepartmentAnnouncements(service, scaffold);
   const elements = scaffold.elements.flatMap((element) => {
     const label = compactSearchValue(element.source_ref?.label || "");
     const person = label === "대표기도" || label === "기도"
       ? defaultServicePrayerLeader(service)
       : label === "봉헌기도" && worshipAppServiceTypeId(service.type_id) === "youth"
         ? calendarAssigneeValueForService(service, ["youth_offering_prayer"]) : "";
-    if (!person) return [];
+    if (!person && !copiedAnnouncementElementIds.has(element.id)) return [];
     return [{ ...element, person: cleanServiceAssignee(person),
       source_ref: { ...element.source_ref, placeholder: false } }];
   });
@@ -14271,7 +14337,7 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
         const rows = pending?.operation === "create" ? {
           sections: pending.request.sections.map(section => ({ id: section.id, service_id: row.id, ...section.patch })),
           elements: pending.request.elements.map(element => ({ id: element.id, section_id: element.sectionId, ...element.patch })),
-        } : calendarAssigneeRowsForNewService(service);
+        } : await calendarAssigneeRowsForNewService(service);
         const items = groupWorshipElements(rows.sections, rows.elements)[row.id] || [];
         const aggregate = await atomic.create({ service: row, rows,
           document: pending?.operation === "create" ? pending.request.document : buildServiceDocumentSnapshot(service, items) });
@@ -14293,7 +14359,8 @@ async function insertWorshipServicesWithCalendarAssignees(payloads = []) {
       throw error;
     }
   }
-  const seeds = payloads.map((payload) => calendarAssigneeRowsForNewService(normalizeWorshipService(payload)));
+  const seeds = await Promise.all(payloads.map((payload) =>
+    calendarAssigneeRowsForNewService(normalizeWorshipService(payload))));
   const sections = seeds.flatMap((seed) => seed.sections);
   const elements = seeds.flatMap((seed) => seed.elements);
   const { data, error } = await state.client.from("mindex_worship_services").insert(payloads).select("*");
