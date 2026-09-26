@@ -8538,6 +8538,16 @@ body.is-chromium .svc-slide-thumb.active:hover .svc-slide-thumb-frame {
   body[data-module="presenter"] {
     --shell-left-w: var(--topbar-left-compact-w);
   }
+  body[data-module="presenter"] .nav-sidebar { overflow: visible; }
+  body[data-module="presenter"] .sidebar {
+    position: fixed;
+    top: var(--topbar-h);
+    bottom: 0;
+    left: var(--nav-rail-w);
+    width: min(280px, calc(100vw - var(--nav-rail-w)));
+    z-index: 61;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, .16);
+  }
   body[data-module="presenter"],
   body[data-module="presenter"].right-sidebar-open,
   body.right-sidebar-open { --shell-right-w: 0px; }

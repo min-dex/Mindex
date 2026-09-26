@@ -1924,6 +1924,13 @@ async function handleSearchKeydown(event) {
   const moduleName = state.module;
   if (!normalizeSearchValue(query)) return;
 
+  if (moduleName === "bulletin") {
+    event.preventDefault();
+    const service = getBulletinSidebarServices()[0];
+    if (service) await runServiceBulletinAction("open", service.id);
+    return;
+  }
+
   const scriptureShortcut = await getScriptureSearchShortcut(query);
   if (state.search !== query || state.module !== moduleName) return;
   if (state.module !== "references" && scriptureShortcut && (state.module !== "scripture" || scriptureShortcut.type !== "text")) {
@@ -15234,13 +15241,17 @@ function serviceSupportsBulletin(service = null) {
     && !serviceIsNoGathering(service));
 }
 
+function getBulletinSidebarServices() {
+  const query=normalizeSearchValue(state.search);
+  return state.services.filter(serviceSupportsBulletin).filter(service=>!query||normalizeSearchValue(`${service.date} 청년부 주보 ${service.title||""}`).includes(query)).sort((a,b)=>b.date.localeCompare(a.date));
+}
+
 function renderBulletinList() {
   refs.songCount.textContent = "";
   if (!state.client || state.connectionError) {refs.songList.innerHTML=renderConnectionList(state.connectionError);return;}
   if (state.serviceError || !state.serviceTypes.length) {refs.songList.innerHTML=state.serviceError?renderListEmptyState("주보 목록을 불러오지 못했습니다",state.serviceError):renderLoadingList();return;}
-  const query=normalizeSearchValue(state.search);
-  const services=state.services.filter(serviceSupportsBulletin).filter(service=>!query||normalizeSearchValue(`${service.date} 청년부 주보 ${service.title||""}`).includes(query)).sort((a,b)=>b.date.localeCompare(a.date));
-  refs.songList.innerHTML=`<div class="service-sidebar"><section class="service-sidebar-section"><div class="service-sidebar-head"><span>청년부 주보</span></div><div class="service-sidebar-stack service-sidebar-stack--navigation">${services.map(service=>`<button type="button" class="service-type-row${state.presenterBulletinServiceId===service.id?" active":""}" data-bulletin-open="${escapeAttr(service.id)}"><span>${escapeHtml(formatServiceDate(service))}</span></button>`).join("")||'<p class="muted">표시할 주보가 없습니다.</p>'}</div></section></div>`;
+  const services=getBulletinSidebarServices();
+  refs.songList.innerHTML=`<div class="service-sidebar"><section class="service-sidebar-section"><div class="service-sidebar-head"><span>청년부 주보</span></div><div class="service-sidebar-stack service-sidebar-stack--navigation">${services.map(service=>`<button type="button" class="service-type-row${state.presenterBulletinServiceId===service.id?" active":""}" data-bulletin-open="${escapeAttr(service.id)}" aria-current="${state.presenterBulletinServiceId===service.id?"page":"false"}"><span>${escapeHtml(formatServiceDate(service))}</span></button>`).join("")||'<p class="muted">표시할 주보가 없습니다.</p>'}</div></section></div>`;
   finishListRender();
 }
 
@@ -17029,6 +17040,7 @@ function updatePresenterRightSidebarToggleButtons() {
 
 function getListScrollKey() {
   const search = normalizeSearchValue(state.search);
+  if (state.module === "bulletin") return `bulletin:${search}`;
   if (isGlobalSearchActive()) return `global:${search}`;
   if (state.module === "home") return `home:${search}`;
   if (state.module === "scripture") return `scripture:${state.scriptureFilter}:${search}`;
@@ -17045,10 +17057,14 @@ function saveCurrentListScroll() {
   state.listScroll[getListScrollKey()] = refs.songList.scrollTop;
 }
 
+let listScrollRestoreSerial = 0;
 function restoreCurrentListScroll() {
   if (!refs.songList) return;
-  const top = state.listScroll[getListScrollKey()] || 0;
+  const request = ++listScrollRestoreSerial;
+  const key = getListScrollKey();
+  const top = state.listScroll[key] || 0;
   requestAnimationFrame(() => {
+    if (request !== listScrollRestoreSerial || key !== getListScrollKey()) return;
     refs.songList.scrollTop = top;
   });
 }
