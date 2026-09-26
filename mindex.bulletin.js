@@ -366,11 +366,6 @@
       const lastPraise=source.order.findLastIndex(r=>["찬양","찬송"].includes(r.label));
       if(lastPraise>=0&&source.order[lastPraise+1]?.label==="성경봉독")source.order.splice(lastPraise+1,0,{id:"bulletin-communal-prayer",label:"기도",content:"",person:"다같이"});
     }
-    const praise=source.order.find(r=>["찬양","찬송"].includes(r.label))?.content||"";
-    source.referenceNotice=date==="2026-07-05"&&praise&&!praise.replace(/\s/g,"").includes("내손을주께듭니다")
-      ?"원본의 네 번째 찬양은 ‘내 손을 주께 듭니다’입니다. 현재 연결된 곡을 확인해 주세요."
-      :date==="2026-09-06"&&/250 구주의 십자가 보혈로/.test(praise)
-      ?"원본 찬송 번호 ‘통 128’과 연결곡 번호 ‘250’이 다릅니다. 곡 DB의 번호를 사용하고 있습니다.":"";
     return source;
   }
 
@@ -715,7 +710,7 @@
   }
   function snapshot(doc){return {fields:clone(doc.fields),settings:clone(doc.settings||{}),frames:clone(doc.frames),months:clone(doc.months||{}),inherited:clone(doc.inherited||{common:{},months:{}}),sourceSnapshot:clone(doc.sourceSnapshot||null)};}
 
-  const weeklySourceKeys=["referenceNotice","leader","announcer","sermon","scripture","news","notices","welcome","outline","outlineTitle","sermonReference","liturgical"];
+  const weeklySourceKeys=["leader","announcer","sermon","scripture","news","notices","welcome","outline","outlineTitle","sermonReference","liturgical"];
   function normalizeSourceSnapshot(value) {
     if(!isRecord(value)||typeof value.serviceId!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(value.date||""))return null;
     const weekly={};for(const key of weeklySourceKeys)if(typeof value.weekly?.[key]==="string")weekly[key]=value.weekly[key];
@@ -843,7 +838,7 @@
         const field=key=>`<label>${escape(fields[key])}${["issue","church","website"].includes(key)?
           `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
           `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`;
-        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주</h3><p class="bulletin-help">찬양·본문·설교·기도자는 예배와 교회력에서 가져옵니다. 소식은 광고를 바탕으로 편집하고, 설교 요점과 누락된 인도자만 보완해 주세요.</p>${doc.source?.hasArchiveReference?`<label><input type="checkbox" data-bulletin-setting="archiveReference" ${doc.settings.archiveReference!==false?"checked":""}> 발행 원본의 소식·담당·요점·위원표 사용</label><p class="bulletin-help">이 날짜의 실제 PDF에서 확인한 내용입니다. 찬양·설교는 연결된 예배 자료를 사용합니다.</p>`:""}${doc.source?.referenceNotice?`<p class="bulletin-help" role="status">${escape(doc.source.referenceNotice)}</p>`:""}${["news","outline","leader","issue"].map(field).join("")}<details class="bulletin-property-section"><summary>세부 표기</summary>${["announcer","sermonReference","outlineTitle"].map(field).join("")}</details></section>
+        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주</h3><p class="bulletin-help">찬양·본문·설교·기도자는 예배와 교회력에서 가져옵니다. 소식은 광고를 바탕으로 편집하고, 설교 요점과 누락된 인도자만 보완해 주세요.</p>${doc.source?.hasArchiveReference?`<label><input type="checkbox" data-bulletin-setting="archiveReference" ${doc.settings.archiveReference!==false?"checked":""}> 발행 원본의 소식·담당·요점·위원표 사용</label><p class="bulletin-help">이 날짜의 실제 PDF에서 확인한 내용입니다. 찬양·설교는 연결된 예배 자료를 사용합니다.</p>`:""}${["news","outline","leader","issue"].map(field).join("")}<details class="bulletin-property-section"><summary>세부 표기</summary>${["announcer","sermonReference","outlineTitle"].map(field).join("")}</details></section>
           <section class="bulletin-property-section"><h3>이번 달</h3><p class="bulletin-help">${escape(doc.source?.eventsOrigin||"교회력 일정")}을 사용합니다. 일정 수정은 같은 달 주보에 이어집니다. 저장하면 이번 호의 예배 내용과 위원표도 보존합니다. 최신 배정은 예배 자료 갱신으로 가져옵니다.</p>${field("eventsText")}<button type="button" data-bulletin-calendar-events>교회력 일정 불러오기</button><div class="bulletin-number-grid">
           <label>교회 일정<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
           <label>예배 위원<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label></div></section>
