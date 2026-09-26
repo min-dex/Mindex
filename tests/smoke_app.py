@@ -8638,6 +8638,15 @@ def main() -> int:
                             { id: '__smoke_apply_hymn_1_new__', name: '새찬송가', praise_types: ['hymn'], forms: [] },
                             { id: '__smoke_apply_hymn_1_alt__', name: '다른 버전', praise_types: ['hymn'], forms: [] },
                           ]);
+                          const hymnOneLegacy = {
+                            id: '__smoke_apply_hymn_1_legacy__',
+                            title: '통일 찬송가 1장',
+                            hymn_no: '1',
+                            praise_types: ['hymn'],
+                          };
+                          hymnOneLegacy.versions = normalizeSongVersions(hymnOneLegacy, [
+                            { id: '__smoke_apply_hymn_1_legacy_v__', name: '통일 찬송가', praise_types: ['hymn'], forms: [] },
+                          ]);
                           const hymnTwo = {
                             id: '__smoke_apply_hymn_2__',
                             title: '찬양 성부 성자 성령',
@@ -8657,7 +8666,9 @@ def main() -> int:
                           ]);
                           const toasts = [];
                           try {
-                            state.songs = [hymnOne, hymnTwo, ccmTen];
+                            // Legacy import duplicates must not make an explicit hymn
+                            // number input ("찬 1장") abort the whole apply.
+                            state.songs = [hymnOneLegacy, hymnOne, hymnTwo, ccmTen];
                             state.services = [service];
                             state.selectedServiceId = service.id;
                             state.selectedServiceTypeId = service.type_id;

@@ -32,6 +32,16 @@ def main():
                   check(jobs.length===1&&jobs[0].targetId===tid,'wrong sync scope');
                   await syncSharedSundayContentAfterSave(source,[edited],{previousItems:[edited]});
                   check(jobs.length===1,'unchanged save resynced');
+                  const first={id:'first',date:source.date,type_id:'sunday-first'};
+                  const second={id:'second',date:source.date,type_id:'sunday-second'};
+                  const praiseItem=(service,songId)=>normalizeServiceItem({id:`${service.id}:praise`,service_id:service.id,label:'찬양 1',song_id:songId,
+                    _worshipSectionKey:'praise',_worshipSectionTitle:'찬양',_worshipSlotKey:'praise.song.1',
+                    memo:serializeServiceItemMemo({elementType:'praise',inputMode:'lyrics_db'})});
+                  const beforePraise=praiseItem(first,'old-song'),nextPraise=praiseItem(first,'new-song');nextPraise._worshipSharedContentDirty=true;
+                  jobs=[];state.services=[first,second];pendingSundayEditSync.clear();
+                  await syncSharedSundayContentAfterSave(first,[nextPraise],{previousItems:[beforePraise]});
+                  check(jobs.length===1&&jobs[0].targetId===second.id&&jobs[0].key==='main-praise:1','first-to-second praise sync missing');
+                  check(!Object.hasOwn(JSON.parse(jobs[0].item.memo),'asset'),'sync retry snapshot kept arbitrary payload');
                   const blank=make(target,'');state.serviceItems={[sid]:[edited],[tid]:[blank]};
                   check(serviceItemWithSharedSundayContent(blank,target).raw_title==='','read borrowed content');
                   check(!presenterServiceInputIsStatic(blank),'editor hidden');
@@ -127,6 +137,12 @@ def main():
                   try{await syncSharedSundayContentAfterSave(source,[edited],{previousItems:[previous]})}catch{failed=true}
                   check(failed&&pendingSundayEditSync.size===1,'failed job lost');
                   check(readPendingSundayEditSync().size===1,'retry not durable');
+                  const originalStorageSet=safeStorageSet;
+                  safeStorageSet=()=>false;pendingSundayEditSync.clear();let storageBlockedCalls=0;
+                  persistSundayEditSync=async()=>{storageBlockedCalls++};
+                  await syncSharedSundayContentAfterSave(source,[edited],{previousItems:[previous]});
+                  check(storageBlockedCalls===1&&pendingSundayEditSync.size===0,'storage failure blocked live sync');
+                  safeStorageSet=originalStorageSet;
                   persistSundayEditSync=async()=>{};
                   await syncSharedSundayContentAfterSave(source,[edited],{previousItems:[edited]});
                   check(pendingSundayEditSync.size===0,'retry failed');

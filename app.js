@@ -7294,14 +7294,18 @@ async function syncSharedSundayContentAfterSave(sourceService, sourceItems = [],
       const pending = pendingSundayEditSync.get(jobKey);
       pendingSundayEditSync.set(jobKey, {
         sourceServiceId: sourceService.id, targetId: target.id, key,
-        previous: JSON.parse(JSON.stringify(previous[0])), item: JSON.parse(JSON.stringify(savedItem)),
+        // Retry records never need arbitrary element payloads. Keeping this
+        // compact also avoids localStorage quota failures from blocking a
+        // live first/second-service sync.
+        previous: sundayEditSyncItemSnapshot(previous[0]),
+        item: sundayEditSyncItemSnapshot(savedItem),
         previousSignatures: uniqueList([...(pending?.previousSignatures || []),
           ...(pending ? [sundayEditSyncSignature(pending.previous), sundayEditSyncSignature(pending.item)] : [])]),
       });
     }
   }
   const failures = [];
-  persistPendingSundayEditSync();
+  let retryRecordPersisted = persistPendingSundayEditSync();
   for (const [jobKey, job] of pendingSundayEditSync) {
     if (job.sourceServiceId !== sourceService.id) continue;
     const savedSourceItems = groupWorshipElements(
@@ -7311,20 +7315,21 @@ async function syncSharedSundayContentAfterSave(sourceService, sourceItems = [],
     const savedSource = savedSourceItems.filter((item) => sundaySharedContentKey(item) === job.key);
     if (savedSource.length === 1 && sundayEditSyncSignature(savedSource[0]) !== sundayEditSyncSignature(job.item)) {
       pendingSundayEditSync.delete(jobKey);
-      persistPendingSundayEditSync();
+      retryRecordPersisted = persistPendingSundayEditSync() && retryRecordPersisted;
       failures.push(`${job.item.label}: 원본이 바뀌어 이전 동기화 요청을 취소했습니다.`);
       continue;
     }
     try {
       await persistSundayEditSync(job, options);
       pendingSundayEditSync.delete(jobKey);
-      persistPendingSundayEditSync();
+      retryRecordPersisted = persistPendingSundayEditSync() && retryRecordPersisted;
     } catch (error) {
       failures.push(error.message || "연결 예배 저장 실패");
     }
   }
   if (failures.length) {
-    const message = `현재 예배는 저장됐지만 연결 예배 반영은 완료되지 않았습니다. ${uniqueList(failures).join(" / ")}`;
+    const retryNote = retryRecordPersisted ? "" : " 이 브라우저에서는 재시도 기록을 보관하지 못하니 화면을 닫기 전에 다시 저장해 주세요.";
+    const message = `현재 예배는 저장됐지만 연결 예배 반영은 완료되지 않았습니다. ${uniqueList(failures).join(" / ")}${retryNote}`;
     showToast(message, "error");
     throw new Error(message);
   }
@@ -7342,14 +7347,50 @@ function readPendingSundayEditSync() {
   } catch { return new Map(); }
 }
 
+function sundayEditSyncItemSnapshot(item = {}) {
+  const memo = parseServiceItemMemo(item?.memo);
+  const content = sundayEditSyncContent(item);
+  const snapshotMemo = {
+    elementType: serviceMemoElementType(memo),
+    inputMode: content.inputMode || memo.inputMode || "",
+  };
+  if (Object.hasOwn(content, "references")) {
+    snapshotMemo.scriptureReference = content.references[0] || "";
+    snapshotMemo.scriptureReferences = content.references;
+    snapshotMemo.scriptureReferencePayloads = content.payloads;
+  } else if (Object.hasOwn(content, "song")) {
+    Object.assign(snapshotMemo, {
+      formHint: content.formHint,
+      formPreset: content.formPreset,
+      formPresetDisabled: content.formPresetDisabled,
+      formPresetRules: content.formPresetRules,
+      slides: content.slides,
+      outputMode: memo.outputMode || "",
+    });
+  }
+  return {
+    id: String(item?.id || ""),
+    label: String(item?.label || ""),
+    raw_title: String(item?.raw_title || ""),
+    assignee: String(item?.assignee || ""),
+    song_id: item?.song_id || null,
+    version_id: item?.version_id || item?.song_version_id || null,
+    song_version_id: item?.song_version_id || item?.version_id || null,
+    _worshipSectionKey: String(item?._worshipSectionKey || item?.section_key || ""),
+    _worshipSectionTitle: String(item?._worshipSectionTitle || item?.section_title || ""),
+    _worshipSlotKey: normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slot_key || item?.source_ref?.slotKey),
+    memo: serializeServiceItemMemo(snapshotMemo),
+  };
+}
+
 function persistPendingSundayEditSync() {
   if (!pendingSundayEditSync.size) {
     safeStorageRemove("local", SUNDAY_EDIT_SYNC_STORAGE_KEY);
-    return;
+    return true;
   }
-  if (!safeStorageSet("local", SUNDAY_EDIT_SYNC_STORAGE_KEY, JSON.stringify([...pendingSundayEditSync]))) {
-    throw new Error("연결 예배 재시도 기록을 저장하지 못했습니다. 이 창을 닫지 말고 다시 저장해 주세요.");
-  }
+  // Storage is a retry aid, not a prerequisite for the immediately following
+  // network save. Private mode or quota pressure must not stop a live sync.
+  return safeStorageSet("local", SUNDAY_EDIT_SYNC_STORAGE_KEY, JSON.stringify([...pendingSundayEditSync]));
 }
 
 function sundayEditSyncEligible(item = {}, service = null) {

@@ -633,9 +633,14 @@ function parsePresenterPreparationHymnHint(value = "") {
 function resolvePresenterPreparationHymnSong(value = "") {
   const hint = parsePresenterPreparationHymnHint(value);
   if (!hint.hymnNo) return null;
-  const hymnMatches = presenterPreparationSongExactIndex().hymnNos.get(hint.hymnNo) || [];
+  const hymnMatches = presenterPreparationHymnNumberCandidates(
+    presenterPreparationSongExactIndex().hymnNos.get(hint.hymnNo) || [],
+  );
   if (!hymnMatches.length) return null;
-  if (!hint.title) return hymnMatches.length === 1 ? hymnMatches[0] : null;
+  // A hymn number is an unambiguous user choice even when old imports left
+  // duplicate catalog rows. Prefer the current hymnal record rather than
+  // rejecting "찬 36장" and aborting the whole worship-input apply.
+  if (!hint.title) return hymnMatches[0] || null;
   const titleKey = compactSearchValue(hint.title);
   const titled = hymnMatches.filter((song) => [
     song.title,
@@ -643,7 +648,34 @@ function resolvePresenterPreparationHymnSong(value = "") {
     songServiceOptionLabel(song),
     song.subtitle,
   ].some((label) => compactSearchValue(label) === titleKey));
-  return titled.length === 1 ? titled[0] : (hymnMatches.length === 1 ? hymnMatches[0] : null);
+  return titled[0] || hymnMatches[0] || null;
+}
+
+function presenterPreparationHymnNumberCandidates(matches = []) {
+  const unique = [...new Map((matches || []).filter(Boolean)
+    .map((song) => [String(song.id || song.title || ""), song])).values()];
+  const legacyScore = (song) => {
+    const values = [song?.hymn_no, song?.title, song?.subtitle, song?.original_title]
+      .concat((song?.versions || []).flatMap((version) => [
+        version?.name, version?.curated_version_name, version?.version_label,
+        version?.raw_section_name, version?.hymn_no,
+      ]))
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+    return values.some((value) => /^통(?:일)?(?:\s|\d|$)/.test(value) || value.includes("통일 찬송가")) ? 1 : 0;
+  };
+  const hymnScore = (song) => {
+    const types = [song?.praise_types]
+      .concat((song?.versions || []).map((version) => version?.praise_types))
+      .flatMap((value) => Array.isArray(value) ? value : [value])
+      .map((value) => String(value || "").toLowerCase());
+    return types.includes("hymn") ? 0 : 1;
+  };
+  return unique.sort((left, right) =>
+    legacyScore(left) - legacyScore(right)
+    || hymnScore(left) - hymnScore(right)
+    || String(left.title || "").localeCompare(String(right.title || ""), "ko")
+    || String(left.id || "").localeCompare(String(right.id || ""), "en"));
 }
 
 function resolvePresenterPreparationSong(value, item, service) {
