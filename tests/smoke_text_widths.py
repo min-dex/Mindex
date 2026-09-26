@@ -13,6 +13,8 @@ def main():
             page = browser.new_page()
             page.route('**/*supabase*/**', lambda route: route.abort())
             page.goto(url + '?output=presenter', wait_until='domcontentloaded')
+            page.wait_for_function("""() => [...document.styleSheets].some((sheet) =>
+              sheet.href && sheet.href.includes('styles.presenter-output.css'))""", timeout=10000)
             result = page.evaluate('''() => {
               const cases=[
                 ['lyrics','<div class="presenter-slide-text"><span>가사</span></div>','.presenter-slide-text'],
@@ -41,13 +43,15 @@ def main():
             }''')
             for r in result:
                 if r['type'] == 'liturgical-body':
-                    # Fullscreen liturgical copy is centered in the full stage at a 45px output inset.
-                    assert abs(r['width'] - (1 - 90 / 1920)) < 0.001, r
-                    assert abs(r['left'] - (45 / 1920)) < 0.001, r
+                    # Liturgical copy keeps a fixed safe area: 45px in chromakey,
+                    # 145px for clean fullscreen output.
+                    expected_inset = 145 if r['clean'] else 45
+                    assert abs(r['width'] - (1 - expected_inset * 2 / 1920)) < 0.001, r
+                    assert abs(r['left'] - (expected_inset / 1920)) < 0.001, r
                 else:
                     assert abs(r['width'] - (0.85 if r['clean'] else 0.95)) < 0.001, r
                     assert abs(r['left'] - (0.075 if r['clean'] else 0.025)) < 0.001, r
-            print('PASS 16 text layouts: standard margins plus 45px fullscreen liturgical inset')
+            print('PASS 16 text layouts: standard margins plus fixed liturgical safe areas')
             browser.close()
     finally:
         if server:

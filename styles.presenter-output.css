@@ -470,9 +470,12 @@
 .presenter-slide--liturgical-body {
   align-items: stretch;
   justify-content: center;
-  /* Liturgical and announcement copy uses the full stage for a true vertical center. */
-  padding: 0 calc(45 * var(--presenter-stage-unit));
+  /* Keep the fixed stage grid without consuming the output safe area. */
+  padding: calc(75 * var(--presenter-stage-unit)) calc(45 * var(--presenter-stage-unit));
   text-align: left;
+}
+.presenter-output-root.no-chromakey .presenter-slide--liturgical-body {
+  padding-inline: calc(145 * var(--presenter-stage-unit));
 }
 .presenter-liturgical-body {
   display: block;
