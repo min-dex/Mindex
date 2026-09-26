@@ -1,0 +1,6083 @@
+{
+  "services": [
+    {
+      "id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "service_type_id": "young_adult",
+      "service_date": "2026-07-05",
+      "title": "청년부 예배",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "service_type_id": "young_adult",
+      "service_date": "2026-07-12",
+      "title": "청년부 예배",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {
+        "no_gathering": true,
+        "no_gathering_reason": "찬양사역부 제자헌신예배"
+      }
+    },
+    {
+      "id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "service_type_id": "young_adult",
+      "service_date": "2026-07-19",
+      "title": "청년부 예배",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "service_type_id": "young_adult",
+      "service_date": "2026-07-26",
+      "title": "청년부 예배",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "service_type_id": "young_adult",
+      "service_date": "2026-08-02",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "service_type_id": "young_adult",
+      "service_date": "2026-08-16",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "service_type_id": "young_adult",
+      "service_date": "2026-08-23",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "service_type_id": "young_adult",
+      "service_date": "2026-09-06",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "service_type_id": "young_adult",
+      "service_date": "2026-09-13",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    },
+    {
+      "id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "service_type_id": "young_adult",
+      "service_date": "2026-09-20",
+      "title": "",
+      "worship_leader": "",
+      "service_alias": "",
+      "source_ref": {}
+    }
+  ],
+  "sections": [
+    {
+      "id": "17e379a5-62c7-4b91-b642-ee23626f665e",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "3889813d-20d8-4e4d-a80d-34d9c6060343",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "b07c986a-8992-413c-9f4b-56eb8955ef86",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "b5bea1db-01da-4fa8-bac8-57ac768b7a3a",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "59021317-72b2-4ff0-8d2a-2c88c98162e7",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "c42913ce-9a8f-4264-a682-b5a12655a7a0",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "f3747662-deb2-4f0b-aece-241cd1107ccf",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "e44dcdcd-0b05-4e61-bce0-a4751d338de8",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "e03c28a8-2d0a-44a6-a156-3de553bf0009",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "7b33d525-deaa-47e9-a32d-bfaf998e6a30",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "0594d1a4-19b0-4577-b869-5a789c853c61",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "e03a2744-29fc-42e3-92d6-150b5cf49587",
+      "service_id": "61dde39c-f8fd-48b8-9bc2-24125445bd30",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "9f487f06-3bb0-4dbf-b210-4ab0a728b507",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "0904a2eb-bbcc-44a1-abb0-15822c5bfccf",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "603ef4db-8313-434b-9652-94a141786806",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "1c00f20a-40b6-4610-9ff9-525f297bbd7a",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "98f548fc-8f82-4dd2-a52a-a3014d7958d1",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "2e4b0684-24b6-5a02-a664-eb645b6ad838",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "6fdc4cbb-b13c-50e7-a9d6-2ca59ba187db",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "6eda5586-bd1b-43f4-bb48-bd218e052cdd",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "91e28185-7347-535d-8faf-106734dc31dd",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "98e44116-231f-5bb0-9c82-1cc6be764efa",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "68541151-e69f-5aed-aa56-eeaf8888b391",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "4c21aac2-3f94-5a7e-b562-d66c65d22cb2",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "363ad768-e91d-599a-8f62-8edc28fe5c7c",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "c900564b-2439-585d-8fab-4c63d8e2006f",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "94aff3a1-98cc-4233-9255-85c435613994",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "b6adb3d8-909f-4925-b47f-20ee55a4e355",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "41b76743-e318-4308-a9cf-ab260bab9833",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "e375044f-b1e9-4ecb-83ff-a61bdcabfd16",
+      "service_id": "12c1dfdc-ce71-4987-91b8-562f5525ab01",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "f2391f34-d368-58fa-8466-11d43cfc0d30",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "a61f1aa1-b06a-52e5-aa64-863f9f71ab69",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "a7dd0242-34d2-51be-9620-5d5c9f1a92c2",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "6ec59a91-9509-5261-92c7-5c036bba10d1",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "3389ee1f-041f-52f3-a71f-84e9142abf07",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "38931ca0-1b06-563a-9130-d51cbb15fb24",
+      "service_id": "023c1970-e5bb-4929-b56a-9a3bfd5591bc",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "882b75aa-c380-5b76-8398-68fc8c5fef92",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "025073f9-c1e0-595d-bcfd-a4bf588c2f89",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "ebf056b5-f9f4-5075-bbb8-7edfec187b4d",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "1f9fcc14-1a74-577e-af52-8d70f861ded8",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "0199db50-1d23-53fa-a950-3afcb8f284a4",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "00cd45ed-1624-53dd-a926-33af25805f8d",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "3405eae4-8e7f-5106-9126-e760658d8e00",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "56db025c-ace1-5078-9ceb-5a1ab16b8a8c",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "71d29ccc-0046-5e5a-83f8-6614c8b821a8",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "ae7e7ae3-8c33-5ed1-9e0d-a06f3cb1601f",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "c842ec79-e1dd-5b9d-b971-867f257b0289",
+      "service_id": "d202cd48-f5b4-434e-8256-87b40f25d399",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "00f0fb07-fb7c-5e7d-bc46-67ebab98a273",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "dd344bcd-7f89-5e75-b7d8-dc5f6cf11be5",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "1e300ebe-41ce-5a08-a922-bdde997ebb42",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "ebb456f9-6071-5915-a2c3-b317ee8d7c19",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "5f63530a-1c99-5166-83a1-b2d4edd9e5ba",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "c62da8c0-39ff-5542-a9a8-60c4bbb35314",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "548d40a3-7677-56f5-b54c-4cbb47c39e67",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "37d4e2b9-2e8f-572d-acf1-f8c75c0b0e81",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "09b937ea-d559-5066-9794-6064b716376a",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "5c36bc59-d8bb-5f99-8dd8-953b0372c339",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "bcf4ad67-9f38-569b-8517-8a514d85fcaf",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "49f5beb1-f850-51fd-bce8-1e6f40949521",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "c9f95bf2-1fd5-5c7e-bbe9-abd45bfe801a",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "ecdeeb75-3d2c-56d9-8782-0deba8da5d65",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "e172f11f-5310-5b19-9e19-e037d8477feb",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "782c9320-0227-5fb2-87e8-62d4b3d6e0f4",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "60dae857-aade-57fd-881b-870b165cdac3",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "d9a76b45-7b4f-533f-9b4f-b661ecd28889",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "27103bda-11ec-512e-b531-641405e7cb32",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "db677b22-c531-5110-86e1-e0ceaf49c33e",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "3cfa3e36-327a-549e-bffb-94e4d691730e",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "f430b95d-e7a3-59c5-8c1a-5e37a0107c9d",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "28c22736-2d19-5b9e-8486-44d4ac6ab11e",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "dccb1d35-f7d4-58c1-9d69-410b77fb8a0d",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "ffa2101b-b4c2-5993-95b0-14615267525b",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "978aaf3c-0d3b-5d24-9a4c-0ace2e413b34",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "73bf4203-97f3-5471-9c5b-1f271e11ace7",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "a0e3b6d0-fbe5-5d92-890f-b2e49d445e54",
+      "service_id": "1fd42b90-e643-4ef2-a64f-8bc60651b620",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "147a3f98-6766-52a2-89b5-6a446fcb42bc",
+      "service_id": "5da5a154-83c9-4aa2-9e34-6da1579d01c6",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "a49f8965-6d68-5af5-9ef7-3a9f6e22cacd",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "984534b6-e406-5888-b763-991e6ad72b8a",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "a089c8f1-3dea-5c95-83ab-3157d721d4e1",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "dce640e2-e44f-54e6-ac57-4f1474068442",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "b5bbb508-1db4-53c2-8eea-5004870415ac",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "24598eeb-d4e6-5775-bf99-c97bcc3fb71f",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "4277c741-5025-5dad-bcdf-cb07c6379779",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "1efe85a2-f7ce-59e6-9baa-5f2421c9a832",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "e3a59731-f1b7-5f19-9315-b67b49a90001",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "2e82fbbf-3e2a-5c1b-8e5a-6f11b04de417",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "84660980-edcf-5922-a76f-5a04289a3954",
+      "service_id": "86a40f99-8efa-4b00-8e8a-2cb0865b80ec",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "6d7ee058-03bf-5822-a4cc-2dfb2a9dd31f",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "cdc57fea-86f3-5da7-925a-37cafa5fc266",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "9296c730-c5c7-59f8-85a1-d55d5f00571b",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "4c22d185-62a3-5a3c-bd56-3bc5784d2695",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "19421965-f3c2-5cbc-8cdd-cfb58901e6c5",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "c1f374da-1d45-58f8-8a7c-81296501da08",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "242bce56-e963-5aea-a0da-3efc216bd93e",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "1b2305cd-3605-502b-a828-51efadae6b46",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    },
+    {
+      "id": "236a8d42-efed-53a0-9015-a0eeb69fa9be",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "e24c0c5d-c2eb-5bb0-b613-f0d778ad52eb",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "ff1ba73a-e3a7-5ce8-84dc-5e9903e21618",
+      "service_id": "98b5b076-f800-555f-a259-169ca091df5e",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "b1701d17-2ef5-43c9-9418-8951119ff5ba",
+      "service_id": "71467a2c-bf00-4cee-b0b6-03237e16dfca",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "3f03f738-a1c2-586e-ad58-8bd8adf66c34",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "ready",
+      "title": "준비",
+      "sort_order": 1
+    },
+    {
+      "id": "b0f4923f-0aa4-58e3-88b5-33b9ead53437",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "creed",
+      "title": "신앙고백",
+      "sort_order": 2
+    },
+    {
+      "id": "a9778c16-2e56-5692-a85a-8e2038ca2b16",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "prayer",
+      "title": "대표기도",
+      "sort_order": 3
+    },
+    {
+      "id": "5f1285c5-da97-5399-9912-e9233d740f2d",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "praise",
+      "title": "찬양",
+      "sort_order": 4
+    },
+    {
+      "id": "0cc82229-703b-5501-944c-38c3bfaf0459",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "scripture_reading",
+      "title": "성경봉독",
+      "sort_order": 5
+    },
+    {
+      "id": "f9957278-4b09-5b12-a3d5-570cb7f52c74",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "sermon",
+      "title": "설교",
+      "sort_order": 6
+    },
+    {
+      "id": "c2c41f34-7525-5476-a8ec-48408dc23590",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "response_song",
+      "title": "결단",
+      "sort_order": 7
+    },
+    {
+      "id": "98a90319-fb2e-5929-b0fc-6ef302d38e01",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "offering",
+      "title": "봉헌",
+      "sort_order": 8
+    },
+    {
+      "id": "02e66980-79f6-537a-aeee-419ccaed0084",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "announcements",
+      "title": "광고",
+      "sort_order": 9
+    },
+    {
+      "id": "f257cbb0-f986-51fc-9a03-a6469fbc4dd8",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "sending",
+      "title": "파송",
+      "sort_order": 10
+    },
+    {
+      "id": "4de0a21d-2e34-5209-b61f-6a2361f16585",
+      "service_id": "c45b4cec-042c-457c-9cf2-ad6db212dee9",
+      "section_key": "fellowship",
+      "title": "교제",
+      "sort_order": 11
+    }
+  ],
+  "elements": [
+    {
+      "id": "7aa091b7-c3cb-47bd-ac1d-2099042175b0",
+      "section_id": "e03a2744-29fc-42e3-92d6-150b5cf49587",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "김석범 목사",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "72a46f59-a545-48a5-9ce6-bc9923d263cf",
+      "section_id": "e03a2744-29fc-42e3-92d6-150b5cf49587",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "830ae883-079c-483c-827e-afca5d969020",
+      "section_id": "3889813d-20d8-4e4d-a80d-34d9c6060343",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "eb71b1fb-b101-55fc-8385-791c932fc4e0",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d505032d-45bc-4761-a613-626259154066",
+      "section_id": "3889813d-20d8-4e4d-a80d-34d9c6060343",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d17d9818-2f90-500c-a718-70041f9880dc",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5041d34b-4cca-48e1-9df0-0dc3885a183f",
+      "section_id": "7b33d525-deaa-47e9-a32d-bfaf998e6a30",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "바울의 소원",
+      "body": "",
+      "person": "김석범 목사님",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "08b156d7-fe1f-4019-a12d-16e938c5b6f7",
+      "section_id": "b5bea1db-01da-4fa8-bac8-57ac768b7a3a",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "9dd5c8fc-487f-415a-b11c-0f91ad7e5a91",
+      "section_id": "b07c986a-8992-413c-9f4b-56eb8955ef86",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "79b2f86d-13bc-4a1c-941f-e29eb4ec4487",
+      "section_id": "3889813d-20d8-4e4d-a80d-34d9c6060343",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "1caeb521-54e3-58e4-94ef-6dfd5f103b7c",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "dfd521d4-b10d-4801-8d22-93385ab8549f",
+      "section_id": "59021317-72b2-4ff0-8d2a-2c88c98162e7",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김윤민 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "f173be66-3ba3-4bfb-8241-92e628c3cc1e",
+      "section_id": "f3747662-deb2-4f0b-aece-241cd1107ccf",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "8f55643a-b1f8-4e7c-b49c-3d6d2c590de6",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d11602e0-77d7-4888-bf33-56ae16c6bcf2",
+      "section_id": "f3747662-deb2-4f0b-aece-241cd1107ccf",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "772fbb7b-767b-463f-8f95-39fc4599d655",
+      "section_id": "3889813d-20d8-4e4d-a80d-34d9c6060343",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "0d12e5a3-1842-5bd8-af20-875e051debce",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2e8414a5-20d3-40de-8d36-03dfa1ec1ef6",
+      "section_id": "1c00f20a-40b6-4610-9ff9-525f297bbd7a",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "b5175103-be41-59a6-a176-d698491ea4f7",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "f5cf8c36-04bd-4089-a816-498886f19671",
+      "section_id": "c42913ce-9a8f-4264-a682-b5a12655a7a0",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "행 28:30–31",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 28:30–31"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 28:30–31"
+    },
+    {
+      "id": "1215ea35-380a-4e44-8fed-4a57a947ce14",
+      "section_id": "1c00f20a-40b6-4610-9ff9-525f297bbd7a",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "b348cfb4-5ed4-550d-81df-979dd482b480",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "a1bfedb0-f3c8-44f6-8ebe-cfa0c4295de6",
+      "section_id": "1c00f20a-40b6-4610-9ff9-525f297bbd7a",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "445353c6-0ef1-5bd5-b5f6-accf61cb7216",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5bf4044f-c8e4-45e6-80f2-95e9bca6ebce",
+      "section_id": "0594d1a4-19b0-4577-b869-5a789c853c61",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5e8e63b2-36e4-4ec4-8c2f-56633afb6fcd",
+      "section_id": "0594d1a4-19b0-4577-b869-5a789c853c61",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "76b07683-77ef-4ced-b769-5430f525ecd8",
+      "section_id": "94aff3a1-98cc-4233-9255-85c435613994",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6bb780fe-961a-4b49-8b18-3d25e7246a3d",
+      "section_id": "7b33d525-deaa-47e9-a32d-bfaf998e6a30",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "고후 13:4; 행 28:30–31; 왕상 21:1",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "고후 13:4",
+          "행 28:30–31",
+          "왕상 21:1"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "고후 13:4"
+    },
+    {
+      "id": "1291ed2d-e755-46c8-a2e3-e3d8b22787e2",
+      "section_id": "e03c28a8-2d0a-44a6-a156-3de553bf0009",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b19875cb-54a1-4732-b836-d1b0fd941fb7",
+      "section_id": "e44dcdcd-0b05-4e61-bce0-a4751d338de8",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "교회소식"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "382fb419-e64f-4667-971d-243f57e1b2a5",
+      "section_id": "0904a2eb-bbcc-44a1-abb0-15822c5bfccf",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "98117c24-8e27-41f3-9f14-6d0b29639621",
+      "section_id": "b6adb3d8-909f-4925-b47f-20ee55a4e355",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "8200a5fa-5385-49ae-a0ef-5f6ac14ae906",
+      "section_id": "e375044f-b1e9-4ecb-83ff-a61bdcabfd16",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "4163bb2c-d631-4ffb-acb7-2a4dc3536faa",
+      "section_id": "6eda5586-bd1b-43f4-bb48-bd218e052cdd",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "왕하 2:9; 왕상 19:19; 요 2:5; 요 6:9; 마 6:6; 눅 6:38; 고전 12:31",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "왕하 2:9",
+          "왕상 19:19",
+          "요 2:5",
+          "요 6:9",
+          "마 6:6",
+          "눅 6:38",
+          "고전 12:31"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "왕하 2:9"
+    },
+    {
+      "id": "0fec2da2-8498-4be9-bbea-e37f60142b45",
+      "section_id": "94aff3a1-98cc-4233-9255-85c435613994",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "18cdc6ef-59c5-5f4c-b594-d3f1eaad0e7b",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "0cb5fbb0-b55a-4133-b879-5aea6b3c7975",
+      "section_id": "603ef4db-8313-434b-9652-94a141786806",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김윤서 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "be6bb8ec-a8f4-4233-a8dd-ab9ebd3fc7ec",
+      "section_id": "6eda5586-bd1b-43f4-bb48-bd218e052cdd",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "왕하 4:1–7",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "왕하 4:1–7"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "왕하 4:1–7"
+    },
+    {
+      "id": "75eb3b45-4dca-4647-81fe-1522750b781d",
+      "section_id": "b6adb3d8-909f-4925-b47f-20ee55a4e355",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "94acdace-b077-4739-a7ae-e31f45da393f",
+      "section_id": "1c00f20a-40b6-4610-9ff9-525f297bbd7a",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "1b37c6a3-b4e4-514c-a5fe-34d8c8c86a7e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c8d1cc1a-c378-43de-be6b-c0a427bb979b",
+      "section_id": "98f548fc-8f82-4dd2-a52a-a3014d7958d1",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "왕하 4:1–7",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "왕하 4:1–7"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "왕하 4:1–7"
+    },
+    {
+      "id": "20fa4e34-b4df-426d-ac13-ee0b42ed80be",
+      "section_id": "6eda5586-bd1b-43f4-bb48-bd218e052cdd",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "말도 안 되는 믿음",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "09359e24-4799-41cf-8d73-9bab2d06e668",
+      "section_id": "e375044f-b1e9-4ecb-83ff-a61bdcabfd16",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "ab74866d-4df2-50f1-a0aa-09b3475fad4d",
+      "section_id": "4c21aac2-3f94-5a7e-b562-d66c65d22cb2",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "138a4873-e84b-4746-b28b-e4d1cb316451",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "65f4c70a-a421-5e44-afec-379ad06b8a3e",
+      "section_id": "98e44116-231f-5bb0-9c82-1cc6be764efa",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "aa7484da-261d-55c4-8a53-a202c173e2d6",
+      "section_id": "4c21aac2-3f94-5a7e-b562-d66c65d22cb2",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d4b67302-292a-5047-98c9-1493f8e6846c",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6bb9fc8f-935a-5245-a0e0-86c30b0bc0fb",
+      "section_id": "68541151-e69f-5aed-aa56-eeaf8888b391",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김하은 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "a87481b4-75c7-5c1e-9da6-d2a0b59c4de8",
+      "section_id": "4c21aac2-3f94-5a7e-b562-d66c65d22cb2",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "0743bbe5-b183-4e81-aac3-083d9ade1804",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "9e4ffe2f-fbee-519f-ba1e-54edbba0c37f",
+      "section_id": "c900564b-2439-585d-8fab-4c63d8e2006f",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "창 41:38; 민 27:18; 단 4:8; 잠 22:29; 출 4:20; 요 10:7; 창 39:6; 삼상 16:14, 23",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "창 41:38",
+          "민 27:18",
+          "단 4:8",
+          "잠 22:29",
+          "출 4:20",
+          "요 10:7",
+          "창 39:6",
+          "삼상 16:14",
+          "삼상 16:23"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "창 41:38"
+    },
+    {
+      "id": "a5747cfb-fe48-5a97-8d56-d9155337423b",
+      "section_id": "4c21aac2-3f94-5a7e-b562-d66c65d22cb2",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "5a6479e2-f86d-56c6-bea2-5655c07b1f77",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "bbfce6e8-4488-5416-b4cf-56c0ee22d344",
+      "section_id": "363ad768-e91d-599a-8f62-8edc28fe5c7c",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "삼상 16:6–13",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "삼상 16:6–13"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "삼상 16:6–13"
+    },
+    {
+      "id": "a0500155-ac44-5b45-a6cb-244fc778586d",
+      "section_id": "c900564b-2439-585d-8fab-4c63d8e2006f",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "여호와의 영에 감동된 사람",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "9d4ffc9c-d419-5672-a3c7-ed3c35b4f908",
+      "section_id": "c900564b-2439-585d-8fab-4c63d8e2006f",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "삼상 16:6–13",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "삼상 16:6–13"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "삼상 16:6–13"
+    },
+    {
+      "id": "69c9ee87-3555-5a3b-a0c4-d7d9c8d17c77",
+      "section_id": "6fdc4cbb-b13c-50e7-a9d6-2ca59ba187db",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c2000f1d-55c9-4d2a-ab68-4de81106f6a8",
+      "section_id": "7b33d525-deaa-47e9-a32d-bfaf998e6a30",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "행 28:30–31",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 28:30–31"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 28:30–31"
+    },
+    {
+      "id": "f1c09875-93ea-52eb-85ad-0ccdf5739dc9",
+      "section_id": "e44dcdcd-0b05-4e61-bce0-a4751d338de8",
+      "sort_order": 2,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 여름 수련회 – 안흥교회 여름성경학교가 일주일 후 시작됩니다!\n일시: 8월 2일(주일)–5일(수)\n장소: 충남 태안 안흥교회\n교재: 파이디온선교회 ‘신나는 성경탐험 구약’\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "",
+      "person": "박지훈 서기",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "9c86e617-cbca-4107-aa8a-d87c6048fa0f",
+      "section_id": "41b76743-e318-4308-a9cf-ab260bab9833",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 청년부 여름 수련회 — ‘안흥교회 여름성경학교’가 오늘 시작됩니다!\n일시: 8월 2일(주일)–5일(수)\n장소: 충남 태안 안흥교회\n교재: 파이디온선교회 ‘신나는 성경탐험 구약’\n2. 돌아오는 금요일 저녁에 온세대 월삭예배가 있습니다.\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 청년부 여름 수련회 — ‘안흥교회 여름성경학교’가 오늘 시작됩니다!\n2. 돌아오는 금요일 저녁에 온세대 월삭예배가 있습니다.\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b79c525c-baaa-510e-95a2-b92013864d60",
+      "section_id": "38931ca0-1b06-563a-9130-d51cbb15fb24",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "0f055933-4b74-5d35-a1e3-eff33e64f09f",
+      "section_id": "025073f9-c1e0-595d-bcfd-a4bf588c2f89",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "6d223a7a-bfc6-5467-b26a-7240cab81444",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "11055c59-9b1e-538f-b537-20914a3c858d",
+      "section_id": "025073f9-c1e0-595d-bcfd-a4bf588c2f89",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "b79023af-7632-5c6e-8a33-30b4f0e6a658",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "7385eb9e-0f01-56ee-88b2-dd1c362c55ce",
+      "section_id": "1f9fcc14-1a74-577e-af52-8d70f861ded8",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "Extension",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "7285ea0b-e72c-5bc1-8bb6-142fb0408b57",
+      "section_id": "1f9fcc14-1a74-577e-af52-8d70f861ded8",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "행 12:1–5",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 12:1–5"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 12:1–5"
+    },
+    {
+      "id": "fce7b191-1a99-5ec1-b3db-5373ff05ad91",
+      "section_id": "0199db50-1d23-53fa-a950-3afcb8f284a4",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6e309b44-f1a1-538c-9b4c-3c966131b02c",
+      "section_id": "3389ee1f-041f-52f3-a71f-84e9142abf07",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "71309ffd-691f-5513-84f5-d4e5f2f50f91",
+      "section_id": "3389ee1f-041f-52f3-a71f-84e9142abf07",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2564dd41-8740-54e9-8c23-ae438f92ec89",
+      "section_id": "a61f1aa1-b06a-52e5-aa64-863f9f71ab69",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "e6023465-8cb6-440b-8534-239ecf062aa9",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2b6c1f98-9de3-5d2e-9169-de5076d22e8c",
+      "section_id": "a7dd0242-34d2-51be-9620-5d5c9f1a92c2",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "27060a93-5d6f-54b5-a2ca-0ea37b5c44cf",
+      "section_id": "00cd45ed-1624-53dd-a926-33af25805f8d",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2264d888-af15-5016-8920-7730fdcf8d24",
+      "section_id": "a61f1aa1-b06a-52e5-aa64-863f9f71ab69",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2e6c2451-760f-5201-946d-156308958df1",
+      "section_id": "a7dd0242-34d2-51be-9620-5d5c9f1a92c2",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "assignee",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "10055ac6-7349-5862-9ee0-b8e0c450bb16",
+      "section_id": "025073f9-c1e0-595d-bcfd-a4bf588c2f89",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "de62d82e-e0bd-50ad-9c10-1ea2d9e4e1ea",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "12055dec-c2f3-5ebc-a4e7-2706d0285004",
+      "section_id": "025073f9-c1e0-595d-bcfd-a4bf588c2f89",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "ca4180ed-2b43-47e4-9c87-2f9c6b7af5eb",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c2a7640f-1dbd-55c7-a6d5-e46562f67dbf",
+      "section_id": "56db025c-ace1-5078-9ceb-5a1ab16b8a8c",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "0a9fc3ed-4ff7-5a51-8bb6-0963b76bd77d",
+      "section_id": "ebf056b5-f9f4-5075-bbb8-7edfec187b4d",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "행 12:1–5",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 12:1–5"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 12:1–5"
+    },
+    {
+      "id": "680035b2-80d7-56fc-b2be-d69a9711bc2e",
+      "section_id": "5f63530a-1c99-5166-83a1-b2d4edd9e5ba",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "979896e1-c2c8-54c0-b20c-937b4b0682ec",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "28060c26-8544-5fe2-9fc6-d79001480f46",
+      "section_id": "00cd45ed-1624-53dd-a926-33af25805f8d",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "90955598-e122-52f6-88bf-fbd0becc2804",
+      "section_id": "882b75aa-c380-5b76-8398-68fc8c5fef92",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "박지훈 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "7185e878-bf57-5094-b55f-ac7e2a54c0e0",
+      "section_id": "1f9fcc14-1a74-577e-af52-8d70f861ded8",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "마 18:19–20; 눅 18:1–8; 벧전 1:22; 눅 22:4; 왕하 5:4",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "마 18:19–20",
+          "눅 18:1–8",
+          "벧전 1:22",
+          "눅 22:4",
+          "왕하 5:4"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "마 18:19–20"
+    },
+    {
+      "id": "6600328c-d081-5d56-8612-07388b3a2740",
+      "section_id": "5f63530a-1c99-5166-83a1-b2d4edd9e5ba",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "c2266139-2582-5d65-84d6-5fb439071449",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6927cb55-a34d-5501-81a5-68630becfdf5",
+      "section_id": "c842ec79-e1dd-5b9d-b971-867f257b0289",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c3a765a2-a63e-5440-bd2c-4c16e8e24836",
+      "section_id": "56db025c-ace1-5078-9ceb-5a1ab16b8a8c",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "f9e7acd8-426d-59ee-b0d8-1c606d424e2c",
+      "section_id": "0199db50-1d23-53fa-a950-3afcb8f284a4",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "7b176388-a4a6-5f6a-8d62-47749ebe21b7",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "ef5bab87-2221-585d-aaf7-709b2451a7d3",
+      "section_id": "ebb456f9-6071-5915-a2c3-b317ee8d7c19",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김음파 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "735e02f7-d797-5ba7-9fe0-229501829ac7",
+      "section_id": "548d40a3-7677-56f5-b54c-4cbb47c39e67",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body"
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "optional_citation_empty",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d6528230-e085-502e-9b7c-d928d3d8ca6c",
+      "section_id": "37d4e2b9-2e8f-572d-acf1-f8c75c0b0e81",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "a6f62490-ed72-5d06-b5fc-e7085cc56f04",
+      "section_id": "09b937ea-d559-5066-9794-6064b716376a",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d95286e9-b8b0-5501-9e80-103b659c29d1",
+      "section_id": "37d4e2b9-2e8f-572d-acf1-f8c75c0b0e81",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "97793b31-c272-4758-a329-9b932cd8d6c2",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "60639b69-5090-5ce5-9a67-34c778cbff89",
+      "section_id": "00f0fb07-fb7c-5e7d-bc46-67ebab98a273",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "Get Lost",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목",
+        "slotKey": "sermon.title"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "46ff26e2-ddf0-580c-8bed-ba4200f6ab36",
+      "section_id": "1e300ebe-41ce-5a08-a922-bdde997ebb42",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d07c1c50-4c67-52ee-a41d-0bd85e949f6c",
+      "section_id": "c62da8c0-39ff-5542-a9a8-60c4bbb35314",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "행 24:24–27",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 24:24–27"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 24:24–27"
+    },
+    {
+      "id": "755e061d-87ed-554d-8c8c-f1f70d5a2fb5",
+      "section_id": "548d40a3-7677-56f5-b54c-4cbb47c39e67",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "틈",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "725e0164-afc2-507a-8989-bae47b96d050",
+      "section_id": "548d40a3-7677-56f5-b54c-4cbb47c39e67",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "행 24:24–27",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 24:24–27"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 24:24–27"
+    },
+    {
+      "id": "a9f62949-c59d-51d9-b900-1e1bee88ce69",
+      "section_id": "09b937ea-d559-5066-9794-6064b716376a",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "78db0a35-00c0-5ccb-b7f1-b03d4cba7489",
+      "section_id": "bcf4ad67-9f38-569b-8517-8a514d85fcaf",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "75db057c-8941-5b44-8e48-17eebaf71524",
+      "section_id": "bcf4ad67-9f38-569b-8517-8a514d85fcaf",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "69003745-a8ac-5229-8915-3e4b1cfd86a5",
+      "section_id": "5f63530a-1c99-5166-83a1-b2d4edd9e5ba",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "b9a653f8-eb04-561d-8fb7-bd05cd7e2ca3",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "63002dd3-5902-5bcf-b5c2-0dad28d51b93",
+      "section_id": "5f63530a-1c99-5166-83a1-b2d4edd9e5ba",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "a87a20ce-ae0a-5b04-baaa-810a752343a1",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "3c4da882-ba93-5712-ba50-6ac85c03ff1a",
+      "section_id": "c9f95bf2-1fd5-5c7e-bbe9-abd45bfe801a",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "삼상 18:27–30",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "삼상 18:27–30"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독",
+        "slotKey": "word.body"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "삼상 18:27–30"
+    },
+    {
+      "id": "0effce4d-554b-579d-9451-973f522faa6d",
+      "section_id": "6ec59a91-9509-5261-92c7-5c036bba10d1",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 교회에서 진행 중인 '업둥이 전도'에 청년들도 많은 신청과 참여 바랍니다!\n- 1인 1태신자 카드 작성하여 다음 주일까지 사무실로 제출!\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 교회에서 진행 중인 '업둥이 전도'에 청년들도 많은 신청과 참여 바랍니다!\n- 1인 1태신자 카드 작성하여 다음 주일까지 사무실로 제출!\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "24308565-b4c3-5325-8560-a0072d989945",
+      "section_id": "5c36bc59-d8bb-5f99-8dd8-953b0372c339",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 다음 주 청년부 예배는 교육사역부 제자헌신예배가 있는 관계로, 오후예배(3층 본당)로 연합하여 드립니다.\n3. 청년부 여름 수련회 – 안흥교회 여름성경학교 공지합니다. 일시: 8월 2일(주일)–5일(수) 장소: 충남 태안 안흥교회 교재: 파이디온선교회 ‘신나는 성경탐험 구약’\n4. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n5. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "",
+      "person": "박지훈 서기",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "bce3d578-23ca-53b2-8570-143c9de4d024",
+      "section_id": "3405eae4-8e7f-5106-9126-e760658d8e00",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 다음 주 청년부 예배는 '야외예배'로 드립니다.\n- 일시: 8월 30일 주일 오후 1시 (교회 차량으로 이동)\n- 장소: 더현대 서울 (서울특별시 영등포구)\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 다음 주 청년부 예배는 '야외예배'로 드립니다.\n- 일시: 8월 30일 주일 오후 1시 (교회 차량으로 이동)\n- 장소: 더현대 서울 (서울특별시 영등포구)\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "614fe64c-82a9-5a76-86e6-88c89f7fd2e0",
+      "section_id": "f2391f34-d368-58fa-8466-11d43cfc0d30",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "사무엘상 22:1–5",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "사무엘상 22:1–5"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독",
+        "slotKey": "word.body"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "사무엘상 22:1–5"
+    },
+    {
+      "id": "5d6396b0-7865-5812-9763-fdb4e708a024",
+      "section_id": "00f0fb07-fb7c-5e7d-bc46-67ebab98a273",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "사무엘상 22:1–5",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "사무엘상 22:1–5"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문",
+        "slotKey": "sermon.scripture"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "사무엘상 22:1–5"
+    },
+    {
+      "id": "5e639843-a03a-533f-adba-65656cf46a9b",
+      "section_id": "00f0fb07-fb7c-5e7d-bc46-67ebab98a273",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "사무엘상 23:1–5",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "사무엘상 23:1–5"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절",
+        "slotKey": "sermon.citation.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "사무엘상 23:1–5"
+    },
+    {
+      "id": "c226fc00-edc2-592e-87f0-a3285e5a489c",
+      "section_id": "71d29ccc-0046-5e5a-83f8-6614c8b821a8",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임",
+        "slotKey": "fellowship.person"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "1473f9fd-3be6-508f-a968-4acc2af93b56",
+      "section_id": "6d7ee058-03bf-5822-a4cc-2dfb2a9dd31f",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "1549d21e-a1e2-51ae-93d5-a8887c12a48f",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2a0ce976-4a43-511f-9c93-27ac15a62f9e",
+      "section_id": "6d7ee058-03bf-5822-a4cc-2dfb2a9dd31f",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "f28c80c8-f1b3-4fdb-a202-2614d706a349",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "1e89a204-32b8-59a6-9293-96b8fdf25b08",
+      "section_id": "147a3f98-6766-52a2-89b5-6a446fcb42bc",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d41cb82a-302a-528c-b0e5-8582e60d696e",
+      "section_id": "984534b6-e406-5888-b763-991e6ad72b8a",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "455cffaf-cd6e-59dd-b0d2-4adb19da4feb",
+      "section_id": "a089c8f1-3dea-5c95-83ab-3157d721d4e1",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "assignee_empty",
+        "required": true,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e1287fcf-bf08-563d-8a1b-073b1e51b59b",
+      "section_id": "a0e3b6d0-fbe5-5d92-890f-b2e49d445e54",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "392138f5-f8db-5839-8866-80bd4c82686b",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2",
+        "slotKey": "praise.song.2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d82af754-5863-5cd6-848c-b07820428918",
+      "section_id": "dce640e2-e44f-54e6-ac57-4f1474068442",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "song_empty",
+        "required": true,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "db2afc0d-308f-51a9-878f-e78bb205e87d",
+      "section_id": "dce640e2-e44f-54e6-ac57-4f1474068442",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "song_empty",
+        "required": true,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "da2afa7a-08ba-567c-b139-7fda2c1a1e06",
+      "section_id": "dce640e2-e44f-54e6-ac57-4f1474068442",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "song_empty",
+        "required": true,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d52af29b-e0e5-5b4f-b43c-b6edbddd7d6b",
+      "section_id": "dce640e2-e44f-54e6-ac57-4f1474068442",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "song_empty",
+        "required": true,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "7dd9e588-555f-5d6e-91c7-c118ff5d20d4",
+      "section_id": "b5bbb508-1db4-53c2-8eea-5004870415ac",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body"
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "scripture_body_empty",
+        "required": true,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e98990f5-aa8e-59cd-a5a1-e5b7e8647fbd",
+      "section_id": "24598eeb-d4e6-5775-bf99-c97bcc3fb71f",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e6898c3c-d263-54fa-a29e-aea456a12058",
+      "section_id": "24598eeb-d4e6-5775-bf99-c97bcc3fb71f",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body"
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "scripture_body_empty",
+        "required": true,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e7898dcf-fa37-5027-b8f5-1655dc8ceacf",
+      "section_id": "24598eeb-d4e6-5775-bf99-c97bcc3fb71f",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body"
+      },
+      "source_ref": {
+        "label": "인용 구절"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "optional_citation_empty",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "469f0661-66e4-5581-8679-8e7b21192bb9",
+      "section_id": "4277c741-5025-5dad-bcdf-cb07c6379779",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "missing",
+        "reason": "song_empty",
+        "required": true,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "439f01a8-8eb9-50ae-8376-57688f55cc54",
+      "section_id": "4277c741-5025-5dad-bcdf-cb07c6379779",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "ba2e0978-0e19-5886-bc24-1fc8bd73251c",
+      "section_id": "1efe85a2-f7ce-59e6-9baa-5f2421c9a832",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "bd2e0e31-e644-5d59-bf27-56db4f368481",
+      "section_id": "1efe85a2-f7ce-59e6-9baa-5f2421c9a832",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "20b9fe1d-c694-5a4b-8447-29fd79442601",
+      "section_id": "2e82fbbf-3e2a-5c1b-8e5a-6f11b04de417",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "1db9f964-4f15-58c4-9a9d-91aee780c69c",
+      "section_id": "2e82fbbf-3e2a-5c1b-8e5a-6f11b04de417",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "38ec71bc-66c4-5626-9302-927887586370",
+      "section_id": "84660980-edcf-5922-a76f-5a04289a3954",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5340fdaf-2af2-503d-aea4-9e5a637747a6",
+      "section_id": "6d7ee058-03bf-5822-a4cc-2dfb2a9dd31f",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "a5a6524d-ce69-5404-907a-c0330eaf4bb8",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "1dda9fbf-e6ed-55a3-b9ae-05d443098e9e",
+      "section_id": "9296c730-c5c7-59f8-85a1-d55d5f00571b",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "행 27:22–26",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 27:22–26"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 27:22–26"
+    },
+    {
+      "id": "52b5a03d-ec80-5973-9b30-4b78f9ed2dc5",
+      "section_id": "6d7ee058-03bf-5822-a4cc-2dfb2a9dd31f",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "c0be476e-29ae-4951-9f81-c9cc600bb52e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c035ec4e-1731-530c-a0c0-5e5f62b6fd2a",
+      "section_id": "cdc57fea-86f3-5da7-925a-37cafa5fc266",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "행 27:22–26",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "행 27:22–26"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "행 27:22–26"
+    },
+    {
+      "id": "d88a6aef-6a73-51b7-b8f0-709dcd8baf37",
+      "section_id": "3cfa3e36-327a-549e-bffb-94e4d691730e",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "99956c17-991d-55ea-ab7d-2e1d071ee7a8",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4",
+        "slotKey": "praise.song.4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "3c5736d4-3219-53bb-ad83-86cbe9824764",
+      "section_id": "9296c730-c5c7-59f8-85a1-d55d5f00571b",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "기적이 상식이 되는 믿음",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5f7f370d-5fff-5033-90ae-6b655222eca1",
+      "section_id": "ecdeeb75-3d2c-56d9-8782-0deba8da5d65",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "잠언 21:9; 열왕기하 8:18, 27; 사무엘상 19:18; 출애굽기 33:3, 1–3",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "잠언 21:9",
+          "열왕기하 8:18",
+          "열왕기하 8:27",
+          "사무엘상 19:18",
+          "출애굽기 33:3",
+          "출애굽기 33:1–3"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절",
+        "slotKey": "sermon.citation.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "잠언 21:9"
+    },
+    {
+      "id": "cb57b3cc-4f0d-5476-a80c-f8388460ec00",
+      "section_id": "f430b95d-e7a3-59c5-8c1a-5e37a0107c9d",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도",
+        "slotKey": "response.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e6ab12f0-6061-5ea0-b4f5-ac92fda7cf50",
+      "section_id": "978aaf3c-0d3b-5d24-9a4c-0ace2e413b34",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경",
+        "slotKey": "faith.creed"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d4a54f61-4c75-5b51-a23b-3c4b4cbdf359",
+      "section_id": "73bf4203-97f3-5471-9c5b-1f271e11ace7",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "서영윤 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도",
+        "slotKey": "prayer.representative"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e2288162-e6dd-516a-8717-d028a43d8012",
+      "section_id": "a0e3b6d0-fbe5-5d92-890f-b2e49d445e54",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "3a3eb0d9-4a2e-5cf9-9c43-da90215ae6af",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1",
+        "slotKey": "praise.song.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e0287e3c-9733-5b10-b3c4-9f8a9865eb24",
+      "section_id": "a0e3b6d0-fbe5-5d92-890f-b2e49d445e54",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "157c083d-a892-520d-b4cd-549f432e449c",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3",
+        "slotKey": "praise.song.3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "df287ca9-ae05-594b-b6c7-d69d127a20ad",
+      "section_id": "a0e3b6d0-fbe5-5d92-890f-b2e49d445e54",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "a5a6524d-ce69-5404-907a-c0330eaf4bb8",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4",
+        "slotKey": "praise.song.4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5d7f33e7-1055-59d9-bd5b-3ac7464b57b3",
+      "section_id": "ecdeeb75-3d2c-56d9-8782-0deba8da5d65",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "누구와 함께 있는가?",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목",
+        "slotKey": "sermon.title"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "5e7f357a-382a-5506-ba58-03b4cc37222a",
+      "section_id": "ecdeeb75-3d2c-56d9-8782-0deba8da5d65",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "삼상 18:27–30",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "삼상 18:27–30"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문",
+        "slotKey": "sermon.scripture"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "삼상 18:27–30"
+    },
+    {
+      "id": "93fa9757-44a1-55e5-b28a-f14bfe720bfb",
+      "section_id": "e172f11f-5310-5b19-9e19-e037d8477feb",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "4788a925-aa92-58b4-9a14-9f1cd9335fdb",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양",
+        "slotKey": "response.song"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "94fa98ea-6c75-5112-af87-ba38845dd672",
+      "section_id": "e172f11f-5310-5b19-9e19-e037d8477feb",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도",
+        "slotKey": "response.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "a5115606-912c-512a-b0f5-24d8c10d3dc6",
+      "section_id": "782c9320-0227-5fb2-87e8-62d4b3d6e0f4",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양",
+        "slotKey": "offering.praise"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "a4115473-6957-55fd-b3f8-5beb3b21734f",
+      "section_id": "782c9320-0227-5fb2-87e8-62d4b3d6e0f4",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도",
+        "slotKey": "offering.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "bc15a753-c2d8-5071-96cf-b13750f1f9c7",
+      "section_id": "60dae857-aade-57fd-881b-870b165cdac3",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n3. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n3. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고",
+        "slotKey": "announcements.department"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b2fe0273-1cee-5857-8f76-6b6d7478f91b",
+      "section_id": "d9a76b45-7b4f-533f-9b4f-b661ecd28889",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양",
+        "slotKey": "sending.doxology"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b3fe0406-a56f-56d0-a5cc-d31efa64c392",
+      "section_id": "d9a76b45-7b4f-533f-9b4f-b661ecd28889",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도",
+        "slotKey": "sending.benediction"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "e3220eb6-9df3-552a-aa71-61282f934b56",
+      "section_id": "27103bda-11ec-512e-b531-641405e7cb32",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임",
+        "slotKey": "fellowship.person"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "61ff29ed-a507-54a5-89c5-ab478699e3fd",
+      "section_id": "e3a59731-f1b7-5f19-9315-b67b49a90001",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "7405aec9-5f9b-5dfd-b840-3337279e89c1",
+      "section_id": "dccb1d35-f7d4-58c1-9d69-410b77fb8a0d",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 추석 이후, 다음 주일부터 셀 구성이 개편됩니다.\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 추석 이후, 다음 주일부터 셀 구성이 개편됩니다.\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고",
+        "slotKey": "announcements.department"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "926efef1-da5b-5eb3-b383-916d3bcc7cbd",
+      "section_id": "ffa2101b-b4c2-5993-95b0-14615267525b",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양",
+        "slotKey": "sending.doxology"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "47d582be-206c-5524-a8e7-52923da2646a",
+      "section_id": "db677b22-c531-5110-86e1-e0ceaf49c33e",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경",
+        "slotKey": "faith.creed"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d38a6310-e1f2-533e-8940-6a285f4f0e9c",
+      "section_id": "3cfa3e36-327a-549e-bffb-94e4d691730e",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "758c8199-2faa-5001-9d11-2f809239b4c1",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1",
+        "slotKey": "praise.song.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d68a67c9-ba1d-5811-8c43-a13bf1126e01",
+      "section_id": "3cfa3e36-327a-549e-bffb-94e4d691730e",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "f2df93ed-94fd-5f22-8186-a010afec83a0",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2",
+        "slotKey": "praise.song.2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d58a6636-9248-5ce4-b5ed-398a6b26a38a",
+      "section_id": "3cfa3e36-327a-549e-bffb-94e4d691730e",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "8764d2a6-0e5a-510e-b463-089bda18b30b",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3",
+        "slotKey": "praise.song.3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "ce57b885-2739-5949-ab10-2f4b16244b65",
+      "section_id": "f430b95d-e7a3-59c5-8c1a-5e37a0107c9d",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "b92fdc27-fc84-50a8-8fa2-9fba39a39382",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양",
+        "slotKey": "response.song"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "241fd404-0b4b-540e-9192-bed87eb53a20",
+      "section_id": "28c22736-2d19-5b9e-8486-44d4ac6ab11e",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양",
+        "slotKey": "offering.praise"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "271fd8bd-e376-58e1-9495-f5eb10789985",
+      "section_id": "28c22736-2d19-5b9e-8486-44d4ac6ab11e",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도",
+        "slotKey": "offering.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "8f6efa38-62dc-5d2c-89d9-f91eaa091d58",
+      "section_id": "ffa2101b-b4c2-5993-95b0-14615267525b",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도",
+        "slotKey": "sending.benediction"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6436f191-6f63-5ad7-8e54-e88ecabf4f1f",
+      "section_id": "19421965-f3c2-5cbc-8cdd-cfb58901e6c5",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "50fa9009-05b3-5eed-b4d4-f11024ca87ab",
+      "section_id": "19421965-f3c2-5cbc-8cdd-cfb58901e6c5",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "db3540e8-b531-5a6c-84ee-8bfc8539f08f",
+      "section_id": "e24c0c5d-c2eb-5bb0-b613-f0d778ad52eb",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "42f54dab-6ac3-5a5b-9207-f6463de760fd",
+      "section_id": "ff1ba73a-e3a7-5ce8-84dc-5e9903e21618",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김유리 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "0d8cd92a-4663-5894-bfa5-9a41f892981d",
+      "section_id": "4c22d185-62a3-5a3c-bd56-3bc5784d2695",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "6ad15220-79b4-5b30-9e7e-7cadfc6b0d00",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "praise_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "f5de7638-3671-522c-adc4-df533c18237b",
+      "section_id": "242bce56-e963-5aea-a0da-3efc216bd93e",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "548aee82-4de6-5d54-80b5-a79120c67d7a",
+      "section_id": "4c22d185-62a3-5a3c-bd56-3bc5784d2695",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "01830624-3963-5171-b418-fa74731c12ab",
+      "section_id": "242bce56-e963-5aea-a0da-3efc216bd93e",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6300f1e6-b7ef-5120-8650-ee2c372063d5",
+      "section_id": "c1f374da-1d45-58f8-8a7c-81296501da08",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 여름 수련회 – 안흥교회 여름성경학교 공지합니다.\n일시: 8월 2일(주일)–5일(수)\n장소: 충남 태안 안흥교회\n교재: 파이디온선교회 ‘신나는 성경탐험 구약’\n3. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n4. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "",
+      "person": "박지훈 서기",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "14120ff1-0769-53a0-af15-f7b8abeeecc9",
+      "section_id": "1b2305cd-3605-502b-a828-51efadae6b46",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "33034e2d-2e85-55a3-99f9-086dcbc496b9",
+      "section_id": "5f1285c5-da97-5399-9912-e9233d740f2d",
+      "sort_order": 3,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "45de1823-c6ec-5eae-b224-0fe5779f05b5",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 3",
+        "slotKey": "praise.song.3"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "2c034328-17b3-5768-96f5-d15a22520d78",
+      "section_id": "5f1285c5-da97-5399-9912-e9233d740f2d",
+      "sort_order": 4,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "db449b77-c112-539e-9614-d5eccc213cf1",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 4",
+        "slotKey": "praise.song.4"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "88e72b69-9ac9-57a5-9db4-2bbf09ce8c21",
+      "section_id": "0cc82229-703b-5501-944c-38c3bfaf0459",
+      "sort_order": 1,
+      "element_type": "scripture_body",
+      "title": "사무엘상 21:10–15",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "사무엘상 21:10–15"
+        ]
+      },
+      "source_ref": {
+        "label": "성경봉독",
+        "slotKey": "word.body"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "사무엘상 21:10–15"
+    },
+    {
+      "id": "99bf4e0a-6c33-58ba-a32a-a44091d83862",
+      "section_id": "f9957278-4b09-5b12-a3d5-570cb7f52c74",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "Way Maker",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "설교 제목",
+        "slotKey": "sermon.title"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "98bf4c77-445e-5d8d-a62d-db530bec6deb",
+      "section_id": "f9957278-4b09-5b12-a3d5-570cb7f52c74",
+      "sort_order": 2,
+      "element_type": "scripture_body",
+      "title": "사무엘상 21:10–15",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "사무엘상 21:10–15"
+        ]
+      },
+      "source_ref": {
+        "label": "설교 본문",
+        "slotKey": "sermon.scripture"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "사무엘상 21:10–15"
+    },
+    {
+      "id": "97bf4ae4-1c89-5260-8fd7-73a28600a374",
+      "section_id": "f9957278-4b09-5b12-a3d5-570cb7f52c74",
+      "sort_order": 3,
+      "element_type": "scripture_body",
+      "title": "시편 34; 히브리서 4:15",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "scripture_body",
+        "scriptureReferences": [
+          "시편 34",
+          "히브리서 4:15"
+        ]
+      },
+      "source_ref": {
+        "label": "인용 구절",
+        "slotKey": "sermon.citation.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "scripture_body",
+        "required": false,
+        "inputMode": "scripture",
+        "elementType": "scripture_body"
+      },
+      "scripture_reference": "시편 34"
+    },
+    {
+      "id": "bb8d9124-2ea9-5a82-9e73-cadc811c53c0",
+      "section_id": "c2c41f34-7525-5476-a8ec-48408dc23590",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "ca91bc1c-97a1-5e64-9fd0-83ceec07ded2",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "결단찬양",
+        "slotKey": "response.song"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "be8d95dd-06d4-5f55-a177-01ef12dfb325",
+      "section_id": "c2c41f34-7525-5476-a8ec-48408dc23590",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "결단기도",
+        "slotKey": "response.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "fixed_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6fcc7cc7-82aa-58e9-bb09-df5fbc6c9e7b",
+      "section_id": "98a90319-fb2e-5929-b0fc-6ef302d38e01",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "봉헌찬양",
+        "slotKey": "offering.praise"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "70cc7e5a-aa7f-5416-b806-a84c425868f2",
+      "section_id": "98a90319-fb2e-5929-b0fc-6ef302d38e01",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "봉헌기도",
+        "slotKey": "offering.prayer"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c9493bfe-36c0-577c-b26f-c4ea2ff997ba",
+      "section_id": "f257cbb0-f986-51fc-9a03-a6469fbc4dd8",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "파송찬양",
+        "slotKey": "sending.doxology"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "c8493a6b-ae3f-5903-9c19-5d39aa0dcd43",
+      "section_id": "f257cbb0-f986-51fc-9a03-a6469fbc4dd8",
+      "sort_order": 2,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "김석범 목사",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "축도",
+        "slotKey": "sending.benediction"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6e6f7651-96c4-5e05-bc8a-9fbf3f8efbc9",
+      "section_id": "4de0a21d-2e34-5209-b61f-6a2361f16585",
+      "sort_order": 1,
+      "element_type": "plain_text",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title"
+      },
+      "source_ref": {
+        "label": "셀 모임",
+        "slotKey": "fellowship.person"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "raw_title",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b73d8ed6-743f-4a95-9127-123afdfb99e5",
+      "section_id": "b1701d17-2ef5-43c9-9418-8951119ff5ba",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "이지원 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도",
+        "slotKey": "prayer.representative"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "d81e53f3-3dba-53ef-b186-e0c5079e6d7b",
+      "section_id": "b0f4923f-0aa4-58e3-88b5-33b9ead53437",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "나는 전능하신 아버지 하나님, 천지의 창조주를 믿습니다.\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아 있는 자와 죽은 자를 심판하러 오십니다.\n나는 성령을 믿으며, 거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다. 아멘.",
+      "body": "",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "사도신경",
+        "slotKey": "faith.creed"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "6f1ff66c-ab16-573a-9292-f02c836b1ba0",
+      "section_id": "a9778c16-2e56-5692-a85a-8e2038ca2b16",
+      "sort_order": 1,
+      "element_type": "title_person",
+      "title": "",
+      "body": "",
+      "person": "이재희 청년",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "title_person"
+      },
+      "source_ref": {
+        "label": "대표기도",
+        "slotKey": "prayer.representative"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "title_person",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "title_person"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "31034b07-dedb-5f49-86a5-d7cfbfed01cb",
+      "section_id": "5f1285c5-da97-5399-9912-e9233d740f2d",
+      "sort_order": 1,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "e02fec61-c4ce-503a-a5b7-d3a97bd45707",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 1",
+        "slotKey": "praise.song.1"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "32034c9a-06b0-5a76-83a2-a0bc45d8cc42",
+      "section_id": "5f1285c5-da97-5399-9912-e9233d740f2d",
+      "sort_order": 2,
+      "element_type": "praise",
+      "title": "",
+      "body": "",
+      "person": "",
+      "song_id": "11791e68-fd9d-4317-8814-1eb549a94407",
+      "scripture_id": null,
+      "config": {
+        "elementType": "praise"
+      },
+      "source_ref": {
+        "label": "찬양 2",
+        "slotKey": "praise.song.2"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "song",
+        "required": false,
+        "inputMode": "lyrics_db",
+        "elementType": "praise"
+      },
+      "scripture_reference": ""
+    },
+    {
+      "id": "b70c3efc-15c6-538e-8794-1240a9a8c490",
+      "section_id": "02e66980-79f6-537a-aeee-419ccaed0084",
+      "sort_order": 1,
+      "element_type": "body",
+      "title": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n3. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "body": "오늘도 청년부 예배에 오신 여러분을 환영하고 축복합니다 :)\n1. 오늘 2부 활동은 셀 모임으로 진행합니다.\n2. 청년부 기도 모임(매주 토요일 오후 3시 / 1층 청년부실)에 많은 참여 바랍니다.\n3. 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",
+      "person": "",
+      "song_id": null,
+      "scripture_id": null,
+      "config": {
+        "elementType": "body"
+      },
+      "source_ref": {
+        "label": "광고",
+        "slotKey": "announcements.department"
+      },
+      "content_state": {
+        "state": "filled",
+        "reason": "liturgical_body",
+        "required": false,
+        "inputMode": "text",
+        "elementType": "body"
+      },
+      "scripture_reference": ""
+    }
+  ],
+  "songs": [
+    {
+      "id": "979896e1-c2c8-54c0-b20c-937b4b0682ec",
+      "title": "내 영혼은 안전합니다",
+      "hymn_no": null
+    },
+    {
+      "id": "138a4873-e84b-4746-b28b-e4d1cb316451",
+      "title": "주의 자비가 내려와",
+      "hymn_no": null
+    },
+    {
+      "id": "f28c80c8-f1b3-4fdb-a202-2614d706a349",
+      "title": "주 이름 찬양",
+      "hymn_no": null
+    },
+    {
+      "id": "ca4180ed-2b43-47e4-9c87-2f9c6b7af5eb",
+      "title": "아름다우신",
+      "hymn_no": null
+    },
+    {
+      "id": "e6023465-8cb6-440b-8534-239ecf062aa9",
+      "title": "주가 주 되심을",
+      "hymn_no": null
+    },
+    {
+      "id": "0743bbe5-b183-4e81-aac3-083d9ade1804",
+      "title": "너 근심 걱정 와도",
+      "hymn_no": null
+    },
+    {
+      "id": "8f55643a-b1f8-4e7c-b49c-3d6d2c590de6",
+      "title": "나는 일어섭니다",
+      "hymn_no": null
+    },
+    {
+      "id": "c0be476e-29ae-4951-9f81-c9cc600bb52e",
+      "title": "오직 주만이",
+      "hymn_no": null
+    },
+    {
+      "id": "d39e63a6-fcf7-5f86-9567-c0c5d7759e8e",
+      "title": "피난처 되시는 주 예수",
+      "hymn_no": null
+    },
+    {
+      "id": "db449b77-c112-539e-9614-d5eccc213cf1",
+      "title": "내 안에 가장 귀한 것",
+      "hymn_no": null
+    },
+    {
+      "id": "6ad15220-79b4-5b30-9e7e-7cadfc6b0d00",
+      "title": "나는 믿노라",
+      "hymn_no": null
+    },
+    {
+      "id": "99956c17-991d-55ea-ab7d-2e1d071ee7a8",
+      "title": "더 원합니다",
+      "hymn_no": null
+    },
+    {
+      "id": "8764d2a6-0e5a-510e-b463-089bda18b30b",
+      "title": "주께 가까이",
+      "hymn_no": null
+    },
+    {
+      "id": "c2266139-2582-5d65-84d6-5fb439071449",
+      "title": "내 모든 삶의 행동",
+      "hymn_no": null
+    },
+    {
+      "id": "7b176388-a4a6-5f6a-8d62-47749ebe21b7",
+      "title": "한라에서 백두까지 백두에서 땅끝까지",
+      "hymn_no": null
+    },
+    {
+      "id": "97793b31-c272-4758-a329-9b932cd8d6c2",
+      "title": "예수 예수 예수",
+      "hymn_no": null
+    },
+    {
+      "id": "1caeb521-54e3-58e4-94ef-6dfd5f103b7c",
+      "title": "감사함으로",
+      "hymn_no": null
+    },
+    {
+      "id": "e02fec61-c4ce-503a-a5b7-d3a97bd45707",
+      "title": "매일 매일",
+      "hymn_no": null
+    },
+    {
+      "id": "1549d21e-a1e2-51ae-93d5-a8887c12a48f",
+      "title": "낮은 자의 하나님",
+      "hymn_no": null
+    },
+    {
+      "id": "d4b67302-292a-5047-98c9-1493f8e6846c",
+      "title": "나 주님의 기쁨 되기 원하네",
+      "hymn_no": null
+    },
+    {
+      "id": "a87a20ce-ae0a-5b04-baaa-810a752343a1",
+      "title": "찬송의 옷을 주셨네",
+      "hymn_no": null
+    },
+    {
+      "id": "11791e68-fd9d-4317-8814-1eb549a94407",
+      "title": "이곳에서",
+      "hymn_no": null
+    },
+    {
+      "id": "de62d82e-e0bd-50ad-9c10-1ea2d9e4e1ea",
+      "title": "주와 같이 길 가는 것",
+      "hymn_no": "430"
+    },
+    {
+      "id": "4788a925-aa92-58b4-9a14-9f1cd9335fdb",
+      "title": "광야를 지나며",
+      "hymn_no": null
+    },
+    {
+      "id": "157c083d-a892-520d-b4cd-549f432e449c",
+      "title": "주의 친절한 팔에 안기세",
+      "hymn_no": "405"
+    },
+    {
+      "id": "6d223a7a-bfc6-5467-b26a-7240cab81444",
+      "title": "내 진정 사모하는",
+      "hymn_no": "88"
+    },
+    {
+      "id": "392138f5-f8db-5839-8866-80bd4c82686b",
+      "title": "구주의 십자가 보혈로",
+      "hymn_no": "250"
+    },
+    {
+      "id": "b348cfb4-5ed4-550d-81df-979dd482b480",
+      "title": "나의 안에 거하라",
+      "hymn_no": null
+    },
+    {
+      "id": "445353c6-0ef1-5bd5-b5f6-accf61cb7216",
+      "title": "하나님의 부르심",
+      "hymn_no": null
+    },
+    {
+      "id": "eb71b1fb-b101-55fc-8385-791c932fc4e0",
+      "title": "내 주 되신 주를 참 사랑하고",
+      "hymn_no": "315"
+    },
+    {
+      "id": "b92fdc27-fc84-50a8-8fa2-9fba39a39382",
+      "title": "예수의 길",
+      "hymn_no": null
+    },
+    {
+      "id": "5a6479e2-f86d-56c6-bea2-5655c07b1f77",
+      "title": "예배합니다",
+      "hymn_no": null
+    },
+    {
+      "id": "18cdc6ef-59c5-5f4c-b594-d3f1eaad0e7b",
+      "title": "나는 믿네",
+      "hymn_no": null
+    },
+    {
+      "id": "b79023af-7632-5c6e-8a33-30b4f0e6a658",
+      "title": "십자가를 참으신",
+      "hymn_no": null
+    },
+    {
+      "id": "a5a6524d-ce69-5404-907a-c0330eaf4bb8",
+      "title": "주 은혜임을",
+      "hymn_no": null
+    },
+    {
+      "id": "ca91bc1c-97a1-5e64-9fd0-83ceec07ded2",
+      "title": "길을 만드시는 분",
+      "hymn_no": null
+    },
+    {
+      "id": "f2df93ed-94fd-5f22-8186-a010afec83a0",
+      "title": "내겐 만족함이 없었네",
+      "hymn_no": null
+    },
+    {
+      "id": "45de1823-c6ec-5eae-b224-0fe5779f05b5",
+      "title": "푯대를 향하여",
+      "hymn_no": null
+    },
+    {
+      "id": "d17d9818-2f90-500c-a718-70041f9880dc",
+      "title": "내 구주 예수를 더욱 사랑",
+      "hymn_no": "314"
+    },
+    {
+      "id": "3a3eb0d9-4a2e-5cf9-9c43-da90215ae6af",
+      "title": "주 되심",
+      "hymn_no": null
+    },
+    {
+      "id": "cd22e1a0-72ae-569a-9284-f1d6c2c10c90",
+      "title": "임재",
+      "hymn_no": null
+    },
+    {
+      "id": "758c8199-2faa-5001-9d11-2f809239b4c1",
+      "title": "목마른 내 영혼",
+      "hymn_no": "309"
+    },
+    {
+      "id": "b5175103-be41-59a6-a176-d698491ea4f7",
+      "title": "내가 어둠 속에서",
+      "hymn_no": null
+    },
+    {
+      "id": "1b37c6a3-b4e4-514c-a5fe-34d8c8c86a7e",
+      "title": "해 뜨는 데부터",
+      "hymn_no": null
+    },
+    {
+      "id": "b9a653f8-eb04-561d-8fb7-bd05cd7e2ca3",
+      "title": "주님 약속하신 말씀 위에 서",
+      "hymn_no": "546"
+    },
+    {
+      "id": "0d12e5a3-1842-5bd8-af20-875e051debce",
+      "title": "내가 매일 기쁘게",
+      "hymn_no": "191"
+    }
+  ],
+  "scriptures": [],
+  "calendar": [
+    {
+      "date": "2026-01-04",
+      "liturgical": "성탄절 후 두 번째 주일",
+      "note": "신년주일",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-01-06",
+      "liturgical": "주현절",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-01-11",
+      "liturgical": "주님의 수세주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-01-18",
+      "liturgical": "주현절 후 두 번째 주일",
+      "note": "해외선교주일",
+      "church_schedule": "온세대 찬양예배",
+      "young_adult_prayer": "김윤서 청년"
+    },
+    {
+      "date": "2026-01-25",
+      "liturgical": "주현절 후 세 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김유리 청년"
+    },
+    {
+      "date": "2026-02-01",
+      "liturgical": "주현절 후 네 번째 주일",
+      "note": "",
+      "church_schedule": "제55회 사무총회",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-02-08",
+      "liturgical": "주현절 후 다섯 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김하은 청년"
+    },
+    {
+      "date": "2026-02-15",
+      "liturgical": "산상변모주일",
+      "note": "",
+      "church_schedule": "설 연휴",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-02-18",
+      "liturgical": "재의 수요일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-02-22",
+      "liturgical": "사순절 첫 번째 주일",
+      "note": "",
+      "church_schedule": "어린이부 겨울 캠프 / 온세대 찬양예배",
+      "young_adult_prayer": "박지훈 청년"
+    },
+    {
+      "date": "2026-03-01",
+      "liturgical": "사순절 두 번째 주일",
+      "note": "성청주일",
+      "church_schedule": "제55회 사무총회 속회",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-03-08",
+      "liturgical": "사순절 세 번째 주일",
+      "note": "서울신대기념주일",
+      "church_schedule": "",
+      "young_adult_prayer": "서영윤 청년"
+    },
+    {
+      "date": "2026-03-15",
+      "liturgical": "사순절 네 번째 주일",
+      "note": "",
+      "church_schedule": "청년부 제자헌신예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-03-22",
+      "liturgical": "사순절 다섯 번째 주일",
+      "note": "",
+      "church_schedule": "온세대 찬양예배",
+      "young_adult_prayer": "이상곤 청년"
+    },
+    {
+      "date": "2026-03-29",
+      "liturgical": "종려·수난주일",
+      "note": "성결교회전도주간",
+      "church_schedule": "",
+      "young_adult_prayer": "이재희 청년"
+    },
+    {
+      "date": "2026-04-02",
+      "liturgical": "성목요일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-04-03",
+      "liturgical": "성금요일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-04-04",
+      "liturgical": "성토요일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-04-05",
+      "liturgical": "부활주일",
+      "note": "장애인주일",
+      "church_schedule": "부활절 연합예배 / 1분기 직원회 / 찬양사역부 제자헌신예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-04-12",
+      "liturgical": "부활 후 두 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "이지원 청년"
+    },
+    {
+      "date": "2026-04-19",
+      "liturgical": "부활 후 세 번째 주일",
+      "note": "",
+      "church_schedule": "온세대 찬양예배",
+      "young_adult_prayer": "김음파 청년"
+    },
+    {
+      "date": "2026-04-26",
+      "liturgical": "부활 후 네 번째 주일",
+      "note": "교회창립주일",
+      "church_schedule": "",
+      "young_adult_prayer": "김유리 청년"
+    },
+    {
+      "date": "2026-05-03",
+      "liturgical": "부활 후 다섯 번째 주일",
+      "note": "어린이주일",
+      "church_schedule": "어린이부 제자헌신예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-05-10",
+      "liturgical": "부활 후 여섯 번째 주일",
+      "note": "어버이주일",
+      "church_schedule": "",
+      "young_adult_prayer": "김윤민 청년"
+    },
+    {
+      "date": "2026-05-14",
+      "liturgical": "주님의 승천일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-05-17",
+      "liturgical": "부활 후 일곱 번째 주일",
+      "note": "부부주일 / 성결교회창립주간 및 웨슬리회심주간",
+      "church_schedule": "온세대 찬양예배",
+      "young_adult_prayer": "김윤서 청년"
+    },
+    {
+      "date": "2026-05-24",
+      "liturgical": "성령강림주일·오순절",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김하은 청년"
+    },
+    {
+      "date": "2026-05-31",
+      "liturgical": "삼위일체주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "박지훈 청년"
+    },
+    {
+      "date": "2026-06-07",
+      "liturgical": "오순절 후 두 번째 주일",
+      "note": "농어촌주일",
+      "church_schedule": "",
+      "young_adult_prayer": "서영윤 청년"
+    },
+    {
+      "date": "2026-06-14",
+      "liturgical": "오순절 후 세 번째 주일",
+      "note": "환경주일",
+      "church_schedule": "",
+      "young_adult_prayer": "이상곤 청년"
+    },
+    {
+      "date": "2026-06-21",
+      "liturgical": "오순절 후 네 번째 주일",
+      "note": "특수전도주일",
+      "church_schedule": "온세대 찬양예배 / 임시 사무총회",
+      "young_adult_prayer": "이재희 청년"
+    },
+    {
+      "date": "2026-06-28",
+      "liturgical": "오순절 후 다섯 번째 주일",
+      "note": "통일주일",
+      "church_schedule": "",
+      "young_adult_prayer": "이지원 청년"
+    },
+    {
+      "date": "2026-07-05",
+      "liturgical": "오순절 후 여섯 번째 주일",
+      "note": "맥추감사주일",
+      "church_schedule": "",
+      "young_adult_prayer": "김음파 청년"
+    },
+    {
+      "date": "2026-07-12",
+      "liturgical": "오순절 후 일곱 번째 주일",
+      "note": "교회교육주일",
+      "church_schedule": "교육사역부 제자헌신예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-07-19",
+      "liturgical": "오순절 후 여덟 번째 주일",
+      "note": "",
+      "church_schedule": "온세대 찬양예배 / 유치부 여름성경학교",
+      "young_adult_prayer": "김유리 청년"
+    },
+    {
+      "date": "2026-07-26",
+      "liturgical": "오순절 후 아홉 번째 주일",
+      "note": "",
+      "church_schedule": "유치부 여름성경학교 / 어린이부 여름성경학교",
+      "young_adult_prayer": "김윤민 청년"
+    },
+    {
+      "date": "2026-08-02",
+      "liturgical": "오순절 후 열 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김윤서 청년"
+    },
+    {
+      "date": "2026-08-09",
+      "liturgical": "오순절 후 열한 번째 주일",
+      "note": "해방기념주일",
+      "church_schedule": "청소년부 제자헌신예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-08-16",
+      "liturgical": "오순절 후 열두 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김하은 청년"
+    },
+    {
+      "date": "2026-08-23",
+      "liturgical": "오순절 후 열세 번째 주일",
+      "note": "",
+      "church_schedule": "온세대 찬양예배",
+      "young_adult_prayer": "박지훈 청년"
+    },
+    {
+      "date": "2026-08-30",
+      "liturgical": "오순절 후 열네 번째 주일",
+      "note": "",
+      "church_schedule": "청년부 야외예배",
+      "young_adult_prayer": ""
+    },
+    {
+      "date": "2026-09-06",
+      "liturgical": "오순절 후 열다섯 번째 주일",
+      "note": "평신도주일",
+      "church_schedule": "",
+      "young_adult_prayer": "서영윤 청년"
+    },
+    {
+      "date": "2026-09-13",
+      "liturgical": "오순절 후 열여섯 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "이재희 청년"
+    },
+    {
+      "date": "2026-09-20",
+      "liturgical": "오순절 후 열입곱 번째 주일",
+      "note": "순교자기념주일",
+      "church_schedule": "온세대 찬양예배 / 총동원 전도주일",
+      "young_adult_prayer": "이지원 청년"
+    },
+    {
+      "date": "2026-09-27",
+      "liturgical": "오순절 후 열여덟 번째 주일",
+      "note": "",
+      "church_schedule": "",
+      "young_adult_prayer": "김음파 청년"
+    },
+    {
+      "date": "2026-10-04",
+      "liturgical": "오순절 후 열아홉 번째 주일",
+      "note": "군선교주일 / 故김상준추모주간",
+      "church_schedule": "",
+      "young_adult_prayer": "김윤민 청년"
+    }
+  ]
+}

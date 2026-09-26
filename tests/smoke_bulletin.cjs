@@ -35,6 +35,9 @@ const server=http.createServer((req,res)=>{
         syncBrowserHistory();
       };
       const b=window.bulletinTest;
+      // Exercise live DB projection; exact historical-copy behavior has its own regression.
+      const liveSource=loadServiceBulletinSource;
+      loadServiceBulletinSource=(id,settings)=>liveSource(id,{...settings,archiveReference:false});
       b.drafts={};b.saves=0;
       loadBulletinDraft=async sid=>structuredClone(b.drafts[sid]||null);
       saveBulletinDraft=async(sid,value,revision)=>{
@@ -82,7 +85,7 @@ const server=http.createServer((req,res)=>{
       const pick=(type,date,liturgical='')=>bulletinBackgroundForService({type_id:type,date},{date,liturgical})?.key;
       return [pick('young-adult','2026-09-20'),pick('young-adult','2026-07-05'),pick('friday','2026-09-25'),pick('children','2026-09-20'),pick('young-adult','2026-05-24','성령강림주일'),pick('young-adult','2026-03-29','종려주일'),pick('young-adult','2026-04-05','부활주일')];
     });
-    assert.deepEqual(autoCases,['26-A5.png','26-A4.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
+    assert.deepEqual(autoCases,['26-A5.png','26-A3.png','26-B5.png','26-C5.png','26-S6.png','26-S4.png','26-S5.png']);
 
     assert.equal(await page.locator('[data-bulletin-close]').count(),0,'Bulletin has no special back button');
     const originalTab=await page.evaluate(()=>state.pageTabs[state.pageTabIndex].id);

@@ -10,6 +10,7 @@ const server=http.createServer((req,res)=>{
   if(pathname==='/'){res.setHeader('Content-Type','text/html');res.end('<meta charset="utf-8"><script src="/mindex.bulletin.js"></script>');return;}
   const file=path.resolve(root,pathname.slice(1));
   if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory()){res.writeHead(404);res.end();return;}
+  if(file.endsWith('.svg'))res.setHeader('Content-Type','image/svg+xml');
   res.end(fs.readFileSync(file));
 });
 (async()=>{
@@ -43,7 +44,7 @@ const server=http.createServer((req,res)=>{
     assert.ok(result.styles.news.some(([text,weight])=>text==='셀 모임'&&weight==='700'));
     assert.match(result.news,/①.*②/);
     assert.equal(result.flip,'translate(297 0) scale(-1 1)');
-    assert.equal(result.sermon[1].text,'사무엘상 22:1–5');
+    assert.equal(result.sermon[1].text,'삼상 22:1–5');
     assert.ok(result.sermon[1].size<result.sermon[0].size);
     assert.ok(!result.news.includes('기도 모임'));
     assert.match(result.events,/4일 \(금\).*8:00/);

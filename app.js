@@ -15303,13 +15303,15 @@ async function loadServiceBulletinSource(serviceId, settings = {}) {
   ]);
   const source = window.MindexBulletin.resolveSource({...aggregate, songs: songs || [], scriptures: scriptures || [], calendar: calendar || [], settings, history,
     services: (bulletinServices || []).map(normalizeWorshipService).filter(s => worshipAppServiceTypeId(s.type_id) === "young-adult")
-      .map(s => ({date: s.date, noGathering: serviceIsNoGathering(s), label: s.alias || s.title || "집회 없음"}))});
+      .map(s => ({date: s.date, noGathering: serviceIsNoGathering(s), label: s.alias || (serviceIsNoGathering(s) ? (/연합|헌신예배/.test(s._worshipSourceRef?.no_gathering_reason||"")?"연합예배":"집회 없음") : s.title) || "집회 없음"}))});
   source.autoBackground = bulletinBackgroundForService(normalized, (calendar || []).find(row => row.date === normalized.date));
   return source;
 }
 
 function bulletinBackgroundForService(service, calendarRow) {
-  const url = presenterBackgroundSourcesForService(service, {includeChromakeyCleanSlides:true, calendarRow})[0];
+  // Printed July/August issues retained A3 after the Presenter moved to A4.
+  const printFile=service.type_id==="young-adult"&&service.date>="2026-07-05"&&service.date<"2026-09-06"?"26-A3.png":null;
+  const url = printFile?worshipBackgroundSourcesForFileName(printFile)[0]:presenterBackgroundSourcesForService(service, {includeChromakeyCleanSlides:true, calendarRow})[0];
   if (!url) return null;
   const registered = Object.entries(state.worshipBackgroundRegistry || {}).find(([,entry]) => entry.dataUrl === url);
   return {key:registered?.[0] || (/^(data:|blob:)/.test(url) ? "예배 지정 이미지" : worshipBackgroundFileNameFromPath(url)), url};

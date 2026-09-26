@@ -111,7 +111,7 @@ const actualBefore=JSON.stringify(actual);
 const reference=c.window.MindexBulletin.resolveSource(actual);
 assert.equal(reference.scripture,'사무엘상 22:1–5');
 assert.match(reference.liturgical,/순교자기념주일/);
-assert.equal(reference.order.length,12,'The DB lacks the printed post-praise prayer; never invent a stored element');
+assert.equal(reference.order.length,13,'The verified print template includes communal prayer without mutating stored elements');
 assert.equal(reference.order.filter(r=>r.label==='성경봉독').length,1);
 assert.equal(reference.order.find(r=>r.label==='찬양').content.split('\n').length,4);
 assert.equal(reference.order.find(r=>r.label==='사도신경').content,'');
@@ -129,7 +129,7 @@ const commonDoc=baseDoc(B.resolveSource(actual));
 assert.equal(B.fieldValue(commonDoc,'church'),'기독교대한성결교회 검단우리교회');
 assert.match(B.fieldValue(commonDoc,'eventsText'),/4일 \(금\) 오후 8:00/);
 assert.match(B.fieldValue(commonDoc,'notices'),/토요일 오후 3시/);
-assert.equal(B.fieldValue(commonDoc,'outline'),'');
+assert.match(B.fieldValue(commonDoc,'outline'),/길을 잃다/);
 const history=[
  {date:'2026-09-06',content:{reuse:{common:{meeting:'새 예배 장소',notices:''},months:{'2026-09':'9월 확인 일정'}},fields:{news:'이전 주 소식',leader:'이전 인도자',outline:'이전 설교'}}},
  {date:'2026-10-04',content:{reuse:{common:{meeting:'미래 장소'},months:{'2026-10':'미래 일정'}}}}
@@ -139,7 +139,7 @@ assert.equal(B.fieldValue(baseDoc(reused),'meeting'),'새 예배 장소');
 assert.equal(reused.events,'9월 확인 일정');
 assert.equal(B.fieldValue(baseDoc(reused),'notices'),'','Explicitly shared blanks override older recurring text in announcements');
 assert.ok(!reused.news.includes('이전 주 소식'));
-assert.equal(reused.leader,'');
+assert.equal(reused.leader,'이재희 청년');
 assert.equal(B.reusableContent('2026-09-20','2026-09',history).common.notices,'');
 const nextMonth=B.resolveSource({...actual,service:{...actual.service,service_date:'2026-10-01'},history});
 assert.equal(nextMonth.events,'','September content must not leak across the month boundary');
@@ -164,3 +164,31 @@ console.log('PASS monthly reuse, dated common copy, week/month isolation, explic
 
 const legacy=B.reusableContent('2026-09-20','2026-09',[{date:'2026-09-06',content:{fields:{church:'기존에 수정한 교회명',eventsText:'기존 월간 일정',news:'복사하면 안 되는 소식'}}}]);
 assert.equal(legacy.common.church,'기존에 수정한 교회명');assert.equal(legacy.events,'기존 월간 일정');assert.equal(legacy.common.news,undefined);
+
+
+const frozenSource=B.resolveSource(actual);
+const frozenDoc=baseDoc(frozenSource);
+frozenDoc.fields.announcer='';
+frozenDoc.settings.outlineColumns=2;
+const publication=B.storedValue(frozenDoc);
+assert.equal(publication.layout.outlineColumns,2);
+assert.equal(publication.content.outlineColumns,undefined,'Column layout belongs to layout data');
+const publicationDoc={};B.applyStored(publicationDoc,{...publication,revision:1});
+const changedSource={...frozenSource,sermon:'changed sermon',news:'changed news',leader:'changed leader',order:[],prayers:[]};
+const frozenAgain=B.applySourceSnapshot(changedSource,publicationDoc.sourceSnapshot);
+assert.equal(frozenAgain.sermon,frozenSource.sermon);
+assert.equal(frozenAgain.news,frozenSource.news);
+assert.equal(JSON.stringify(frozenAgain.prayers),JSON.stringify(frozenSource.prayers));
+assert.equal(B.applySourceSnapshot(changedSource,null).sermon,'changed sermon');
+assert.equal(B.applySourceSnapshot({...changedSource,id:'different'},publicationDoc.sourceSnapshot).sermon,'changed sermon');
+const anotherMonth=B.applySourceSnapshot({...changedSource,rosterMonth:'2026-10'},publicationDoc.sourceSnapshot);
+assert.equal(anotherMonth.prayers.length,0,'An unrecorded month must use newly loaded calendar data');
+const live=B.resolveSource({...actual,settings:{archiveReference:false}});
+assert.equal(live.leader,'');
+assert.equal(live.outline,undefined);
+const future=B.resolveSource({...actual,service:{...actual.service,service_date:'2026-10-04'}});
+assert.equal(future.hasArchiveReference,false);
+assert.equal(future.leader,'');
+assert.equal(future.outline,undefined);
+assert.equal(future.order.filter(r=>r.label==='기도').length,1,'The printed prayer belongs to the youth template, not individual issue exceptions');
+console.log('PASS published source freezing, explicit refresh, month isolation, layout storage and no historical weekly-copy leakage');
