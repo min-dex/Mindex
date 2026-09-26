@@ -7895,6 +7895,16 @@ def main() -> int:
                             });
                             const memo = parseServiceItemMemo(item.memo);
                             const uploadedHtml = renderPresenterServiceAssetInput(item, 0, memo);
+                            const imageBatchHtml = renderPresenterReferenceMediaPreview({
+                              kind: 'image',
+                              name: '지도',
+                              url: 'https://cdn.example.test/map-1.png',
+                              slides: [
+                                { url: 'https://cdn.example.test/map-1.png', order: 1 },
+                                { url: 'https://cdn.example.test/map-2.png', order: 2 },
+                                { url: 'https://cdn.example.test/map-3.png', order: 3 },
+                              ],
+                            }, 'image');
                             return {
                               hasFileInput: html.includes('data-service-item-asset-file'),
                               acceptVideoOnly: html.includes('accept="video/*"'),
@@ -7910,6 +7920,7 @@ def main() -> int:
                               modified: Boolean(item._worshipElementTemplateModified),
                               videoLimitLarger: presenterMediaMaxBytesForKind('video') > presenterMediaMaxBytesForKind('image'),
                               videoLimitLabel: presenterMediaMaxSizeLabel('video'),
+                              imageBatchStatus: imageBatchHtml.includes('이미지 3장 연결됨'),
                             };
                           } finally {
                             if (originalItems === undefined) delete state.serviceItems[serviceId];
@@ -7941,6 +7952,7 @@ def main() -> int:
                         and presenter_generic_asset_upload_guard["modified"]
                         and presenter_generic_asset_upload_guard["videoLimitLarger"]
                         and presenter_generic_asset_upload_guard["videoLimitLabel"] == "500MB"
+                        and presenter_generic_asset_upload_guard["imageBatchStatus"]
                     ):
                         pass_("presenter-generic-asset-upload-guard", json.dumps(presenter_generic_asset_upload_guard, ensure_ascii=False))
                     else:

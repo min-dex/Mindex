@@ -29375,12 +29375,12 @@ function renderPresenterReferenceMediaPreview(asset, kind, emptyMessage = "파�
   const source = String(asset?.url || "").trim();
   if (!source) return `<div class="svc-reference-media-preview is-empty"><i data-lucide="image-plus"></i><span>${escapeHtml(emptyMessage)}</span></div>`;
   const normalizedKind = String(kind || asset?.kind || "file").trim().toLowerCase();
-  const slideCount = normalizedKind === "imported_deck" ? normalizeServiceAssetSlides(asset.slides).length : 0;
+  const slideCount = normalizeServiceAssetSlides(asset.slides).length;
   const statusLabel = normalizedKind === "imported_deck"
     ? (slideCount ? `슬라이드 ${slideCount}장 연결됨` : "슬라이드 연결됨")
     : normalizedKind === "video" ? "영상 연결됨"
       : normalizedKind === "audio" ? "음원 연결됨"
-        : normalizedKind === "image" ? "이미지 연결됨" : "파일 연결됨";
+        : normalizedKind === "image" ? (slideCount > 1 ? `이미지 ${slideCount}장 연결됨` : "이미지 연결됨") : "파일 연결됨";
   const icon = normalizedKind === "imported_deck" ? "presentation"
     : normalizedKind === "video" ? "file-video"
       : normalizedKind === "audio" ? "audio-lines"
