@@ -29,8 +29,10 @@ def main():
                   check(history.every(e=>e.slideCount===30&&e.sourceRecordCount===4),'counts kept');
                   const fullBytes=JSON.stringify(legacy).length, slimBytes=JSON.stringify(history).length;
                   check(slimBytes*10<fullBytes*1.5+1,'history much smaller: '+slimBytes+' vs '+fullBytes);
-                  // the current document keeps its slides
-                  check(ref[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY].slides===undefined || Array.isArray(ref[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY].slides),'document key present');
+                  // New current documents keep only source text and signatures. Legacy
+                  // documents remain readable above, but rendered slides are not saved again.
+                  const current=ref[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY];
+                  check(!('slides' in current)&&!('sourceRecords' in current)&&!('exceptions' in current),'current document is row-derived');
                   // the list shows counts and restore puts the text back
                   service._worshipSourceRef=ref;
                   const html=renderServiceSourceHistory(service);

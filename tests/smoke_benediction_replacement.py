@@ -26,6 +26,7 @@ def run(browser, url):
       renderServiceList = () => {};
       render = () => {};
       captureCleanFingerprint = () => {};
+      worshipAtomicClient = async () => null;
       let fail = false, writes = [];
       state.client = {from:table => ({
         upsert:async rows => { writes.push({table, rows:clone(rows)}); return {error:fail ? Error('injected failure') : null}; },
@@ -85,7 +86,6 @@ def run(browser, url):
         state.saving = false;
         const slides = buildPresenterSlidesForServiceItem(replacement, service, 0);
         check(JSON.stringify(slides).includes('하늘에 계신'), type+' prayer body missing from slides');
-        check(serviceDocumentExceptionForItem(service, replacement).type === 'benediction_replacement', 'exception note missing');
         replacement = getServiceItems(sid).find(x => parseServiceItemMemo(x.memo).benedictionReplacement);
         check(replaceServiceBenediction(replacement, false), type+' restore rejected');
         rows = roundtrip(service);

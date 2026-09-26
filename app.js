@@ -7516,39 +7516,18 @@ async function persistSundayEditSync(job, options = {}) {
   }
   if (next.song_id) patch.song_version_id = next.version_id || next.song_version_id || null;
   patch.updated_at = new Date().toISOString();
-  const document = serviceDocumentSnapshotFromRef(freshService);
-  const sourceText = document ? sundayEditSyncSourceText(document, item, next, freshService) : "";
-  let saved = { ...existing, ...patch };
   const nextItems = items.map((candidate) => candidate.id === item.id ? next : candidate);
-  let ref = null;
-  // Replace only this element's snapshots; preserve unrelated custom slides verbatim.
-  if (document) {
-    const replacements = buildPresenterSlidesForServiceItem(next, freshService, items.indexOf(item))
-      .map((slide, index) => compactServiceDocumentSlide({ ...slide, elementId: item.id,
-        sectionId: item._worshipSectionId, sectionKey: item._worshipSectionKey, elementLabel: item.label,
-        slotKey: serviceItemSlotKey(item) }, index, next)).filter(Boolean);
-    let replaced = false;
-    const slides = (document.slides || []).flatMap((slide) => {
-      if (slide.elementId !== item.id) return [slide];
-      if (replaced) return [];
-      replaced = true;
-      return replacements;
-    });
-    if (!replaced) slides.push(...replacements);
-    const orderedSlides = slides.map((slide, index) => ({ ...slide, index: index + 1 }));
-    const updated = { ...document, updatedAt: patch.updated_at, sourceText, slides: orderedSlides,
-      sourceSignature: compactTextSignature(sourceText),
-      slideSignature: compactTextSignature(JSON.stringify(orderedSlides)),
-      sourceRecords: buildServiceDocumentSourceRecords(sourceText, nextItems, freshService) };
-    ref = { ...serviceRow.source_ref, [MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY]: updated,
-      [MINDEX_SERVICE_DOCUMENT_HISTORY_SOURCE_REF_KEY]: serviceDocumentHistoryWithPrevious(document,
-        serviceRow.source_ref?.[MINDEX_SERVICE_DOCUMENT_HISTORY_SOURCE_REF_KEY], updated) };
-  }
+  const previousDocument = serviceDocumentSnapshotFromRef(freshService);
+  const sourceText = previousDocument?.sourceText
+    ? sundayEditSyncSourceText(previousDocument, item, next, freshService)
+    : buildServiceSourceText(freshService, { items: nextItems, ignoreSnapshotFallback: true });
+  const documentService = { ...freshService, _worshipSourceTextDraft: sourceText };
+  let ref = withServiceDocumentSnapshot(documentService, nextItems);
+  let saved = { ...existing, ...patch };
   if (atomic) {
     const committed = await atomic.commit({ serviceId: target.id,
       rows: { sections: [], elements: [saved] },
-      document: ref?.[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY]
-        || buildServiceDocumentSnapshot(freshService, nextItems),
+      document: ref[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY],
     });
     saved = committed.elements.find(row => row.id === existing.id);
     ref = committed.service.source_ref;
@@ -7557,15 +7536,13 @@ async function persistSundayEditSync(job, options = {}) {
       .update(patch, { count: "exact" }).eq("id", existing.id).eq("updated_at", existing.updated_at);
     if (error) throw error;
     if (count !== 1) throw conflict();
-    if (ref) {
     const { error: refError, count: refCount } = await state.client.from("mindex_worship_services")
       .update({ source_ref: ref, updated_at: patch.updated_at }, { count: "exact" }).eq("id", target.id).eq("source_ref", JSON.stringify(serviceRow.source_ref));
     if (refError || refCount !== 1) {
       throw new Error(`${label}: 항목은 저장됐지만 원문 기록 갱신이 완료되지 않았습니다. 다시 저장해 주세요.`);
     }
-    }
   }
-  if (ref) target._worshipSourceRef = ref;
+  target._worshipSourceRef = ref;
   if (!sundayEditSyncHasLocalDraft(target.id)) {
     const sectionIds = new Set(sections.map((section) => section.id));
     state.worshipSections = [...state.worshipSections.filter((section) => section.service_id !== target.id), ...sections];
@@ -22949,8 +22926,8 @@ function buildServiceDocumentSnapshot(service = null, items = null) {
   const serviceId = String(service?.id || "").trim();
   const sourceItems = Array.isArray(items) ? items : getServiceOutputItems(serviceId);
   const sourceText = serviceDocumentSourceTextForSnapshot(service, sourceItems);
-  const sourceRecords = buildServiceDocumentSourceRecords(sourceText, sourceItems, service);
-  const slides = buildServiceDocumentSlideSnapshots(serviceId, sourceItems, service);
+  const sourceRecordCount = parseServiceSourceText(sourceText).length;
+  const presentationSignature = serviceDocumentPresentationSignature(sourceItems);
   return normalizeServiceDocumentSnapshot({
     kind: MINDEX_SERVICE_DOCUMENT_KIND,
     version: MINDEX_SERVICE_DOCUMENT_VERSION,
@@ -22961,70 +22938,25 @@ function buildServiceDocumentSnapshot(service = null, items = null) {
     serviceAlias: String(service?.alias || service?.service_alias || "").trim(),
     updatedAt: new Date().toISOString(),
     sourceSignature: compactTextSignature(sourceText),
-    slideSignature: compactTextSignature(JSON.stringify(slides.map((slide) => [
-      slide.id || "",
-      slide.elementId || "",
-      slide.type || "",
-      slide.layout || "",
-      slide.elementType || "",
-      slide.title || "",
-      slide.text || "",
-      slide.asset?.url || slide.imageSrc || slide.videoSrc || slide.audioSrc || "",
-    ]))),
+    // Presenter slides are a rendering result of the canonical service rows.
+    // Store a compact signature instead of a second ownership graph.
+    slideSignature: presentationSignature,
+    contentSignature: compactTextSignature(JSON.stringify([sourceText, presentationSignature])),
     sourceText,
-    sourceRecords,
-    slides,
-    exceptions: buildServiceDocumentExceptionNotes(service, sourceItems),
+    sourceRecordCount,
   });
 }
 
-function buildServiceDocumentSourceRecords(sourceText = "", items = [], service = null) {
-  const candidates = (Array.isArray(items) ? items : [])
-    .filter((item) => serviceSourceItemIsUserDiscretionary(item, service))
-    .map((item, index) => ({ item, index }));
-  const usedIndexes = new Set();
-  return parseServiceSourceText(sourceText).map((record, index) => {
-    const target = serviceSourceFindTarget(record, candidates, usedIndexes);
-    const item = target?.item || null;
-    if (target) usedIndexes.add(target.index);
-    const payload = {
-      index: index + 1,
-      recordKey: "",
-      elementId: String(item?.id || "").trim(),
-      sectionId: String(item?._worshipSectionId || item?.section_id || "").trim(),
-      sectionKey: String(item?._worshipSectionKey || item?.section_key || "").trim(),
-      slotKey: normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slot_key || item?.source_ref?.slotKey || item?.source_ref?.slot_key || item?.config?.slotKey),
-      sectionTitle: record.sectionTitle,
-      label: record.label,
-      value: record.value,
-      linkedSource: serviceDocumentRecordLinkedSource(item, service),
-    };
-    if (record.hasAssignee) payload.assignee = record.assignee;
-    if (record.hasLyrics) payload.lyrics = limitServiceDocumentText(record.lyrics);
-    if (record.hasAssetName || record.hasAssetUrl) {
-      payload.asset = {};
-      if (record.hasAssetName) payload.asset.name = record.assetName;
-      if (record.hasAssetUrl) payload.asset.url = record.assetUrl;
-    }
-    payload.recordKey = serviceDocumentRecordKey(payload);
-    return Object.fromEntries(Object.entries(payload).filter(([, value]) => {
-      if (value && typeof value === "object") return Object.keys(value).length;
-      return value !== "" && value != null;
-    }));
-  });
-}
-
-function serviceDocumentRecordLinkedSource(item = null, service = null) {
-  if (!item || typeof item !== "object") return {};
-  const source = {};
-  const memo = parseServiceItemMemo(item.memo);
-  if (item.song_id) source.songId = item.song_id;
-  if (item.version_id || item.song_version_id) source.songVersionId = item.version_id || item.song_version_id;
-  const references = serviceItemScriptureReferences(item, memo, service);
-  if (references.length) source.scriptureReferences = references;
-  const asset = normalizeServiceAsset(memo.asset);
-  if (asset.name || asset.url || asset.kind) source.asset = asset;
-  return source;
+function serviceDocumentPresentationSignature(items = []) {
+  const source = (Array.isArray(items) ? items : []).map((item, index) => [
+    index,
+    String(item?.id || "").trim(),
+    String(item?._worshipSectionId || item?.section_id || "").trim(),
+    String(item?._worshipSectionKey || item?.section_key || "").trim(),
+    normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slot_key || item?.source_ref?.slotKey),
+    serviceItemPersistenceSignature(item),
+  ]);
+  return compactTextSignature(JSON.stringify(source));
 }
 
 function serviceDocumentSourceTextForSnapshot(service = null, items = []) {
@@ -23035,119 +22967,9 @@ function serviceDocumentSourceTextForSnapshot(service = null, items = []) {
   return buildServiceSourceText(service, { items, ignoreSnapshotFallback: true });
 }
 
-function buildServiceDocumentSlideSnapshots(serviceId = "", items = null, service = null) {
-  const itemById = Object.fromEntries((Array.isArray(items) ? items : getServiceOutputItems(serviceId))
-    .map((item) => [String(item?.id || "").trim(), item])
-    .filter(([id]) => id));
-  const slides = Array.isArray(items)
-    ? buildServicePresenterSlidesUncached(serviceId, { service, items, allowHydration: false })
-    : buildServicePresenterSlides(serviceId);
-  return slides
-    .map((slide, index) => compactServiceDocumentSlide(slide, index, itemById[String(slide?.elementId || "").trim()]))
-    .filter(Boolean);
-}
-
-function compactServiceDocumentSlide(slide = {}, index = 0, item = null) {
-  if (!slide || typeof slide !== "object") return null;
-  const asset = normalizeServiceAsset(slide.asset || slide.media);
-  const persistedElementId = String(item?.id || "").trim();
-  const persistedSectionId = String(item?._worshipSectionId || item?.section_id || "").trim();
-  const persistedSectionKey = String(item?._worshipSectionKey || item?.section_key || "").trim();
-  const persistedSlotKey = normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slotKey || item?.slot_key);
-  const hasPersistedOwner = Boolean(persistedElementId);
-  // A presenter slide can retain display metadata from an earlier template or
-  // asset import. The document snapshot is validated against persisted rows, so
-  // always let the current item own its linkage. Unknown element IDs are display
-  // leftovers and must not enter the validated document at all.
-  const slotKey = hasPersistedOwner
-    ? persistedSlotKey
-    : normalizeWorshipSlotKey(slide.slotKey || slide.slot_key);
-  const payload = {
-    index: index + 1,
-    slideKey: "",
-    id: String(slide.id || "").trim(),
-    elementId: hasPersistedOwner ? persistedElementId : "",
-    sectionId: hasPersistedOwner ? persistedSectionId : String(slide.elementId || "").trim() ? "" : String(slide.sectionId || "").trim(),
-    sectionKey: hasPersistedOwner ? persistedSectionKey : String(slide.elementId || "").trim() ? "" : String(slide.sectionKey || "").trim(),
-    slotKey,
-    elementLabel: String(slide.elementLabel || slide.label || "").trim(),
-    type: String(slide.type || "").trim(),
-    layout: presenterSlideLayout(slide),
-    elementType: presenterSlideElementType(slide),
-    title: String(slide.title || "").trim(),
-    text: limitServiceDocumentText(slide.text || slide.bodyText || slide.body || ""),
-    outputContext: presenterSlideOutputContext(slide, true),
-    hidden: presenterSlideIsHidden(slide),
-    autoTrailingBlank: Boolean(slide.autoTrailingBlank),
-    linkedSource: serviceDocumentSlideLinkedSource(slide),
-  };
-  if (asset.name || asset.url || asset.kind) payload.asset = asset;
-  if (slide.imageSrc) payload.imageSrc = String(slide.imageSrc).trim();
-  if (slide.videoSrc) payload.videoSrc = String(slide.videoSrc).trim();
-  if (slide.audioSrc) payload.audioSrc = String(slide.audioSrc).trim();
-  payload.slideKey = serviceDocumentSlideKey(payload);
-  return Object.fromEntries(Object.entries(payload).filter(([, value]) => {
-    if (Array.isArray(value)) return value.length;
-    if (value && typeof value === "object") return Object.keys(value).length;
-    return value !== "" && value !== false && value != null;
-  }));
-}
-
 function limitServiceDocumentText(value = "") {
   const text = String(value || "");
   return text.length > 8000 ? `${text.slice(0, 8000)}\n[truncated]` : text;
-}
-
-function serviceDocumentSlideLinkedSource(slide = {}) {
-  const source = {};
-  const slotKey = normalizeWorshipSlotKey(slide.slotKey || slide.slot_key);
-  if (slotKey) source.slotKey = slotKey;
-  if (slide.songId || slide.song_id) source.songId = slide.songId || slide.song_id;
-  if (slide.songVersionId || slide.song_version_id || slide.versionId) {
-    source.songVersionId = slide.songVersionId || slide.song_version_id || slide.versionId;
-  }
-  if (slide.scriptureContext || slide.referenceRange || slide.referenceBook) {
-    source.scripture = cleanList([slide.referenceBook, slide.referenceRange || slide.scriptureContext]).join(" ").trim();
-  }
-  if (slide.sourceType) source.sourceType = slide.sourceType;
-  if (slide.componentType) source.componentType = slide.componentType;
-  return source;
-}
-
-function buildServiceDocumentExceptionNotes(service = null, items = []) {
-  return (Array.isArray(items) ? items : [])
-    .map((item) => serviceDocumentExceptionForItem(service, item))
-    .filter(Boolean);
-}
-
-function serviceDocumentExceptionForItem(service = null, item = {}) {
-  const memo = parseServiceItemMemo(item.memo);
-  if (memo.benedictionReplacement) return {
-    type: "benediction_replacement", scope: "service",
-    target: { section: serviceSourceSectionTitle(item), label: item.label, elementId: item.id },
-    reason: "해당 예배의 축도를 주기도문으로 대체함. 원래 축도 정보는 복원을 위해 보존함.",
-  };
-  const asset = normalizeServiceAsset(memo.asset);
-  const hasAsset = asset.name || asset.url || asset.kind;
-  if (!hasAsset) return null;
-  const section = serviceSourceSectionTitle(item) || String(item._worshipSectionTitle || "").trim() || "예배";
-  const label = String(item.label || "").trim() || serviceAssetFileKindLabel(asset.kind);
-  const serviceName = cleanList([
-    service?.date || service?.service_date || "",
-    serviceDisplayTypeName(service) || service?.title || "",
-  ]).join(" ");
-  const assetLabel = asset.name || presenterMediaFileName(asset.url) || serviceAssetFileKindLabel(asset.kind);
-  return {
-    type: "asset",
-    scope: "service",
-    target: {
-      section,
-      label,
-      elementId: String(item.id || "").trim(),
-    },
-    asset,
-    reason: `${serviceName ? `${serviceName}: ` : ""}${section} 섹션의 ${label} 항목에 ${assetLabel} ${serviceAssetFileKindLabel(asset.kind)}를 연결함.`,
-  };
 }
 
 function normalizeServiceDisplayName(value) {

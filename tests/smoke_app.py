@@ -6765,6 +6765,7 @@ def main() -> int:
                             const sourceRef = withServiceDocumentSnapshot(service, [item]);
                             const fromRef = serviceDocumentSnapshotFromRef({ _worshipSourceRef: sourceRef }) || {};
                             const history = sourceRef[MINDEX_SERVICE_DOCUMENT_HISTORY_SOURCE_REF_KEY] || [];
+                            const renderedSlides = buildServicePresenterSlides(service.id);
                             service._worshipSourceRef = sourceRef;
                             const placeholder = normalizeServiceItem({
                               id: '__smoke_service_document_placeholder__',
@@ -6811,13 +6812,14 @@ def main() -> int:
                               serviceDate: document.serviceDate || '',
                               sourceText: document.sourceText || '',
                               sourceSignature: document.sourceSignature || '',
-                              sourceRecordCount: document.sourceRecords?.length || 0,
-                              sourceRecord: document.sourceRecords?.[0] || {},
+                              sourceRecordCount: Number(document.sourceRecordCount) || 0,
+                              hasStoredRecords: Object.hasOwn(document, 'sourceRecords'),
                               slideSignature: document.slideSignature || '',
-                              slideCount: document.slides.length,
-                              slideSlotKey: document.slides.find((slide) => slide.elementId === item.id)?.slotKey || '',
-                              slideKey: document.slides.find((slide) => slide.elementId === item.id)?.slideKey || '',
-                              slideAsset: document.slides.find((slide) => slide.asset)?.asset || {},
+                              contentSignature: document.contentSignature || '',
+                              hasStoredSlides: Object.hasOwn(document, 'slides'),
+                              hasStoredExceptions: Object.hasOwn(document, 'exceptions'),
+                              renderedCount: renderedSlides.length,
+                              renderedAsset: renderedSlides.find((slide) => slide.asset)?.asset || {},
                               fallbackCount: fallbackSlides.length,
                               fallbackRestoredCount: fallbackSlides.filter((slide) => slide.serviceDocumentFallback).length,
                               fallbackAsset: fallbackSlides.find((slide) => slide.serviceDocumentFallback && slide.asset)?.asset || {},
@@ -6857,22 +6859,14 @@ def main() -> int:
                         and service_document_snapshot["sourceText"] == "[봉헌]\n이미지: 사용자가 남긴 안내 이미지"
                         and ":" in service_document_snapshot["sourceSignature"]
                         and service_document_snapshot["sourceRecordCount"] == 1
-                        and service_document_snapshot["sourceRecord"].get("recordKey") == "offering.media|__smoke_service_document_asset__|offering|이미지"
-                        and service_document_snapshot["sourceRecord"].get("sectionTitle") == "봉헌"
-                        and service_document_snapshot["sourceRecord"].get("label") == "이미지"
-                        and service_document_snapshot["sourceRecord"].get("value") == "사용자가 남긴 안내 이미지"
-                        and service_document_snapshot["sourceRecord"].get("elementId") == "__smoke_service_document_asset__"
-                        and service_document_snapshot["sourceRecord"].get("sectionKey") == "offering"
-                        and service_document_snapshot["sourceRecord"].get("slotKey") == "offering.media"
-                        and service_document_snapshot["sourceRecord"].get("linkedSource", {}).get("asset", {}).get("name") == "꿈꾸는 어린이부 여름성경학교 안내"
+                        and not service_document_snapshot["hasStoredRecords"]
                         and ":" in service_document_snapshot["slideSignature"]
-                        and service_document_snapshot["slideCount"] >= 1
-                        and service_document_snapshot["slideSlotKey"] == "offering.media"
-                        and service_document_snapshot["slideKey"]
-                        and service_document_snapshot["slideAsset"].get("name") == "꿈꾸는 어린이부 여름성경학교 안내"
-                        and service_document_snapshot["fallbackCount"] >= service_document_snapshot["slideCount"]
-                        and service_document_snapshot["fallbackRestoredCount"] >= 1
-                        and service_document_snapshot["fallbackAsset"].get("name") == "꿈꾸는 어린이부 여름성경학교 안내"
+                        and service_document_snapshot["contentSignature"]
+                        and not service_document_snapshot["hasStoredSlides"]
+                        and not service_document_snapshot["hasStoredExceptions"]
+                        and service_document_snapshot["renderedCount"] >= 1
+                        and service_document_snapshot["renderedAsset"].get("name") == "꿈꾸는 어린이부 여름성경학교 안내"
+                        and service_document_snapshot["fallbackRestoredCount"] == 0
                         and service_document_snapshot["pendingFallbackCount"] == 0
                         and service_document_snapshot["pendingReferenceCount"] == 1
                         and service_document_snapshot["pendingReferenceElementId"] == "__smoke_service_document_pending_reference__"
@@ -7957,44 +7951,6 @@ def main() -> int:
                         pass_("presenter-generic-asset-upload-guard", json.dumps(presenter_generic_asset_upload_guard, ensure_ascii=False))
                     else:
                         fail("presenter-generic-asset-upload-guard", json.dumps(presenter_generic_asset_upload_guard, ensure_ascii=False))
-
-                    document_slide_owner_guard = page.evaluate(
-                        """
-                        () => {
-                          const item = {
-                            id: '11111111-1111-4111-8111-111111111111',
-                            _worshipSectionId: '22222222-2222-4222-8222-222222222222',
-                            _worshipSectionKey: 'reference-media',
-                            _worshipSlotKey: 'sermon.reference-media',
-                          };
-                          const staleSlide = {
-                            id: 'map-stage-1',
-                            elementId: '33333333-3333-4333-8333-333333333333',
-                            sectionId: '44444444-4444-4444-8444-444444444444',
-                            sectionKey: 'old-reference-media',
-                            slotKey: 'old.reference-media',
-                            type: 'image',
-                            imageSrc: 'https://cdn.example.test/map-1.png',
-                          };
-                          const owned = compactServiceDocumentSlide(staleSlide, 0, item);
-                          const orphaned = compactServiceDocumentSlide(staleSlide, 0, null);
-                          return {
-                            canonicalOwner: owned.elementId === item.id
-                              && owned.sectionId === item._worshipSectionId
-                              && owned.sectionKey === item._worshipSectionKey
-                              && owned.slotKey === item._worshipSlotKey,
-                            staleOwnerRemoved: !('elementId' in orphaned)
-                              && !('sectionId' in orphaned)
-                              && !('sectionKey' in orphaned)
-                              && !('slotKey' in orphaned),
-                          };
-                        }
-                        """
-                    )
-                    if document_slide_owner_guard["canonicalOwner"] and document_slide_owner_guard["staleOwnerRemoved"]:
-                        pass_("document-slide-owner-guard", json.dumps(document_slide_owner_guard, ensure_ascii=False))
-                    else:
-                        fail("document-slide-owner-guard", json.dumps(document_slide_owner_guard, ensure_ascii=False))
 
                     presenter_imported_deck_asset_guard = page.evaluate(
                         """

@@ -20,6 +20,7 @@ def run(browser, url):
       requireClient = () => true;
       ensureWorshipServiceRowsLoadedForPersistence = async () => {};
       worshipElementTypedStateColumns = async () => columns;
+      worshipAtomicClient = async () => null;
       captureWorshipRecoverySnapshot = () => {};
       updateSaveState = () => {};
       const realRefresh = refreshPresenterForService;
@@ -135,8 +136,8 @@ def run(browser, url):
       const baseDocument = serviceDocumentSnapshotFromRef(state.services[0]);
       baseDocument.sourceText += '\\n\\n[별도]\\n사용자 항목: Keep unknown extension';
       state.services[0]._worshipSourceRef[MINDEX_SERVICE_DOCUMENT_SOURCE_REF_KEY] = baseDocument;
-      const emptySnapshot = buildServiceDocumentSlideSnapshots(sid, [], state.services[0]);
-      check(!JSON.stringify(emptySnapshot).includes('Original 1'), 'empty explicit snapshot revived old document slides');
+      const emptySnapshot = buildServiceDocumentSnapshot(state.services[0], []);
+      check(!JSON.stringify(emptySnapshot).includes('Original 1') && !('slides' in emptySnapshot), 'empty document revived rendered slides');
       edit(a, 'Save A'); edit(b, 'Draft B');
       state.services[0]._worshipSourceTextDraft = 'UNSAVED WHOLE SERVICE SOURCE';
       await save(a);

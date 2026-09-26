@@ -83,7 +83,7 @@ def main():
                   })};
                   const job={sourceServiceId:sid,targetId:tid,key:'sermon-title',previous,item:edited};
                   reset();await persistSundayEditSync(job,{elementTypedStateColumns:typed});
-                  check(writes.length===1&&db.elements[0].title==='Edited','target not saved');
+                  check(writes.length===2&&writes[0].table==='mindex_worship_elements'&&writes[1].table==='mindex_worship_services'&&db.elements[0].title==='Edited','target not saved');
                   check(!Object.hasOwn(writes[0].payload,'sort_order')&&!Object.hasOwn(writes[0].payload,'section_id'),'structure overwritten');
                   reset();db.elements[0].title='Independent';
                   let failed=false;try{await persistSundayEditSync(job,{elementTypedStateColumns:typed})}catch{failed=true}
@@ -100,8 +100,7 @@ def main():
                   await persistSundayEditSync(job,{elementTypedStateColumns:typed});
                   const doc=serviceRow.source_ref.mindexServiceDocument;
                   check(doc.sourceText.includes('Edited'),'source text stale');
-                  check(doc.slides.some(x=>x.id==='custom'&&x.imageSrc==='keep.png'),'unrelated snapshot lost');
-                  check(!doc.slides.some(x=>x.elementId===db.elements[0].id&&x.text==='Original'),'changed snapshot stale');
+                  check(!('slides' in doc)&&!('sourceRecords' in doc)&&!('exceptions' in doc),'derived presentation snapshot persisted');
                   reset();serviceRow.source_ref={mindexServiceDocument:{sourceText:'Original',slides:[]}};mode='document-conflict';failed=false;
                   try{await persistSundayEditSync(job,{elementTypedStateColumns:typed})}catch{failed=true}
                   check(failed&&db.elements[0].title==='Edited','partial save not reported');
