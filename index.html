@@ -17,6 +17,23 @@
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-6SemiBold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-7Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./vendor/fonts/freesentation/Freesentation-8ExtraBold.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      html.presenter-output-document,
+      html.presenter-output-document body,
+      body.presenter-output-body {
+        margin: 0;
+        background: #000;
+      }
+      html.presenter-output-pending body { visibility: hidden; }
+    </style>
+    <script>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("output") === "presenter" || params.get("mindex-output") === "presenter") {
+          document.documentElement.classList.add("presenter-output-document", "presenter-output-pending");
+        }
+      })();
+    </script>
   </head>
   <body>
     <script>

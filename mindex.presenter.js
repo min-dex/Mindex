@@ -3413,6 +3413,8 @@ function initPresenterOutputCore() {
   document.body.innerHTML = `
     <main id="presenterOutputRoot" class="presenter-output-root no-chromakey" aria-live="polite"></main>
   `;
+  // The HTML bootstrap hides the controller shell until this output root exists.
+  document.documentElement.classList.remove("presenter-output-pending");
   applyPresenterOutputViewportScale();
   window.addEventListener("resize", () => applyPresenterOutputViewportScale());
   setupPresenterStartupFullscreen();
