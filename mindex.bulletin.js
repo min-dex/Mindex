@@ -22,7 +22,7 @@
   const dateLabel = value => { const [y,m,d]=String(value).split("-").map(Number); return y&&m&&d ? `${y}년 ${m}월 ${d}일` : ""; };
   const shortDate = value => { const [,m,d]=String(value).split("-").map(Number); return m&&d ? `${m}월 ${d}일` : ""; };
 
-  const profileKeys=["church","notices","staff","motto","verse","website","address","meeting"];
+  const profileKeys=["church","notices","staff","motto","verse","website","address","meeting","welcome"];
   // Confirmed archive metadata only; never infer a future issue from week numbers.
   const archiveIssues={"2025-01-05":"1","2025-01-12":"2","2025-01-26":"3","2025-02-02":"4","2025-02-09":"5","2025-02-16":"6","2025-02-23":"7","2025-03-09":"8","2025-03-16":"9","2025-03-23":"10","2025-03-30":"11","2025-04-13":"12","2025-04-20":"13","2025-04-27":"14","2025-05-04":"15","2025-05-11":"16","2025-05-18":"17","2025-05-25":"18","2025-06-01":"19","2025-06-15":"20","2025-06-22":"21","2025-06-29":"22","2025-07-20":"23","2025-07-27":"24","2025-08-03":"25","2025-08-10":"26","2025-08-17":"27","2025-08-31":"28","2025-09-07":"29","2025-09-14":"30","2025-09-21":"31","2025-09-28":"32","2025-10-12":"33","2025-10-19":"34","2025-10-26":"35","2025-11-02":"36","2025-11-09":"37","2025-11-16":"38","2025-11-30":"39","2025-12-07":"40","2025-12-14":"41","2025-12-21":"42","2026-01-18":"1","2026-01-25":"2","2026-02-08":"3","2026-02-22":"4","2026-03-08":"5","2026-03-22":"6","2026-03-29":"7","2026-04-12":"8","2026-04-19":"9","2026-04-26":"10","2026-05-10":"11","2026-05-17":"12","2026-05-24":"13","2026-05-31":"14","2026-06-07":"15","2026-06-21":"16","2026-06-28":"17","2026-07-05":"18","2026-07-19":"19","2026-07-26":"20","2026-08-02":"21","2026-08-16":"22","2026-08-23":"23","2026-09-06":"24","2026-09-13":"25","2026-09-20":"26"};
   // Legacy keys decode saved drafts; current choices come from the shared registry.
@@ -40,11 +40,11 @@
     const hour=date>="2026-05-31"?"오후 3시":date>="2025-09-14"?"오전 11시":"오전 10시";
     return {church:"기독교대한성결교회 검단우리교회",website:"gdwoori.org",
       address:`인천광역시 ${date>="2026-07-05"?"검단구":"서구"} 완정로 178번안길 1`,
-      welcome:"오늘도 청년부 예배에 오신 여러분을\n환영하고 축복합니다 :)",
+      welcome:date>="2026-01-18"?"오늘도 청년부 예배에 오신 여러분을\n환영하고 축복합니다 :)":"청년부 예배에 오신 여러분을 환영합니다.",
       meeting:"주일 오후 1:10 · 1층 베데스다홀",
       motto:modern?"말씀으로 인도받는 RIA 청년 공동체":"하나님의 주 되심을 인정하는 청년들",
       verse:modern?'이는 그들을 긍휼히 여기는 이가 그들을 이끌되 샘물 근원으로 인도할 것임이라\n— 이사야 49:10b':'여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되며\n여호와께서 성을 지키지 아니하시면 파수꾼의 깨어 있음이 헛되도다 — 시편 127:1',
-      notices:["검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다.",date>="2025-04-13"?`기도 모임: 매주 토요일 ${hour} · 1층 청년부실`:"예배 시작 10분 전에 모여 함께 기도로 준비해 주세요."].join("\n"),
+      notices:[date>="2025-04-13"?`◈ 청년부 기도 모임(매주 토요일 ${hour} / 1층 청년부실)에 많은 참여 바랍니다.`:"예배 시작 10분 전에 모여 함께 기도로 준비해 주세요.","◈ 검단우리교회는 신천지 추수꾼 및 각종 이단의 출입을 금지합니다."].join("\n"),
       staff:date>="2025-12-07"?"위임목사 김남영 목사 · 담당 교역자 김석범 목사\n회장 김음파 청년 · 총무 이재희 청년\n서기 박지훈 청년 · 회계 서영윤 청년":""};
   }
   function monthlyView(calendar,date,settings={},services=[]) {
@@ -61,11 +61,64 @@
       prayers.push({date:day,person:exception?`(${exception.label||"집회 없음"})`:clean(row.young_adult_prayer)||"미정",next:day===nextDate});
       cursor.setUTCDate(cursor.getUTCDate()+7);
     } while(prayers[prayers.length-1].date.slice(0,7)===rosterMonth);
-    // A new bulletin should never revive an event that has already passed. Choosing
-    // a month explicitly remains a deliberate archive/monthly-view request.
-    const eventStart=selectedEventsMonth?`${eventsMonth}-01`:date;
-    return {eventsMonth,rosterMonth,prayers,events:calendar.filter(r=>r.date>=eventStart&&r.date.slice(0,7)===eventsMonth&&clean(r.church_schedule))
+    return {eventsMonth,rosterMonth,prayers,events:calendar.filter(r=>r.date.slice(0,7)===eventsMonth&&clean(r.church_schedule))
       .sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${shortDate(r.date)}  ${clean(r.church_schedule)}`).join("\n")};
+  }
+
+  // Monthly panels transcribed from all 26 youth bulletins in 2026.
+  const archiveMonthlyEvents = [
+  {
+    "date": "2026-01-18",
+    "events": "2일 (금) 오후 8:00 | 월삭예배\n18일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-02-08",
+    "events": "6일 (금) 오후 8:00 | 월삭예배\n22일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-03-08",
+    "events": "6일 (금) 오후 8:00 | 월삭예배\n22일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-04-12",
+    "events": "3일 (금) 오후 8:00 | 월삭예배\n19일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-05-10",
+    "events": "1일 (금) – 22일 (금) 평일 오후 8:00 | 오멜세기기도회\n1일 (금) 오후 8:00 | 월삭예배\n17일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-06-07",
+    "events": "5일 (금) 오후 8:00 | 월삭예배\n21일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-07-05",
+    "events": "3일 (금) 오후 8:00 | 월삭예배\n19일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-08-02",
+    "events": "7일 (금) 오후 8:00 | 온세대 월삭예배\n23일 (주일) 오전 10:50 | 온세대 찬양예배"
+  },
+  {
+    "date": "2026-09-06",
+    "events": "4일 (금) 오후 8:00 | 온세대 월삭예배\n20일 (주일) 오전 10:50 | 온세대 찬양예배"
+  }
+];
+
+  // Reuse only explicitly shared content, never last week's worship or news.
+  function reusableContent(date,month,history=[]) {
+    const common=profileForDate(date),commonOverrides={};
+    let events=archiveMonthlyEvents.filter(row=>row.date<=date&&row.date.slice(0,7)===month).at(-1)?.events;
+    let eventsOrigin=events!==undefined?"실주보 월간 일정":"교회력 일정";
+    const rows=history.filter(row=>row.date<=date).slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.id||"").localeCompare(String(b.id||"")));
+    for(const row of rows) {
+      const shared=row.content?.reuse?.common||row.content?.fields;
+      for(const key of profileKeys)if(typeof shared?.[key]==="string")common[key]=commonOverrides[key]=shared[key];
+      const legacyMonth=row.content?.eventsMonth||row.date.slice(0,7);
+      const value=row.content?.reuse?.months?.[month]??(!row.content?.reuse&&legacyMonth===month?row.content?.fields?.eventsText:undefined);
+      if(typeof value==="string"){events=value;eventsOrigin="같은 달에 저장한 일정";}
+    }
+    return {common,commonOverrides,events,eventsOrigin};
   }
 
   // The printed archive separates the welcome, weekly news and recurring notices.
@@ -83,7 +136,7 @@
     return Object.fromEntries(Object.entries(parts).map(([key,lines])=>[key,lines.join("\n")]));
   }
 
-  function resolveSource({service, sections=[], elements=[], songs=[], scriptures=[], calendar=[], settings={}, services=[]}) {
+  function resolveSource({service, sections=[], elements=[], songs=[], scriptures=[], calendar=[], settings={}, services=[], history=[]}) {
     const compactOrder=settings.compactOrder!==false;
     const songById = new Map(songs.map(s=>[s.id,s]));
     const scriptureById = new Map(scriptures.map(s=>[s.id,s]));
@@ -135,6 +188,11 @@
     source.announcements=source.news;
     Object.assign(source,announcementParts(source.news));
     Object.assign(source,monthlyView(calendar,date,settings,services));
+    const reused=reusableContent(date,source.eventsMonth,history);
+    source.common=reused.common;source.commonOverrides=reused.commonOverrides;
+    source.calendarEvents=source.events;
+    if(reused.events!==undefined){source.events=reused.events;source.eventsOrigin=reused.eventsOrigin;}
+    else source.eventsOrigin="교회력 일정";
     return source;
   }
 
@@ -240,9 +298,17 @@
     return end-box.y+size*.25/MM;
   }
   function fieldValue(doc,key) {
+    if(key==="eventsText") {
+      const month=doc.settings.eventsMonth||doc.source?.eventsMonth;
+      if(Object.hasOwn(doc.months||{},month))return doc.months[month];
+      if(Object.hasOwn(doc.inherited?.months||{},month))return doc.inherited.months[month];
+    }
     if(Object.hasOwn(doc.fields,key))return doc.fields[key];
-    if(["news","welcome","notices","leader"].includes(key))return doc.source?.[key]||doc.profile?.[key]||"";
+    if(Object.hasOwn(doc.inherited?.common||{},key))return doc.inherited.common[key];
+    if(Object.hasOwn(doc.source?.commonOverrides||{},key))return doc.source.commonOverrides[key];
+    if(["news","welcome","notices","leader"].includes(key)&&doc.source?.[key])return doc.source[key];
     if(key==="eventsText")return doc.source?.events||"";
+    if(Object.hasOwn(doc.source?.common||{},key))return doc.source.common[key];
     if(key==="issue")return archiveIssues[doc.source?.date]||"";
     return doc.profile?.[key]??"";
   }
@@ -290,11 +356,14 @@
         } else if(f.type==="events") {
           let y=f.y;
           for(const line of String(boundText(doc,f)).split("\n").filter(Boolean)) {
-            const parts=line.match(/^(\d+월 \d+일)\s+(.+)$/);
+            const printed=line.includes(" | ");
+            const parts=printed?line.match(/^(.+?) \| (.+)$/):line.match(/^(\d+월 \d+일)\s+(.+)$/);
             if(!parts){y+=writeText(group,line,{...f,y,h:f.y+f.h-y},frameIssues,f.id)+2.5;continue;}
-            const body=parts[2],h=Math.max(7.5,wrap(body,f.w-35,f.size).length*snap(f.size*1.2)/MM+2.5);
-            writeText(group,parts[1],{...f,y,w:30,h},frameIssues,f.id);
-            writeText(group,body,{...f,x:f.x+35,y,w:f.w-35,h,align:"right"},frameIssues,f.id);y+=h;
+            const body=parts[2],labelWidth=printed?65:30,bodyX=labelWidth+5,bodyWidth=f.w-bodyX;
+            if(bodyWidth<10){frameIssues.add(f.id);continue;}
+            const h=Math.max(7.5,Math.max(wrap(body,bodyWidth,f.size).length,wrap(parts[1],labelWidth,f.size).length)*snap(f.size*1.2)/MM+2.5);
+            writeText(group,parts[1],{...f,y,w:labelWidth,h},frameIssues,f.id);
+            writeText(group,body,{...f,x:f.x+bodyX,y,w:bodyWidth,h,align:"right",weight:700},frameIssues,f.id);y+=h;
             if(y>f.y+f.h+.01)frameIssues.add(f.id);
           }
         } else if(f.type==="order") {
@@ -345,8 +414,8 @@
 
   const isRecord=value=>!!value&&typeof value==="object"&&!Array.isArray(value);
   function normalizeSnapshot(value={}) {
-    const values={},settings={},frames=defaultFrames();
-    if(!isRecord(value))return {fields:values,settings,frames};
+    const values={},settings={},frames=defaultFrames(),months={},inherited={common:{},months:{}};
+    if(!isRecord(value))value={};
     for(const key of Object.keys(fields))if(typeof value.fields?.[key]==="string")values[key]=value.fields[key];
     for(const key of ["eventsMonth","rosterMonth"])if(validMonth(value.settings?.[key]))settings[key]=value.settings[key];
     if(typeof value.settings?.theme==="string")settings.theme=value.settings.theme;
@@ -362,7 +431,10 @@
       f.x=Math.min(f.x,297-f.w);f.y=Math.min(f.y,210-f.h);
       f.hidden=patch.hidden===true;if(["left","center","right"].includes(patch.align))f.align=patch.align;
     }
-    return {fields:values,settings,frames};
+    for(const [month,text] of Object.entries(isRecord(value.months)?value.months:{}))if(validMonth(month)&&typeof text==="string")months[month]=text;
+    for(const key of profileKeys)if(typeof value.inherited?.common?.[key]==="string")inherited.common[key]=value.inherited.common[key];
+    for(const [month,text] of Object.entries(isRecord(value.inherited?.months)?value.inherited.months:{}))if(validMonth(month)&&typeof text==="string")inherited.months[month]=text;
+    return {fields:values,settings,frames,months,inherited};
   }
   function readLocal(key) {
     try{return JSON.parse(localStorage.getItem(key)||"null");}catch{return null;}
@@ -374,17 +446,22 @@
     if(saved?.version===1&&!Object.hasOwn(value.settings,"theme"))value.settings.theme="26-A5.png";
     return {key,...value,hasLocal,savedAt:Number(saved?.savedAt)||0,source:null,history:[],future:[],revision:0,dirty:false,saving:false,backupUnavailable:false};
   }
-  function snapshot(doc){return {fields:clone(doc.fields),settings:clone(doc.settings||{}),frames:clone(doc.frames)};}
+  function snapshot(doc){return {fields:clone(doc.fields),settings:clone(doc.settings||{}),frames:clone(doc.frames),months:clone(doc.months||{}),inherited:clone(doc.inherited||{common:{},months:{}})};}
 
   function storedValue(doc) {
     const {theme,compactOrder,eventsMonth,rosterMonth}=doc.settings;
-    return {content:{fields:clone(doc.fields),eventsMonth,rosterMonth,compactOrder:compactOrder!==false},
+    const common=Object.fromEntries(profileKeys.filter(key=>Object.hasOwn(doc.fields,key)).map(key=>[key,doc.fields[key]]));
+    const months=clone(doc.months||{}),month=eventsMonth||doc.source?.eventsMonth;
+    if(validMonth(month)&&Object.hasOwn(doc.fields,"eventsText"))months[month]=doc.fields.eventsText;
+    const inherited={common:Object.fromEntries(profileKeys.map(key=>[key,fieldValue(doc,key)])),months:clone(doc.inherited?.months||{})};
+    if(validMonth(month))inherited.months[month]=fieldValue(doc,"eventsText");
+    return {content:{fields:clone(doc.fields),eventsMonth,rosterMonth,compactOrder:compactOrder!==false,months,inherited,reuse:{common,months}},
       layout:{background:backgroundKey(theme),frames:clone(doc.frames)}};
   }
   function applyStored(doc,row) {
     if(!row||!Number.isInteger(row.revision)||row.revision<1||!isRecord(row.content)||!isRecord(row.layout)
       ||(row.layout.frames!==undefined&&!Array.isArray(row.layout.frames)))throw new Error("주보 저장 데이터 형식을 확인해 주세요.");
-    const value=normalizeSnapshot({fields:row.content.fields,settings:{...row.content,theme:row.layout.background},frames:row.layout.frames});
+    const value=normalizeSnapshot({fields:row.content.fields,settings:{...row.content,theme:row.layout.background},frames:row.layout.frames,months:row.content.months,inherited:row.content.inherited});
     Object.assign(doc,value,{revision:row.revision,dirty:false,history:[],future:[]});
   }
 
@@ -470,12 +547,11 @@
         const field=key=>`<label>${escape(fields[key])}${["issue","church","website"].includes(key)?
           `<input data-bulletin-field="${key}" value="${escape(fieldValue(doc,key))}" ${key==="issue"?'inputmode="numeric"':''}>`:
           `<textarea data-bulletin-field="${key}" rows="${key==="news"?5:3}">${escape(fieldValue(doc,key))}</textarea>`}</label>`;
-        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주 내용</h3><p class="bulletin-help">예배 광고에서 환영 문구와 상시 안내를 나눠 담습니다. 직접 편집한 내용은 유지합니다.</p>${["issue","leader","news","eventsText","outline","welcome"].map(field).join("")}</section>
-          <section class="bulletin-property-section"><h3>일정과 위원표</h3><div class="bulletin-number-grid">
+        p.innerHTML=`<section class="bulletin-property-section"><h3>이번 주</h3><p class="bulletin-help">찬양·본문·설교·기도자는 예배와 교회력에서 가져옵니다. 소식은 광고를 바탕으로 편집하고, 설교 요점과 누락된 인도자만 보완해 주세요.</p>${["news","outline","leader","issue"].map(field).join("")}</section>
+          <section class="bulletin-property-section"><h3>이번 달</h3><p class="bulletin-help">${escape(doc.source?.eventsOrigin||"교회력 일정")}을 사용합니다. 일정 수정은 같은 달 주보에 이어집니다. 위원표는 교회력의 배정과 예배 상태를 매번 확인합니다.</p>${field("eventsText")}<button type="button" data-bulletin-calendar-events>교회력 일정 불러오기</button><div class="bulletin-number-grid">
           <label>교회 일정<input type="month" data-bulletin-setting="eventsMonth" value="${escape(doc.settings.eventsMonth||doc.source?.eventsMonth||"")}"></label>
           <label>예배 위원<input type="month" data-bulletin-setting="rosterMonth" value="${escape(doc.settings.rosterMonth||doc.source?.rosterMonth||"")}"></label></div></section>
-          <section class="bulletin-property-section"><h3>공통 정보</h3><button type="button" data-bulletin-reference>기존 주보 문구 불러오기</button><p class="bulletin-help">과거 주보에서 확인한 문구입니다. 현재 정보인지 확인한 뒤 사용해 주세요.</p>${profileKeys.map(field).join("")}
-          </section>`;
+          <details class="bulletin-property-section" data-bulletin-common><summary>공통 내용</summary><p class="bulletin-help">실주보에서 확인한 내용을 기본으로 사용합니다. 여기서 수정·저장한 내용은 이 날짜부터 새로 만드는 주보에도 적용됩니다. 이번 호만 빼려면 양식에서 해당 영역을 숨겨 주세요.</p><button type="button" data-bulletin-common-reset>공통 내용 다시 연결</button>${profileKeys.map(field).join("")}</details>`;
 
       } else {
         const f=doc.frames.find(f=>f.id===selected)||doc.frames[0];selected=f.id;
@@ -510,7 +586,9 @@
           target.dbLoaded=true;target.saveError="";saveError="";
         }
         const source=await options.loadSource(id,target.settings);if(request!==serial||signal.aborted)return;
-        target.source=source;target.profile=target.revision?{}:loadProfile(source.date);
+        target.source=source;
+        if(Object.hasOwn(target.fields,"eventsText")){target.months[source.eventsMonth]=target.fields.eventsText;delete target.fields.eventsText;}
+        target.profile=target.revision?{}:loadProfile(source.date);
         // Preserve explicitly saved legacy common copy as ordinary content when migrating.
         if(!target.revision)for(const [key,value] of Object.entries(target.profile))if(!Object.hasOwn(target.fields,key))target.fields[key]=value;
         target.backgrounds=options.getBackgrounds?.()||[];await readyBackground(target);if(request!==serial||signal.aborted)return;assetLoaded=true;
@@ -534,7 +612,10 @@
     }
     on(root,"input",event=>{
       const key=event.target.dataset.bulletinField;if(!key)return;
-      remember();doc.fields[key]=event.target.value;persist();preview();
+      remember();
+      if(key==="eventsText"){doc.months[doc.source.eventsMonth]=event.target.value;delete doc.fields.eventsText;}
+      else doc.fields[key]=event.target.value;
+      persist();preview();
     });
     on(root,"change",event=>{
       const t=event.target;
@@ -553,8 +634,12 @@
     on(root,"click",event=>{
       const b=event.target.closest("button");if(!b)return;
       if(b.hasAttribute("data-bulletin-reset-layout")){remember();doc.frames=defaultFrames();persist();properties();preview();return;}
-      if(b.hasAttribute("data-bulletin-reference")){
-        remember();for(const [key,value] of Object.entries(profileForDate(doc.source?.date)))if(!fieldValue(doc,key))doc.fields[key]=value;
+      if(b.hasAttribute("data-bulletin-calendar-events")){
+        remember();doc.months[doc.source.eventsMonth]=doc.source.calendarEvents||"";delete doc.fields.eventsText;
+        persist();properties();preview();return;
+      }
+      if(b.hasAttribute("data-bulletin-common-reset")){
+        remember();for(const key of profileKeys)delete doc.fields[key];doc.inherited.common={};
         persist();properties();preview();return;
       }
       if(b.hasAttribute("data-bulletin-save")){void save();return;}
@@ -563,7 +648,7 @@
         if(!doc.localDraft)return;remember();Object.assign(doc,normalizeSnapshot(doc.localDraft));persist();void load(doc.id);return;
       }
       if(b.dataset.bulletinMode){mode=b.dataset.bulletinMode;properties();preview();}
-      if(b.hasAttribute("data-bulletin-refresh"))void load(q("[data-bulletin-service]").value);
+      if(b.hasAttribute("data-bulletin-refresh")){remember();doc.inherited={common:{},months:{}};persist();void load(q("[data-bulletin-service]").value);}
       if(b.hasAttribute("data-bulletin-undo"))history();
       if(b.hasAttribute("data-bulletin-redo"))history(true);
       if(b.hasAttribute("data-bulletin-print"))void print();
@@ -631,5 +716,5 @@
     void load(options.serviceId);
     return {destroy, reload(){return load(q("[data-bulletin-service]").value);}};
   }
-  window.MindexBulletin=Object.freeze({mount,resolveSource,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView,storedValue,applyStored,normalizeSnapshot});
+  window.MindexBulletin=Object.freeze({mount,resolveSource,reusableContent,fieldValue,defaultFrames,renderPages,readyAssets,TOKENS,wrap,profileForDate,monthlyView,storedValue,applyStored,normalizeSnapshot});
 })();

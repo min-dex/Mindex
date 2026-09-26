@@ -58,7 +58,7 @@ const server=http.createServer((req,res)=>{
         const copy=structuredClone(window.bulletinSaved);copy.elements[2].title=b.sermon;return copy;
       }});
       state.client={supabaseUrl:'https://offline-bulletin.test',from(table){
-        const query={select(){return this;},in(){return this;},gte(){return this;},lte(){return this;},order(){return this;},
+        const query={select(){return this;},in(){return this;},gte(){return this;},lte(){return this;},eq(){return this;},neq(){return this;},range(){return this;},order(){return this;},
           then(resolve){return Promise.resolve({data:table==='mindex_songs'?[{id:'song',title:'연결된 DB 찬양',hymn_no:309}]:
             table==='mindex_worship_services'?[{id:'exception',service_type_id:'young-adult',service_date:'2026-09-27',service_alias:'연합예배',source_ref:{no_gathering:true}}]:table==='mindex_sunday_calendar'?[{date:'2026-09-20',young_adult_prayer:b.prayer,liturgical:'교회력 명칭',church_schedule:'DB 일정'},
               {date:'2026-09-27',young_adult_prayer:'다음 기도자'}]:[],error:null}).then(resolve);}};return query;
@@ -124,6 +124,7 @@ const server=http.createServer((req,res)=>{
     console.log('PASS same-tab rail, entry, dates, return, draft undo and explicit tab switching');
 
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));
+    await page.locator('[data-bulletin-common] summary').click();
     await page.locator('[data-bulletin-field="church"]').fill('샘플 교회');
     assert.equal(await page.locator('[data-frame-id="insideChurch"]').textContent(),'샘플 교회');
     await page.locator('[data-bulletin-field="news"]').fill('이번 주 소식\n다음 주 소식');
@@ -345,7 +346,7 @@ const server=http.createServer((req,res)=>{
       window.MindexBulletin.mount(host,{serviceId:source.id,scope:'https://offline-bulletin.test',services:[{id:source.id,label:'다음 주보'}],loadSource:async()=>source,loadDraft:async()=>null,saveDraft:saveBulletinDraft,onClose(){}});
     });
     await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
-    assert.equal(await page.locator('[data-bulletin-field="church"]').inputValue(),'','No automatic historical common copy');
+    assert.equal(await page.locator('[data-bulletin-field="church"]').inputValue(),'기독교대한성결교회 검단우리교회','Dated common copy automatically supplies new bulletins');
     assert.equal(await page.locator('[data-bulletin-field="issue"]').inputValue(),'','Unknown future issue must not be guessed');
     assert.deepEqual(errors,[]);
     if(process.env.BULLETIN_LIVE_STDIN) {

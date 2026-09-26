@@ -15286,13 +15286,14 @@ async function loadServiceBulletinSource(serviceId, settings = {}) {
   const rangeEnd = new Date(Date.UTC(year, month, 7)).toISOString().slice(0, 10);
   const songIds = [...new Set(aggregate.elements.map(row => row.song_id).filter(Boolean))];
   const scriptureIds = [...new Set(aggregate.elements.map(row => row.scripture_id).filter(Boolean))];
-  const [songs, scriptures, calendar, bulletinServices] = await Promise.all([
+  const [songs, scriptures, calendar, bulletinServices, history] = await Promise.all([
     songIds.length ? read(state.client.from("mindex_songs").select("id,title,hymn_no").in("id", songIds)) : [],
     scriptureIds.length ? read(state.client.from("mindex_scriptures").select("id,reference").in("id", scriptureIds)) : [],
     read(state.client.from("mindex_sunday_calendar").select("date,liturgical,note,church_schedule,young_adult_prayer").gte("date", monthStart).lte("date", rangeEnd).order("date")),
     read(state.client.from("mindex_worship_services").select("id,service_type_id,service_date,title,service_alias,source_ref").gte("service_date", monthStart).lte("service_date", rangeEnd).order("service_date")),
+    loadBulletinReusableContent(aggregate.service),
   ]);
-  const source = window.MindexBulletin.resolveSource({...aggregate, songs: songs || [], scriptures: scriptures || [], calendar: calendar || [], settings,
+  const source = window.MindexBulletin.resolveSource({...aggregate, songs: songs || [], scriptures: scriptures || [], calendar: calendar || [], settings, history,
     services: (bulletinServices || []).map(normalizeWorshipService).filter(s => worshipAppServiceTypeId(s.type_id) === "young-adult")
       .map(s => ({date: s.date, noGathering: serviceIsNoGathering(s), label: s.alias || s.title || "집회 없음"}))});
   source.autoBackground = bulletinBackgroundForService(normalized, (calendar || []).find(row => row.date === normalized.date));
@@ -15304,6 +15305,20 @@ function bulletinBackgroundForService(service, calendarRow) {
   if (!url) return null;
   const registered = Object.entries(state.worshipBackgroundRegistry || {}).find(([,entry]) => entry.dataUrl === url);
   return {key:registered?.[0] || (/^(data:|blob:)/.test(url) ? "예배 지정 이미지" : worshipBackgroundFileNameFromPath(url)), url};
+}
+
+async function loadBulletinReusableContent(service) {
+  const rows=[];
+  for(let offset=0;;offset+=200) {
+    const {data,error}=await state.client.from("mindex_bulletins")
+      .select("service_id,content,mindex_worship_services!inner(service_date,service_type_id)")
+      .eq("mindex_worship_services.service_type_id",service.service_type_id)
+      .lte("mindex_worship_services.service_date",service.service_date)
+      .neq("service_id",service.id).order("service_id").range(offset,offset+199);
+    if(error)throw new Error(`주보 공통 내용을 불러오지 못했습니다: ${error.message}`);
+    rows.push(...(data||[]).map(row=>({id:row.service_id,date:row.mindex_worship_services.service_date,content:row.content})));
+    if(!data||data.length<200)return rows;
+  }
 }
 
 async function loadBulletinDraft(serviceId) {

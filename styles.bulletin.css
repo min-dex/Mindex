@@ -55,3 +55,6 @@ body:has(.bulletin-workbench) .right-sidebar{display:none}
 .bulletin-toolbar button svg,.bulletin-meta button svg{width:var(--ui-icon-size);height:var(--ui-icon-size);flex-shrink:0}
 .bulletin-properties :is(input,select,textarea):hover{border-color:var(--control-line-strong)}
 @media(max-width:650px){.bulletin-inspector{border-right:0;border-bottom:1px solid var(--line-soft);padding-right:0}}
+
+.bulletin-property-section>summary{cursor:pointer;font-size:var(--ui-label-size);font-weight:700;color:var(--ink)}
+.bulletin-property-section[open]>summary{margin-bottom:15px}

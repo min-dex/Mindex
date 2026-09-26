@@ -47,7 +47,7 @@ assert.equal(monthlyView([], '2026-08-23').prayers.length,6);
 const separate=monthlyView([{date:'2026-10-02',church_schedule:'월삭'}], '2026-09-20', {eventsMonth:'2026-10',rosterMonth:'2026-08'});
 assert.match(separate.events,/월삭/);assert.equal(separate.prayers[0].date,'2026-08-02');
 const currentWeek=monthlyView([{date:'2026-09-20',church_schedule:'지난 주 일정'},{date:'2026-09-27',church_schedule:'이번 주 일정'}], '2026-09-27');
-assert.equal(currentWeek.events,'9월 27일  이번 주 일정','A new bulletin must not show an earlier event from the same month');
+assert.equal(currentWeek.events,'9월 20일  지난 주 일정\n9월 27일  이번 주 일정','Printed monthly panels retain the whole month');
 const monthReview=monthlyView([{date:'2026-09-20',church_schedule:'지난 주 일정'},{date:'2026-09-27',church_schedule:'이번 주 일정'}], '2026-09-27',{eventsMonth:'2026-09'});
 assert.match(monthReview.events,/지난 주 일정/,'An explicitly selected month may show its complete history');
 assert.match(profileForDate('2026-06-28').address,/서구/);
@@ -122,3 +122,45 @@ assert.equal(JSON.stringify(actual),actualBefore);
 assert.equal(c.window.MindexBulletin.normalizeSnapshot({}).settings.compactOrder,true);
 assert.equal(c.window.MindexBulletin.normalizeSnapshot({settings:{compactOrder:false}}).settings.compactOrder,false);
 console.log('PASS actual September 20 source: print grouping, array references, calendar note and separate copy');
+
+const B=c.window.MindexBulletin;
+const baseDoc=source=>({...B.normalizeSnapshot({}),source});
+const commonDoc=baseDoc(B.resolveSource(actual));
+assert.equal(B.fieldValue(commonDoc,'church'),'기독교대한성결교회 검단우리교회');
+assert.match(B.fieldValue(commonDoc,'eventsText'),/4일 \(금\) 오후 8:00/);
+assert.match(B.fieldValue(commonDoc,'notices'),/토요일 오후 3시/);
+assert.equal(B.fieldValue(commonDoc,'outline'),'');
+const history=[
+ {date:'2026-09-06',content:{reuse:{common:{meeting:'새 예배 장소',notices:''},months:{'2026-09':'9월 확인 일정'}},fields:{news:'이전 주 소식',leader:'이전 인도자',outline:'이전 설교'}}},
+ {date:'2026-10-04',content:{reuse:{common:{meeting:'미래 장소'},months:{'2026-10':'미래 일정'}}}}
+];
+const reused=B.resolveSource({...actual,history});
+assert.equal(B.fieldValue(baseDoc(reused),'meeting'),'새 예배 장소');
+assert.equal(reused.events,'9월 확인 일정');
+assert.equal(B.fieldValue(baseDoc(reused),'notices'),'','Explicitly shared blanks override older recurring text in announcements');
+assert.ok(!reused.news.includes('이전 주 소식'));
+assert.equal(reused.leader,'');
+assert.equal(B.reusableContent('2026-09-20','2026-09',history).common.notices,'');
+const nextMonth=B.resolveSource({...actual,service:{...actual.service,service_date:'2026-10-01'},history});
+assert.equal(nextMonth.events,'','September content must not leak across the month boundary');
+assert.equal(nextMonth.common.meeting,'새 예배 장소','Future-dated changes must not apply early');
+for(const month of ['01','02','03','04','05','06','07','08','09'])assert.ok(B.reusableContent(`2026-${month}-28`,`2026-${month}`).events,'Every reviewed month has its own original panel');
+const edited=baseDoc(reused);edited.fields.meeting='수정한 장소';edited.fields.news='이번 주만';
+edited.months={'2026-09':'이번 달 확정 일정','2026-10':'다음 달 확정 일정'};
+const saved=B.storedValue(edited);
+assert.equal(saved.content.reuse.common.meeting,'수정한 장소');
+assert.equal(saved.content.reuse.common.news,undefined);
+assert.equal(saved.content.reuse.common.leader,undefined);
+assert.equal(saved.content.reuse.months['2026-09'],'이번 달 확정 일정');
+const reload=baseDoc(nextMonth);B.applyStored(reload,{...saved,revision:1});
+reload.source=B.resolveSource({...actual,history:[{date:'2026-09-13',content:{reuse:{common:{church:'나중에 수정된 교회명'}}}}]});
+assert.equal(B.fieldValue(reload,'church'),'기독교대한성결교회 검단우리교회','Saved inherited copy is stable until an explicit source refresh');
+assert.equal(B.fieldValue(reload,'eventsText'),'이번 달 확정 일정');
+reload.settings.eventsMonth='2026-10';assert.equal(B.fieldValue(reload,'eventsText'),'다음 달 확정 일정');
+reload.settings.eventsMonth='2026-09';assert.equal(B.fieldValue(reload,'eventsText'),'이번 달 확정 일정');
+reload.fields.church='';assert.equal(B.fieldValue(reload,'church'),'','An intentional blank remains blank');
+assert.equal(B.normalizeSnapshot({months:{bad:'discard','2026-09':'keep'},inherited:{common:{news:'discard'},months:{bad:'discard'}}}).months.bad,undefined);
+console.log('PASS monthly reuse, dated common copy, week/month isolation, explicit blanks and saved inherited values');
+
+const legacy=B.reusableContent('2026-09-20','2026-09',[{date:'2026-09-06',content:{fields:{church:'기존에 수정한 교회명',eventsText:'기존 월간 일정',news:'복사하면 안 되는 소식'}}}]);
+assert.equal(legacy.common.church,'기존에 수정한 교회명');assert.equal(legacy.events,'기존 월간 일정');assert.equal(legacy.common.news,undefined);

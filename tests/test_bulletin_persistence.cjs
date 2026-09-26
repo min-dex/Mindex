@@ -27,3 +27,23 @@ vm.runInContext(code,ctx);
   await assert.rejects(()=>ctx.loadBulletinDraft('service'),/DB를 불러오지/);
   console.log('PASS bulletin DB adapter: content/layout writes, revision compare, conflicts, permission and missing schema');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+const reuseCode=app.slice(app.indexOf('async function loadBulletinReusableContent('),app.indexOf('async function loadBulletinDraft('));
+(async()=>{
+  const reads=[];let batch=0;
+  const context=vm.createContext({state:{client:{from(table){
+    const q=new Proxy({}, {get:(_,key)=>(...args)=>{
+      reads.push([key,...args]);
+      if(key==='range')return Promise.resolve({data:batch++===0?Array.from({length:200},(_,i)=>({service_id:String(i),content:{reuse:{}},mindex_worship_services:{service_date:'2026-09-06'}})):[{service_id:'last',content:{reuse:{}},mindex_worship_services:{service_date:'2026-09-13'}}],error:null});
+      return q;
+    }});return q;
+  }}}});
+  vm.runInContext(reuseCode,context);
+  const data=await context.loadBulletinReusableContent({id:'current',service_type_id:'young_adult',service_date:'2026-09-20'});
+  assert.equal(data.length,201);assert.equal(data.at(-1).date,'2026-09-13');
+  assert.ok(reads.some(r=>r[0]==='eq'&&r[1]==='mindex_worship_services.service_type_id'&&r[2]==='young_adult'));
+  assert.ok(reads.some(r=>r[0]==='lte'&&r[2]==='2026-09-20'));
+  assert.ok(reads.some(r=>r[0]==='neq'&&r[1]==='service_id'&&r[2]==='current'));
+  assert.deepEqual(reads.filter(r=>r[0]==='range'),[['range',0,199],['range',200,399]]);
+  console.log('PASS shared-content DB read: department, effective date, current-record exclusion and pagination');
+})().catch(e=>{console.error(e);process.exitCode=1;});
