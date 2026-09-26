@@ -12586,6 +12586,7 @@ function serviceItemEditorModel(item = {}, options = {}) {
   const song = elementType === "praise" || isSongServiceLabel(item.label) || specialSong;
   const scriptureBody = isScriptureBodyServiceItem(item);
   const scripture = isScriptureBodyServiceItem(item) || isScriptureServiceLabel(item.label);
+  const titleInputForbidden = serviceTitlePersonDisallowsTitleInput(item, parsed);
   const worshipLeaderItem = presenterTitleAssigneeUsesWorshipLeader(compactLabel);
   const genericRawTitle = presenterTitleAssigneeTitleIsGeneric(item.raw_title || "", item.label || "");
   const rawTitleAssignee = titlePerson ? serviceTitlePersonRawTitleAssignee(item, parsed) : "";
@@ -12606,7 +12607,8 @@ function serviceItemEditorModel(item = {}, options = {}) {
       || Boolean(String(item.assignee || "").trim())
     );
   const editableTitle =
-    isDefault
+    !titleInputForbidden
+    && (isDefault
     || (
       !preparation
       && (
@@ -12615,7 +12617,7 @@ function serviceItemEditorModel(item = {}, options = {}) {
         || serviceTitlePersonNeedsTitleInput(item, parsed)
         || (!rawTitleAssignee && !worshipLeaderItem && !genericRawTitle && Boolean(String(item.raw_title || "").trim()))
       )
-    );
+    ));
   const scripturePayload = scriptureBody ? serviceScriptureTextPayload(item, parsed, service) : null;
   const scriptureTitleValue = scripture
     ? serviceItemEditorScriptureTitleValue(item, parsed, service, scripturePayload)
@@ -12661,6 +12663,7 @@ function serviceItemEditorModel(item = {}, options = {}) {
 
 function serviceTitlePersonNeedsTitleInput(item = {}, memo = parseServiceItemMemo(item.memo)) {
   if (serviceMemoElementType(memo) !== "title_person") return false;
+  if (serviceTitlePersonDisallowsTitleInput(item, memo)) return false;
   if (isMonthlyCorporatePrayerGroupItem(item, memo)) return false;
   const label = compactSearchValue(item.label || "");
   if (!label) return true;
@@ -12668,6 +12671,11 @@ function serviceTitlePersonNeedsTitleInput(item = {}, memo = parseServiceItemMem
   const rawTitle = String(item.raw_title || item.title || "").trim();
   if (rawTitle && !presenterTitleAssigneeTitleIsGeneric(rawTitle, item.label || "") && !looksLikePersonOrGroup(rawTitle)) return true;
   return /설교|설교제목|특송|공동기도/.test(label);
+}
+
+function serviceTitlePersonDisallowsTitleInput(item = {}, memo = parseServiceItemMemo(item.memo)) {
+  return serviceMemoElementType(memo) === "title_person"
+    && compactSearchValue(item.label || "") === "봉헌기도";
 }
 
 function serviceItemEditorScriptureTitleValue(item = {}, parsed = parseServiceItemMemo(item.memo), service = null, scripturePayload = null) {
