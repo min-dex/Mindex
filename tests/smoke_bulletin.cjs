@@ -124,6 +124,20 @@ const server=http.createServer((req,res)=>{
     await page.evaluate(()=>{bulletinTest.delaySave=false;bulletinTest.releaseSave();});
     await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 저장됨'),{},{timeout:3000});
     await page.evaluate(()=>closePageTab(1));
+    await page.locator('[data-bulletin-field="news"]').fill('탭 A의 미저장 내용');
+    await page.evaluate(()=>openNewPageTab(currentBrowserHistorySnapshot()));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'저장 중 탭 전환','Another tab for the same service must load its own DB baseline');
+    await page.locator('[data-bulletin-field="news"]').fill('탭 B의 미저장 내용');
+    await page.evaluate(()=>activatePageTab(0));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 A의 미저장 내용');
+    await page.evaluate(()=>activatePageTab(1));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 B의 미저장 내용');
+    await page.evaluate(()=>closePageTab(1));
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    assert.equal(await page.locator('[data-bulletin-field="news"]').inputValue(),'탭 A의 미저장 내용');
     console.log('PASS same-tab rail, entry, dates, return, draft undo and explicit tab switching');
 
     assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('UNSAVED'));
@@ -160,6 +174,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.evaluate(()=>state.serviceItems[window.bulletinTest.id].find(item=>item.id==='unsaved')?.raw_title),'UNSAVED PRESENTER DRAFT');
     await page.evaluate(()=>{window.bulletinTest.fail=true;});await page.locator('[data-bulletin-refresh]').click();
     await page.waitForFunction(()=>document.querySelector('.bulletin-status').textContent.includes('DB 연결 실패'));
+    assert.equal(await page.locator('.bulletin-canvas svg').count(),0,'Failed reload must not leave a stale bulletin visible');
     assert.equal(await page.locator('[data-bulletin-print]').isDisabled(),true);
     await page.evaluate(()=>{window.bulletinTest.fail=false;});await page.locator('[data-bulletin-refresh]').click();
     await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
@@ -191,8 +206,10 @@ const server=http.createServer((req,res)=>{
     await page.locator('[data-bulletin-hidden]').uncheck();
     await page.locator('[data-bulletin-mode="content"]').click();
     assert.equal(await page.locator('[data-frame-id="notes"]').count(),0);
+    await page.locator('[data-bulletin-field="eventsText"]').fill('9/20 수정한 월간 일정');
     await page.locator('[data-bulletin-print]').click();
     await page.waitForFunction(()=>document.querySelector('.bulletin-print-frame')?.contentDocument?.querySelectorAll('svg').length===2);
+    assert.match(await page.evaluate(()=>document.querySelector('.bulletin-print-frame').contentDocument.body.textContent),/수정한 월간 일정/,'Printed monthly copy must match the preview');
     assert.match(await page.evaluate(()=>document.querySelector('.bulletin-print-frame').contentDocument.querySelector('svg>image').getAttribute('href')),/26-S6\.png$/);
     assert.equal(await page.evaluate(()=>document.querySelector('.bulletin-print-frame').contentDocument.querySelectorAll('[data-frame-id="notes"]').length),0);
     const markup=await page.evaluate(()=>document.querySelector('.bulletin-print-frame').contentDocument.documentElement.outerHTML);
@@ -339,6 +356,70 @@ const server=http.createServer((req,res)=>{
     await page.waitForTimeout(50);
     assert.equal(await page.evaluate(()=>window.printAudit.calls),0);
     console.log('PASS duplicate print prevention and close-during-print cancellation');
+
+    // Publication snapshots must remain coherent across undo and in-flight saves.
+    await page.evaluate(()=>{
+      const host=document.getElementById('detailPane');host.replaceChildren();
+      const source=window.MindexBulletin.resolveSource({...window.bulletinSaved,service:{...window.bulletinSaved.service,id:'race-audit',service_date:'2026-10-04'}});
+      source.autoBackground=bulletinBackgroundForService({type_id:'young-adult',date:source.date},{date:source.date});
+      window.raceAudit={source,documents:new Map(),row:null,delay:false};
+      window.MindexBulletin.mount(host,{serviceId:source.id,scope:'race-audit',services:[{id:source.id,label:'저장 경합 검사'}],documents:raceAudit.documents,
+        loadSource:async()=>structuredClone(raceAudit.source),loadDraft:async()=>raceAudit.row,
+        saveDraft:async(id,value,revision)=>{if(raceAudit.delay)await new Promise(resolve=>raceAudit.release=resolve);raceAudit.row={...structuredClone(value),revision:revision+1};return raceAudit.row;}});
+    });
+    await page.waitForFunction(()=>document.querySelector('[data-bulletin-print]')?.disabled===false);
+    await page.locator('[data-bulletin-refresh]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    await page.evaluate(()=>saveAll());
+    await page.evaluate(()=>{raceAudit.source.sermon='갱신 후 설교';});
+    await page.locator('[data-bulletin-refresh]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-canvas').textContent.includes('갱신 후 설교'));
+    await page.locator('[data-bulletin-undo]').click();
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.ok(!(await page.locator('.bulletin-canvas').textContent()).includes('갱신 후 설교'),'Undo refresh must restore the publication source even when settings are unchanged');
+    await page.locator('[data-bulletin-redo]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-canvas').textContent.includes('갱신 후 설교'));
+    await page.evaluate(()=>saveAll());
+    await page.locator('[data-bulletin-field="news"]').fill('저장 경합 검사');
+    await page.evaluate(()=>{raceAudit.delay=true;raceAudit.source.sermon='저장 중 변경한 자료';});
+    await page.locator('[data-bulletin-save]').click();
+    await page.waitForFunction(()=>!!raceAudit.release);
+    await page.locator('[data-bulletin-mode="layout"]').click();
+    await page.locator('[data-bulletin-setting="compactOrder"]').uncheck();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-canvas').textContent.includes('저장 중 변경한 자료'));
+    await page.evaluate(()=>{raceAudit.delay=false;raceAudit.release();});
+    await page.waitForFunction(()=>!raceAudit.documents.get('race-audit').saving);
+    assert.equal(await page.evaluate(()=>raceAudit.documents.get('race-audit').sourceSnapshot),null,'An older save must not restore a source snapshot cleared by a later edit');
+    await page.locator('[data-bulletin-mode="content"]').click();
+    await page.locator('[data-bulletin-setting="rosterMonth"]').fill('2026-11');
+    await page.locator('[data-bulletin-setting="rosterMonth"]').press('Tab');
+    await page.waitForFunction(()=>!document.querySelector('[data-bulletin-print]').disabled);
+    assert.match(await page.locator('.bulletin-canvas').textContent(),/저장 중 변경한 자료/);
+    await page.evaluate(()=>{raceAudit.documents.get('race-audit').inherited.common.website='saved-example.test';});
+    await page.locator('[data-bulletin-mode="layout"]').click();
+    await page.locator('[data-bulletin-mode="content"]').click();
+    await page.locator('[data-bulletin-print]').click();
+    await page.waitForFunction(()=>document.querySelector('.bulletin-print-frame')?.contentDocument?.querySelectorAll('svg').length===2);
+    assert.match(await page.evaluate(()=>document.querySelector('.bulletin-print-frame').contentDocument.body.textContent),/saved-example.test/,'Print must include saved inherited common copy');
+    console.log('PASS source refresh undo/redo, settings during save, and inherited print content');
+
+    await page.locator('[data-bulletin-mode="layout"]').click();
+    await page.locator('[data-bulletin-frame]').selectOption('news');
+    const hit=await page.locator('[data-frame-hit="news"]').boundingBox();
+    await page.evaluate(()=>{const doc=raceAudit.documents.get('race-audit');raceAudit.beforeDrag=doc.frames.find(f=>f.id==='news').x;doc.history=[];doc.dirty=false;});
+    await page.mouse.move(hit.x+hit.width/2,hit.y+hit.height/2);
+    await page.mouse.down();
+    await page.mouse.move(hit.x+hit.width/2+20,hit.y+hit.height/2,{steps:3});
+    await page.evaluate(()=>document.getElementById('detailPane').replaceChildren());
+    await page.waitForFunction(()=>raceAudit.documents.get('race-audit').history.length===1);
+    await page.mouse.up();
+    const moved=await page.evaluate(()=>{const doc=raceAudit.documents.get('race-audit');return {before:raceAudit.beforeDrag,after:doc.frames.find(f=>f.id==='news').x,backup:JSON.parse(localStorage.getItem(doc.key)).frames.find(f=>f.id==='news').x,dirty:doc.dirty};});
+    assert.notEqual(moved.after,moved.before);
+    assert.equal(moved.backup,moved.after);
+    assert.equal(moved.dirty,true);
+    console.log('PASS leaving during drag preserves layout, undo history and recovery');
+
+
 
 
 

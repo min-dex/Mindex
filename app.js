@@ -15349,10 +15349,12 @@ async function saveBulletinDraft(serviceId, value, revision) {
 }
 
 function mountServiceBulletinWorkbench(service) {
-  if (refs.detailPane.querySelector(`[data-bulletin-owner="${service.id}"]`)) return;
+  const tabId = state.pageTabs[state.pageTabIndex]?.id;
+  const mounted = refs.detailPane.querySelector("[data-bulletin-owner]");
+  if (mounted?.dataset.bulletinOwner === service.id && mounted.dataset.bulletinTab === tabId) return;
   refs.detailPane.innerHTML = `<div data-bulletin-owner="${escapeAttr(service.id)}" style="height:100%;min-height:0"></div>`;
   const host = refs.detailPane.firstElementChild;
-  const tabId = state.pageTabs[state.pageTabIndex]?.id;
+  host.dataset.bulletinTab = tabId;
   if (!bulletinTabSessions.has(tabId)) bulletinTabSessions.set(tabId, new Map());
   window.MindexBulletin.mount(host, {
     documents: bulletinTabSessions.get(tabId),

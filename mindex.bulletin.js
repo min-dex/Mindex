@@ -801,8 +801,7 @@
         if(!options.saveDraft)throw new Error("주보 DB 저장 연결이 필요합니다.");
         const row=await options.saveDraft(target.id,value,target.revision);
         target.revision=row.revision;target.dirty=JSON.stringify(snapshot(target))!==before;
-        target.sourceSnapshot=value.content.sourceSnapshot;
-        if(!target.dirty){target.settings.outlineColumns=value.layout.outlineColumns;target.settings.design=value.layout.design;}
+        if(!target.dirty){target.sourceSnapshot=value.content.sourceSnapshot;target.settings.outlineColumns=value.layout.outlineColumns;target.settings.design=value.layout.design;}
         backup(target);return !target.dirty;
       }catch(e){target.saveError=e.message;if(doc===target)saveError=e.message;target.dirty=true;return false;}
       finally{target.saving=false;window.dispatchEvent(new CustomEvent("mindex-bulletin-save-settled",{detail:target}));}
@@ -855,6 +854,9 @@
       }
     }
     async function load(id,force=false) {
+      endDrag();
+      q(".bulletin-canvas").replaceChildren();
+      issues=new Set();
       const request=++serial;loading=true;assetLoaded=false;error="";saveError="";printError="";drag=null;
       if(!documents.has(id)){
         const fresh=restore(options.scope,id);fresh.id=id;
@@ -889,8 +891,8 @@
     function history(redo=false){
       if(loading||!doc?.dbLoaded)return;
       const from=redo?doc.future:doc.history,to=redo?doc.history:doc.future;
-      if(!from.length)return;const months=JSON.stringify(doc.settings);to.push(snapshot(doc));Object.assign(doc,from.pop());persist();properties();preview();
-      if(months!==JSON.stringify(doc.settings))void load(q("[data-bulletin-service]").value);
+      if(!from.length)return;const sourceState=JSON.stringify([doc.settings,doc.sourceSnapshot]);to.push(snapshot(doc));Object.assign(doc,from.pop());persist();properties();preview();
+      if(sourceState!==JSON.stringify([doc.settings,doc.sourceSnapshot]))void load(q("[data-bulletin-service]").value);
     }
     function setDimension(f,key,value){
       if(key==="size"){if(TOKENS.fontSizes.includes(value))f.size=value;return;}
@@ -979,7 +981,7 @@
       if(q("[data-bulletin-print]").disabled)return;
       endDrag();
       printing=true;printError="";status();
-      const output=clone({fields:doc.fields,settings:doc.settings,profile:doc.profile,frames:doc.frames,source:doc.source,backgrounds:doc.backgrounds});
+      const output={...snapshot(doc),profile:clone(doc.profile),source:clone(doc.source),backgrounds:clone(doc.backgrounds)};
       try{
         await readyBackground(output);
         if(signal.aborted)return;
@@ -1004,7 +1006,7 @@
     }
     const observer=new MutationObserver(()=>{if(!root.isConnected)destroy();});
     observer.observe(document.body,{childList:true,subtree:true});
-    function destroy(){serial++;controller.abort();observer.disconnect();printFrame?.remove();}
+    function destroy(){endDrag();serial++;controller.abort();observer.disconnect();printFrame?.remove();}
 
     void load(options.serviceId);
     return {destroy, reload(){return load(q("[data-bulletin-service]").value);}};
