@@ -22983,14 +22983,25 @@ function buildServiceDocumentSlideSnapshots(serviceId = "", items = null, servic
 function compactServiceDocumentSlide(slide = {}, index = 0, item = null) {
   if (!slide || typeof slide !== "object") return null;
   const asset = normalizeServiceAsset(slide.asset || slide.media);
-  const slotKey = normalizeWorshipSlotKey(slide.slotKey || slide.slot_key || item?._worshipSlotKey || item?.slotKey || item?.slot_key);
+  const persistedElementId = String(item?.id || "").trim();
+  const persistedSectionId = String(item?._worshipSectionId || item?.section_id || "").trim();
+  const persistedSectionKey = String(item?._worshipSectionKey || item?.section_key || "").trim();
+  const persistedSlotKey = normalizeWorshipSlotKey(item?._worshipSlotKey || item?.slotKey || item?.slot_key);
+  const hasPersistedOwner = Boolean(persistedElementId);
+  // A presenter slide can retain display metadata from an earlier template or
+  // asset import. The document snapshot is validated against persisted rows, so
+  // always let the current item own its linkage. Unknown element IDs are display
+  // leftovers and must not enter the validated document at all.
+  const slotKey = hasPersistedOwner
+    ? persistedSlotKey
+    : normalizeWorshipSlotKey(slide.slotKey || slide.slot_key);
   const payload = {
     index: index + 1,
     slideKey: "",
     id: String(slide.id || "").trim(),
-    elementId: String(slide.elementId || "").trim(),
-    sectionId: String(slide.sectionId || "").trim(),
-    sectionKey: String(slide.sectionKey || "").trim(),
+    elementId: hasPersistedOwner ? persistedElementId : "",
+    sectionId: hasPersistedOwner ? persistedSectionId : String(slide.elementId || "").trim() ? "" : String(slide.sectionId || "").trim(),
+    sectionKey: hasPersistedOwner ? persistedSectionKey : String(slide.elementId || "").trim() ? "" : String(slide.sectionKey || "").trim(),
     slotKey,
     elementLabel: String(slide.elementLabel || slide.label || "").trim(),
     type: String(slide.type || "").trim(),

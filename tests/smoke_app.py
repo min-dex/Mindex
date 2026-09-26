@@ -7958,6 +7958,44 @@ def main() -> int:
                     else:
                         fail("presenter-generic-asset-upload-guard", json.dumps(presenter_generic_asset_upload_guard, ensure_ascii=False))
 
+                    document_slide_owner_guard = page.evaluate(
+                        """
+                        () => {
+                          const item = {
+                            id: '11111111-1111-4111-8111-111111111111',
+                            _worshipSectionId: '22222222-2222-4222-8222-222222222222',
+                            _worshipSectionKey: 'reference-media',
+                            _worshipSlotKey: 'sermon.reference-media',
+                          };
+                          const staleSlide = {
+                            id: 'map-stage-1',
+                            elementId: '33333333-3333-4333-8333-333333333333',
+                            sectionId: '44444444-4444-4444-8444-444444444444',
+                            sectionKey: 'old-reference-media',
+                            slotKey: 'old.reference-media',
+                            type: 'image',
+                            imageSrc: 'https://cdn.example.test/map-1.png',
+                          };
+                          const owned = compactServiceDocumentSlide(staleSlide, 0, item);
+                          const orphaned = compactServiceDocumentSlide(staleSlide, 0, null);
+                          return {
+                            canonicalOwner: owned.elementId === item.id
+                              && owned.sectionId === item._worshipSectionId
+                              && owned.sectionKey === item._worshipSectionKey
+                              && owned.slotKey === item._worshipSlotKey,
+                            staleOwnerRemoved: !('elementId' in orphaned)
+                              && !('sectionId' in orphaned)
+                              && !('sectionKey' in orphaned)
+                              && !('slotKey' in orphaned),
+                          };
+                        }
+                        """
+                    )
+                    if document_slide_owner_guard["canonicalOwner"] and document_slide_owner_guard["staleOwnerRemoved"]:
+                        pass_("document-slide-owner-guard", json.dumps(document_slide_owner_guard, ensure_ascii=False))
+                    else:
+                        fail("document-slide-owner-guard", json.dumps(document_slide_owner_guard, ensure_ascii=False))
+
                     presenter_imported_deck_asset_guard = page.evaluate(
                         """
                         async () => {
